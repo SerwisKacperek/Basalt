@@ -1,0 +1,10 @@
+{
+  "extends": "@repo/typescript-config/vite",
+  "include": ["**/*"],
+  "compilerOptions": {
+    "types": ["node", "vite/client"],
+    "paths": {
+      "~/*": ["./app/*"]
+    }
+  }
+}
