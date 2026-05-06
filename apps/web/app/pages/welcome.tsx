@@ -1,4 +1,5 @@
-import React from "react";
+import logoLight from "~/assets/icons/logo-light.svg";
+import logoDark from "~/assets/icons/logo-dark.svg";
 
 export function Welcome() {
   return (
@@ -7,12 +8,12 @@ export function Welcome() {
         <header className="flex flex-col items-center gap-9">
           <div className="w-125 max-w-[100vw] p-4">
             <img
-              src='/assets/icons/logo-light.svg'
+              src={logoLight}
               alt="React Router"
               className="block w-full dark:hidden"
             />
             <img
-              src='/assets/icons/logo-dark.svg'
+              src={logoDark}
               alt="React Router"
               className="hidden w-full dark:block"
             />
@@ -24,6 +25,7 @@ export function Welcome() {
               What&apos;s next?
             </p>
             <ul>
+              <a href="test">test</a>
               {resources.map(({ href, text, icon }) => (
                 <li key={href}>
                   <a

@@ -1,0 +1,45 @@
+{
+  "name": "desktop",
+  "main": "dist/main.js",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "start": "tsc && bun scripts/copy-web.ts && electron .",
+    "dev": "tsc && cross-env DEV=true electron ."
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "electron": "^41.5.0"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "*",
+    "@types/bun": "latest",
+    "@types/node": "^25.6.0",
+    "cross-env": "^7",
+    "electron-builder": "^25.0.0",
+    "typescript": "^5"
+  },
+  "build": {
+    "appId": "com.basalt.app",
+    "files": [
+      "dist/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "../web/dist",
+        "to": "web"
+      }
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "mac": {
+      "target": "dmg"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
+  }
+}
