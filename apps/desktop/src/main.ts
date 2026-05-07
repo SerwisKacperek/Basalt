@@ -1,13 +1,10 @@
-import { app, BrowserWindow, protocol, net } from 'electron'
+import { app, BrowserWindow } from 'electron'
 import path from 'path'
-import { pathToFileURL } from 'url'
-import { existsSync, statSync } from 'fs'
+import { handleAppProtocol, registerAppScheme } from './protocols/app-protocol'
 
 const isDev = process.env.DEV === 'true'
 
-protocol.registerSchemesAsPrivileged([
-  { scheme: 'app', privileges: { secure: true, standard: true, supportFetchAPI: true } }
-])
+registerAppScheme()
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -31,17 +28,7 @@ app.whenReady().then(() => {
     ? path.join(process.resourcesPath, 'web')
     : path.join(__dirname, 'web')
 
-  protocol.handle('app', (request) => {
-    const { pathname } = new URL(request.url)
-    const filePath = path.join(webRoot, pathname)
-
-    if (existsSync(filePath) && !statSync(filePath).isDirectory()) {
-      return net.fetch(pathToFileURL(filePath).toString())
-    }
-
-    return net.fetch(pathToFileURL(path.join(webRoot, 'index.html')).toString())
-  })
-
+  handleAppProtocol(webRoot)
   createWindow()
 })
 
