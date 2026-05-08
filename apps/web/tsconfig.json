@@ -3,6 +3,7 @@
   "include": ["**/*"],
   "compilerOptions": {
     "types": ["node", "vite/client"],
+    "customConditions": ["web", "electron"],
     "paths": {
       "~/*": ["./app/*"]
     }

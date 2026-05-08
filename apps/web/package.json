@@ -3,19 +3,24 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "vite build",
+    "build:web": "VITE_TARGET=web && vite build",
+    "build:electron": "VITE_TARGET=electron && vite build",
     "dev": "vite",
     "preview": "vite preview",
     "check-types": "tsc",
     "lint": "eslint ."
   },
   "dependencies": {
+    "@basalt/api": "*",
+    "@basalt/core": "*",
+    "@elysiajs/eden": "latest",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-router": "7.15.0"
   },
   "devDependencies": {
     "@repo/eslint-config": "*",
+    "elysia": "latest",
     "@repo/typescript-config": "*",
     "@tailwindcss/vite": "^4.2.2",
     "@types/node": "^22",
