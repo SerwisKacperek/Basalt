@@ -4,17 +4,18 @@ Package: `@repo/eslint-config`
 
 ## Exports
 
-| Export | Description |
+| Export | Use case |
 |---|---|
-| `./base` | Base rules for all TypeScript projects |
-| `./next-js` | Next.js specific rules |
-| `./react-internal` | Rules for internal React packages |
+| `./base` | Base TypeScript rules for any project |
+| `./react-app` | React apps (Vite, React Router) |
+| `./react-internal` | Internal React packages |
+| `./next-js` | Next.js apps |
 
 ## Usage
 
 ```js
 // eslint.config.mjs
-import { base } from '@repo/eslint-config/base'
+import reactApp from '@repo/eslint-config/react-app'
 
-export default [...base]
+export default [...reactApp]
 ```

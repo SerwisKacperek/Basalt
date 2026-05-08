@@ -1,6 +1,11 @@
 import { defineConfig } from 'vitepress'
 
 export default defineConfig({
+  vite: {
+    server: {
+      port: 5174,
+    },
+  },
   title: 'Basalt',
   description: 'Basalt documentation',
   themeConfig: {
@@ -19,6 +24,7 @@ export default defineConfig({
         items: [
           { text: 'Introduction', link: '/guide/' },
           { text: 'Installation', link: '/guide/installation' },
+          { text: 'Architecture', link: '/guide/architecture' },
           { text: 'Configuration', link: '/guide/configuration' },
         ],
       },

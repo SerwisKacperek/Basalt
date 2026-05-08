@@ -3,8 +3,8 @@ layout: home
 
 hero:
   name: Basalt
-  text: Realtime Collaborative Notes
-  tagline: Write together, think together. A fast and distraction-free workspace for teams who move fast.
+  text: Local-First Notes App
+  tagline: An Obsidian-style notes app for web and desktop. Works offline. Syncs across devices.
   actions:
     - theme: brand
       text: Get Started
@@ -14,27 +14,27 @@ hero:
       link: https://github.com/SerwisKacperek/Basalt
 
 features:
-  - icon: ⚡
-    title: Realtime Sync
-    details: Every keystroke is reflected instantly for all collaborators. No refresh, no conflicts, no waiting.
-
   - icon: 📝
-    title: Rich Note Editing
-    details: A clean, focused editor with support for markdown, headings, lists, code blocks, and more.
+    title: Markdown Notes
+    details: Edit local Markdown files with a clean, focused editor. SQLite-backed for fast local queries.
 
-  - icon: 👥
-    title: Built for Teams
-    details: See who's online, follow their cursor, and leave inline comments — collaboration baked in from day one.
+  - icon: 🔌
+    title: Works Offline
+    details: Fully functional without a network connection. Web app uses SQLite-WASM in OPFS; desktop uses better-sqlite3.
 
-  - icon: 🔒
-    title: Private by Default
-    details: Notes are scoped to your workspace. Share only what you choose, with granular access controls.
+  - icon: 🔄
+    title: Cross-Device Sync
+    details: Optional sync via a remote API. Local-first — the remote is only for cross-device sync, never a dependency for use.
 
-  - icon: 🚀
-    title: Blazing Fast
-    details: Built on a Turborepo monorepo with Bun. Cold starts in milliseconds, hot reloads even faster.
+  - icon: 🖥️
+    title: Web + Desktop
+    details: A single renderer codebase ships as a PWA and an Electron desktop app via two build targets.
 
-  - icon: 🧩
-    title: Extensible
-    details: Open architecture with shared packages for config, linting, and types — easy to extend and maintain.
+  - icon: 🤖
+    title: AI-Ready
+    details: Embedded MCP server exposes a curated tool surface to AI agents, available in both desktop and hosted modes.
+
+  - icon: ⚡
+    title: Type-Safe API
+    details: Elysia + Eden Treaty gives end-to-end type safety from route definition to React component — zero manual wiring.
 ---

@@ -2,19 +2,20 @@
 
 Package: `@repo/typescript-config`
 
-## Available Configs
+## Available configs
 
 | File | Use case |
 |---|---|
 | `base.json` | Any TypeScript project |
-| `nextjs.json` | Next.js apps |
+| `vite.json` | Vite apps |
 | `react-library.json` | React component libraries |
+| `nextjs.json` | Next.js apps |
 
 ## Usage
 
 ```json
 {
-  "extends": "@repo/typescript-config/base",
+  "extends": "@repo/typescript-config/vite",
   "compilerOptions": {
     "outDir": "dist"
   }

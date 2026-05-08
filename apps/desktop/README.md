@@ -1,15 +1,28 @@
 # desktop
 
-To install dependencies:
+Electron shell for Basalt. Contains no renderer source — builds `apps/web` with `VITE_TARGET=electron` and serves it via the `app://` custom protocol.
 
-```bash
-bun install
+## Dev
+
+Requires `apps/web` dependencies to be installed.
+
+```sh
+bun dev
 ```
 
-To run:
+This compiles TypeScript and launches Electron pointing at `http://localhost:5173` (Vite dev server must be running).
 
-```bash
-bun run index.ts
+## Build
+
+```sh
+bun run build
 ```
 
-This project was created using `bun init` in bun v1.3.3. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
+Builds the renderer into `../web/dist`, copies it to `dist/web`, then packages with `electron-builder`. Outputs to `dist/`.
+
+## Protocols
+
+| Protocol | Purpose |
+|---|---|
+| `app://` | Serves the renderer bundle from `dist/web/` |
+| `api://` | Routes requests to the local Elysia app (planned) |

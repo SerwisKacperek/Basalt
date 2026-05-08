@@ -2,23 +2,55 @@
 
 ## Prerequisites
 
-- Node.js 18+
-- Bun 1.3+
+- [Bun](https://bun.sh) 1.3+
+- [Docker](https://docker.com) (for the Postgres database)
 
 ## Setup
 
-Clone the repository and install dependencies:
+```sh
+git clone https://github.com/SerwisKacperek/Basalt
+cd Basalt
+bun install
+```
+
+## Start the database
 
 ```sh
-git clone <repo-url>
-cd basalt
-bun install
+docker compose up -d db
+```
+
+Create `apps/api/.env`:
+
+```env
+DATABASE_URL=postgres://postgres:postgres@localhost:5432/basalt
+API_PORT=3000
 ```
 
 ## Development
 
-Start all apps in development mode:
+Run everything:
 
 ```sh
 bun dev
 ```
+
+Or run individual apps:
+
+```sh
+# API only (http://localhost:3000)
+bun run dev --filter=@basalt/api
+
+# Web only (http://localhost:5173)
+bun run dev --filter=web
+
+# Desktop (Electron window)
+bun run dev --filter=desktop
+```
+
+## Production build
+
+```sh
+bun run build
+```
+
+Desktop distributable is produced by `electron-builder` — run `bun run build` inside `apps/desktop`.
