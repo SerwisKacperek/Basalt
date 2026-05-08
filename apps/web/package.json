@@ -13,9 +13,10 @@
   "dependencies": {
     "@basalt/api": "*",
     "@basalt/core": "*",
+    "@basalt/ui": "*",
     "@elysiajs/eden": "latest",
-    "react": "^19.2.5",
-    "react-dom": "^19.2.5",
+    "react": "latest",
+    "react-dom": "latest",
     "react-router": "7.15.0"
   },
   "devDependencies": {
