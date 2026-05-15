@@ -1,8 +1,9 @@
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, webContents } from 'electron'
 import path from 'path'
 import { handleAppProtocol, registerAppScheme, handleVaultProtocol } from './protocols/app-protocol'
+import { existsSync, mkdirSync } from 'fs'
 
-const isDev = process.env.DEV === 'true'
+const isDev = process.env.DEV === 'false'
 
 registerAppScheme()
 
@@ -18,8 +19,10 @@ function createWindow() {
 
   if (isDev) {
     win.loadURL('http://localhost:5173')
+     win.webContents.openDevTools({ mode: 'detach' })
   } else {
     win.loadURL('app://-/')
+    win.webContents.openDevTools({ mode: 'detach' })
   }
 }
 
@@ -30,6 +33,9 @@ app.whenReady().then(() => {
 
   
   const vaultRoot = path.join(app.getPath('userData'), 'vault')
+  if (!existsSync(vaultRoot)) {
+    mkdirSync(vaultRoot, { recursive: true });
+  }
   handleAppProtocol(webRoot)
   handleVaultProtocol(vaultRoot)
   createWindow()
