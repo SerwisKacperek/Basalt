@@ -5,6 +5,7 @@
   "scripts": {
     "build:web": "VITE_TARGET=web && vite build",
     "build:electron": "VITE_TARGET=electron && vite build",
+    "build": "vite build",
     "dev": "vite",
     "preview": "vite preview",
     "check-types": "tsc",

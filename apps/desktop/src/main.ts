@@ -1,4 +1,4 @@
-import { app, BrowserWindow, webContents } from 'electron'
+import { app, BrowserWindow } from 'electron'
 import path from 'path'
 import { handleAppProtocol, registerAppScheme, handleVaultProtocol } from './protocols/app-protocol'
 import { existsSync, mkdirSync } from 'fs'
@@ -15,8 +15,7 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
     },
-  })
-
+  }) 
   if (isDev) {
     win.loadURL('http://localhost:5173')
      win.webContents.openDevTools({ mode: 'detach' })
@@ -29,7 +28,7 @@ function createWindow() {
 app.whenReady().then(() => {
   const webRoot = app.isPackaged
     ? path.join(process.resourcesPath, 'web')
-    : path.join(__dirname, 'web')
+    : path.join(__dirname, '../../web/dist')
 
   
   const vaultRoot = path.join(app.getPath('userData'), 'vault')
