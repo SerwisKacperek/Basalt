@@ -1,6 +1,6 @@
 import { app, BrowserWindow } from 'electron'
 import path from 'path'
-import { handleAppProtocol, registerAppScheme } from './protocols/app-protocol'
+import { handleAppProtocol, registerAppScheme, handleVaultProtocol } from './protocols/app-protocol'
 
 const isDev = process.env.DEV === 'true'
 
@@ -28,7 +28,10 @@ app.whenReady().then(() => {
     ? path.join(process.resourcesPath, 'web')
     : path.join(__dirname, 'web')
 
+  
+  const vaultRoot = path.join(app.getPath('userData'), 'vault')
   handleAppProtocol(webRoot)
+  handleVaultProtocol(vaultRoot)
   createWindow()
 })
 
