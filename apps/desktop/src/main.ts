@@ -2,7 +2,7 @@ import { app, BrowserWindow } from 'electron'
 import path from 'path'
 import { handleApiProtocol, handleAppProtocol, registerAppScheme } from './protocols/app-protocol'
 
-const isDev = process.env.DEV === 'true'
+const isDev = process.env.DEV === 'false'
 
 registerAppScheme()
 
@@ -28,7 +28,7 @@ function createWindow() {
 app.whenReady().then(() => {
   const webRoot = app.isPackaged
     ? path.join(process.resourcesPath, 'web')
-    : path.join(__dirname, 'web')
+    : path.join(__dirname, '../../web/dist')
 
   const apiBase = isDev ? 'http://localhost:3000' : process.env.API_URL ?? 'http://localhost:3000';
   handleAppProtocol(webRoot)
