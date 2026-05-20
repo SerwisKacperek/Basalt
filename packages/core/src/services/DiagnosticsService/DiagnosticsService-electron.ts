@@ -8,6 +8,12 @@ export const diagnosticsService: IDiagnosticsService = {
   async healthcheck() {
     const { data, error } = await client.api.healthcheck.get();
     if (error) throw error;
-    return data!;
+    return {
+      status: data!.status,
+      timestamp:
+        data!.timestamp instanceof Date
+          ? data!.timestamp.toISOString()
+          : data!.timestamp,
+    };
   },
 };

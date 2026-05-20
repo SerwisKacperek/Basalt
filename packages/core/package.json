@@ -1,6 +1,9 @@
 {
   "name": "@basalt/core",
   "type": "module",
+  "scripts": {
+    "test": "vitest run"
+  },
   "exports": {
     "./interfaces/*": "./src/interfaces/*.ts",
     "./services/*": {
