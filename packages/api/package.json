@@ -1,0 +1,17 @@
+{
+  "name": "@basalt/api",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@basalt/backend": "*",
+    "@elysiajs/eden": "latest"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "*"
+  }
+}
