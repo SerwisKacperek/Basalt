@@ -1,37 +1,39 @@
 {
   "name": "desktop",
+  "version": "0.0.1",
+  "description": "Basalt desktop app",
+  "author": "Basalt",
   "main": "dist/main.js",
   "private": true,
   "scripts": {
-    "build": "tsc",
-    "start": "tsc && bun scripts/copy-web.ts && electron .",
-    "dev": "tsc && cross-env DEV=true electron ."
+    "build:web": "cross-env OUT_DIR=../desktop/dist/web bun run --filter web build:electron",
+    "build:main": "tsc",
+    "build:sources": "bun run build:web && bun run build:main",
+    "build": "bun run build:sources && electron-builder",
+    "start": "bun run build:sources && electron .",
+    "dev": "bun scripts/dev.ts"
   },
   "peerDependencies": {
     "typescript": "^5"
-  },
-  "dependencies": {
-    "electron": "^41.5.0"
   },
   "devDependencies": {
     "@repo/typescript-config": "*",
     "@types/bun": "latest",
     "@types/node": "^25.6.0",
     "cross-env": "^7",
+    "electron": "^41.5.0",
     "electron-builder": "^25.0.0",
     "typescript": "^5"
   },
   "build": {
     "appId": "com.basalt.app",
+    "productName": "Basalt",
     "files": [
       "dist/**/*"
     ],
-    "extraResources": [
-      {
-        "from": "../web/dist",
-        "to": "web"
-      }
-    ],
+    "directories": {
+      "output": "release"
+    },
     "win": {
       "target": "nsis"
     },

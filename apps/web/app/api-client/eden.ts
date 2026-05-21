@@ -1,6 +1,7 @@
-import { treaty } from "@elysiajs/eden";
-import type { App } from "@basalt/api";
+import { createLocalClient } from "@basalt/core/client";
 
-export const local = treaty<App>(
-  __TARGET__ === "electron" ? "api://app" : (import.meta.env.VITE_BACKEND_URL ?? window.location.origin),
+export const local = createLocalClient(
+  __TARGET__ === "electron"
+    ? "api://app"
+    : (import.meta.env.VITE_BACKEND_URL ?? window.location.origin),
 );

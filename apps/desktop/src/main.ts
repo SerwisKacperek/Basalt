@@ -2,7 +2,8 @@ import { app, BrowserWindow } from 'electron'
 import path from 'path'
 import { handleAppProtocol, registerAppScheme } from './protocols/app-protocol'
 
-const isDev = process.env.DEV === 'true'
+const devServerUrl = process.env.VITE_DEV_SERVER_URL
+const isDev = !!devServerUrl
 
 registerAppScheme()
 
@@ -11,6 +12,7 @@ function createWindow() {
     width: 1280,
     height: 800,
     webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
@@ -18,18 +20,15 @@ function createWindow() {
   })
 
   if (isDev) {
-    win.loadURL('http://localhost:5173')
+    win.loadURL(devServerUrl)
+    win.webContents.openDevTools({ mode: 'detach' })
   } else {
     win.loadURL('app://-/')
   }
 }
 
 app.whenReady().then(() => {
-  const webRoot = app.isPackaged
-    ? path.join(process.resourcesPath, 'web')
-    : path.join(__dirname, 'web')
-
-  handleAppProtocol(webRoot)
+  handleAppProtocol(path.join(__dirname, 'web'))
   createWindow()
 })
 
