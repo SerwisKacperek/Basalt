@@ -12,7 +12,6 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@basalt/api": "*",
     "@basalt/core": "*",
     "@basalt/ui": "*",
     "react": "latest",

@@ -38,7 +38,7 @@ Or run individual apps:
 
 ```sh
 # API only (http://localhost:3000)
-bun run dev --filter=@basalt/api
+bun run dev --filter=@basalt/backend
 
 # Web only (http://localhost:5173)
 bun run dev --filter=web

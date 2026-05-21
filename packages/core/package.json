@@ -6,7 +6,7 @@
     "./client": "./src/client.ts"
   },
   "dependencies": {
-    "@basalt/api": "*",
+    "@basalt/backend": "*",
     "@elysiajs/eden": "latest"
   },
   "devDependencies": {
