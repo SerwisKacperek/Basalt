@@ -2,6 +2,8 @@
 
 A local-first, cross-platform notes app. Works offline on web and desktop. Syncs across devices via a remote API.
 
+![Cover](.github/cover.png)
+
 ## Stack
 
 - **Web/Renderer** — React + React Router v7 + Vite
