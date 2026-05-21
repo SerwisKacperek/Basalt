@@ -32,8 +32,8 @@ bun run db:studio     # open Drizzle Studio
 
 ## Package exports
 
-| Export | Description |
-|---|---|
+| Export              | Description                            |
+| ------------------- | -------------------------------------- |
 | `.` (`@basalt/api`) | `createApp(db)` factory and `App` type |
 
 The `createApp` factory is consumed by three hosts: the Node server, the web Service Worker, and the Electron protocol handler. Only the DB driver differs between them.

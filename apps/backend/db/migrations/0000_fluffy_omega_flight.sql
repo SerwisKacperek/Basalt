@@ -1,9 +1,9 @@
 CREATE TABLE "users" (
-	"id" serial PRIMARY KEY NOT NULL,
-	"username" text NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT uuidv7() NOT NULL,
 	"email" text,
 	"password" text NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
-	"deleted_at" timestamp
+	"deleted_at" timestamp,
+	CONSTRAINT "users_email_unique" UNIQUE("email")
 );
