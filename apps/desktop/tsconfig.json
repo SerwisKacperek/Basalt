@@ -2,15 +2,15 @@
   "compilerOptions": {
     "lib": ["ESNext"],
     "target": "ESNext",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "rootDir": "src",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "outDir": "dist",
     "allowJs": true,
     "strict": true,
     "types": ["node"],
     "skipLibCheck": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "esModuleInterop": true
   },
-  "include": ["src"]
+  "include": ["src", "electron.vite.config.ts"]
 }

@@ -1,10 +1,15 @@
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, protocol } from 'electron'
 import path from 'path'
-import { handleApiProtocol, handleAppProtocol, registerAppScheme } from './protocols/app-protocol'
 
-const isDev = process.env.DEV === 'false'
 
-registerAppScheme()
+import { appScheme, handleAppProtocol } from './protocols/app-protocol'
+import { apiScheme, handleApiProtocol } from './protocols/api-protocol'
+import { vaultScheme, handleVaultProtocol } from './protocols/app-protocol'
+
+const devServerUrl = process.env.VITE_DEV_SERVER_URL
+const isDev = !!devServerUrl
+
+protocol.registerSchemesAsPrivileged([appScheme, apiScheme, vaultScheme])
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -16,24 +21,25 @@ function createWindow() {
       nodeIntegration: false,
       sandbox: true,
     },
-  })
-
+  }) 
   if (isDev) {
-    win.loadURL('http://localhost:5173');
-    win.webContents.openDevTools();
+    win.loadURL(devServerUrl)
+    win.webContents.openDevTools({ mode: 'detach' })
   } else {
-    win.loadURL('app://-/');
+    win.loadURL('app://-/')
+    win.webContents.openDevTools({ mode: 'detach' })
   }
 }
 
 app.whenReady().then(() => {
-  const webRoot = app.isPackaged
-    ? path.join(process.resourcesPath, 'web')
-    : path.join(__dirname, '../../web/dist')
-
   const apiBase = isDev ? 'http://localhost:3000' : process.env.API_URL ?? 'http://localhost:3000';
-  handleAppProtocol(webRoot)
+  
+  const vaultRoot = path.join(app.getPath('userData'), 'vault')
+  
+  handleAppProtocol(path.join(__dirname, 'web'))
   handleApiProtocol(apiBase)
+  handleVaultProtocol(vaultRoot)
+  
   createWindow()
 })
 
