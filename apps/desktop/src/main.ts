@@ -1,24 +1,29 @@
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, protocol } from 'electron'
 import path from 'path'
-import { handleAppProtocol, registerAppScheme, handleVaultProtocol } from './protocols/app-protocol'
-import { existsSync, mkdirSync } from 'fs'
 
-const isDev = process.env.DEV === 'false'
+import { appScheme, handleAppProtocol } from './protocols/app-protocol'
+import { apiScheme, handleApiProtocol } from './protocols/api-protocol'
+import { vaultScheme, handleVaultProtocol } from './protocols/app-protocol'
 
-registerAppScheme()
+const devServerUrl = process.env.VITE_DEV_SERVER_URL
+const isDev = !!devServerUrl
+
+protocol.registerSchemesAsPrivileged([appScheme, apiScheme, vaultScheme])
 
 function createWindow() {
   const win = new BrowserWindow({
     width: 1280,
     height: 800,
     webPreferences: {
-      nodeIntegration: false,
+      preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
     },
   }) 
   if (isDev) {
-    win.loadURL('http://localhost:5173')
-     win.webContents.openDevTools({ mode: 'detach' })
+    win.loadURL(devServerUrl)
+    win.webContents.openDevTools({ mode: 'detach' })
   } else {
     win.loadURL('app://-/')
     win.webContents.openDevTools({ mode: 'detach' })
@@ -26,17 +31,12 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
-  const webRoot = app.isPackaged
-    ? path.join(process.resourcesPath, 'web')
-    : path.join(__dirname, '../../web/dist')
-
-  
   const vaultRoot = path.join(app.getPath('userData'), 'vault')
-  if (!existsSync(vaultRoot)) {
-    mkdirSync(vaultRoot, { recursive: true });
-  }
-  handleAppProtocol(webRoot)
+
+  handleAppProtocol(path.join(__dirname, 'web'))
+  handleApiProtocol()
   handleVaultProtocol(vaultRoot)
+
   createWindow()
 })
 

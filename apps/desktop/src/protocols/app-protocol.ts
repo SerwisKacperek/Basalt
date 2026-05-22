@@ -3,12 +3,7 @@ import { existsSync, statSync } from 'fs'
 import path from 'path'
 import { pathToFileURL } from 'url'
 
-export function registerAppScheme() {
-  protocol.registerSchemesAsPrivileged([
-    { scheme: 'app', privileges: { secure: true, standard: true, supportFetchAPI: true } },
-    { scheme: 'vault', privileges: { secure: true, standard: true, supportFetchAPI: true } },
-  ])
-}
+export const appScheme = { scheme: 'app', privileges: { secure: true, standard: true, supportFetchAPI: true } }
 
 export function handleAppProtocol(webRoot: string) {
   const root = path.resolve(webRoot)
@@ -32,6 +27,8 @@ export function handleAppProtocol(webRoot: string) {
     return net.fetch(pathToFileURL(path.join(root, 'index.html')).toString())
   })
 }
+
+export const vaultScheme = { scheme: 'vault', privileges: { secure: true, standard: true, supportFetchAPI: true } }
 
 export function handleVaultProtocol(vaultRoot: string) {
   const root = path.resolve(vaultRoot)

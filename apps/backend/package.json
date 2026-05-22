@@ -1,0 +1,29 @@
+{
+  "name": "@basalt/backend",
+  "version": "1.0.50",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run --watch src/index.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@elysiajs/cors": "latest",
+    "better-sqlite3": "^12.10.0",
+    "drizzle-orm": "^0.45.2",
+    "elysia": "latest",
+    "pg": "^8.20.0"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "*",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/pg": "^8.20.0",
+    "bun-types": "latest",
+    "drizzle-kit": "^0.31.1"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

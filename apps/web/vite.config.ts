@@ -18,5 +18,9 @@ export default defineConfig(() => {
       },
       conditions: [target, "browser", "module", "import"],
     },
+    build: {
+      outDir: process.env.OUT_DIR ?? "dist",
+      emptyOutDir: true,
+    },
   };
 });
