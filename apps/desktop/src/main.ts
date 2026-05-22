@@ -1,10 +1,9 @@
 import { app, BrowserWindow, protocol } from 'electron'
 import path from 'path'
 
-
 import { appScheme, handleAppProtocol } from './protocols/app-protocol'
 import { apiScheme, handleApiProtocol } from './protocols/api-protocol'
-import { vaultScheme, handleVaultProtocol } from './protocols/app-protocol'
+import { vaultScheme, handleVaultProtocol } from './protocols/vault-protocol'
 
 const devServerUrl = process.env.VITE_DEV_SERVER_URL
 const isDev = !!devServerUrl
@@ -27,16 +26,16 @@ function createWindow() {
     win.webContents.openDevTools({ mode: 'detach' })
   } else {
     win.loadURL('app://-/')
-    win.webContents.openDevTools({ mode: 'detach' })
   }
 }
 
 app.whenReady().then(() => {
   const apiBase = isDev ? 'http://localhost:3000' : process.env.API_URL ?? 'http://localhost:3000';
-  
+
+  const webRoot = path.join(__dirname, 'web')
   const vaultRoot = path.join(app.getPath('userData'), 'vault')
   
-  handleAppProtocol(path.join(__dirname, 'web'))
+  handleAppProtocol(webRoot)
   handleApiProtocol(apiBase)
   handleVaultProtocol(vaultRoot)
   
