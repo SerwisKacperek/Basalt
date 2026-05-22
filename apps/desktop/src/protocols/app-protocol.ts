@@ -27,3 +27,25 @@ export function handleAppProtocol(webRoot: string) {
     return net.fetch(pathToFileURL(path.join(root, 'index.html')).toString())
   })
 }
+
+export const vaultScheme = { scheme: 'vault', privileges: { secure: true, standard: true, supportFetchAPI: true } }
+
+export function handleVaultProtocol(vaultRoot: string) {
+  const root = path.resolve(vaultRoot)
+
+  protocol.handle('vault', (request) => {
+    const { pathname } = new URL(request.url)
+    const relative = decodeURIComponent(pathname).replace(/^\/+/, '')
+    const resolved = path.resolve(root, relative)
+
+    if (resolved !== root && !resolved.startsWith(root + path.sep)) {
+      return new Response(null, { status: 403 })
+    }
+
+    if (existsSync(resolved) && !statSync(resolved).isDirectory()) {
+      return net.fetch(pathToFileURL(resolved).toString())
+    }
+
+    return new Response(null, { status: 404 })
+  })
+}
