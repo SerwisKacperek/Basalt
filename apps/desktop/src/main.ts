@@ -1,6 +1,7 @@
 import { app, BrowserWindow, protocol } from 'electron'
 import path from 'path'
 
+
 import { appScheme, handleAppProtocol } from './protocols/app-protocol'
 import { apiScheme, handleApiProtocol } from './protocols/api-protocol'
 import { vaultScheme, handleVaultProtocol } from './protocols/app-protocol'
@@ -31,12 +32,14 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  const apiBase = isDev ? 'http://localhost:3000' : process.env.API_URL ?? 'http://localhost:3000';
+  
   const vaultRoot = path.join(app.getPath('userData'), 'vault')
-
+  
   handleAppProtocol(path.join(__dirname, 'web'))
-  handleApiProtocol()
+  handleApiProtocol(apiBase)
   handleVaultProtocol(vaultRoot)
-
+  
   createWindow()
 })
 
