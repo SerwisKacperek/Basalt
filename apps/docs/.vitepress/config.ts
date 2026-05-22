@@ -3,7 +3,7 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   vite: {
     server: {
-      port: 5174,
+      port: 5175,
     },
   },
   title: 'Basalt',
