@@ -3,11 +3,9 @@ import { existsSync, statSync } from 'fs'
 import path from 'path'
 import { pathToFileURL } from 'url'
 
-export function registerAppScheme() {
-  protocol.registerSchemesAsPrivileged([
-    { scheme: 'app', privileges: { secure: true, standard: true, supportFetchAPI: true } },
-    { scheme: 'api', privileges: { secure: true, standard: true, supportFetchAPI: true } },
-  ])
+export const appScheme = {
+  scheme: 'app',
+  privileges: { secure: true, standard: true, supportFetchAPI: true },
 }
 
 export function handleAppProtocol(webRoot: string) {
@@ -30,25 +28,5 @@ export function handleAppProtocol(webRoot: string) {
     }
 
     return net.fetch(pathToFileURL(path.join(root, 'index.html')).toString())
-  })
-}
-
-export function handleApiProtocol(webRoot: string) {
-  protocol.handle('api',  (request) => {
-    const { pathname, search } = new URL(request.url)
-    const target = `${webRoot}${pathname}${search}`
-    
-    try {
-      return net.fetch(target, {
-        method: request.method,
-        headers: request.headers,
-        body: request.body,
-      })
-    } catch {
-      return new Response(JSON.stringify({ error: "API unreachable"}), {
-        status: 502,
-        headers: { 'Content-Type': 'application/json' },
-      })
-    }
   })
 }
