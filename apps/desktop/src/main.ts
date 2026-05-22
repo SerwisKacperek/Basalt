@@ -1,11 +1,12 @@
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, protocol } from 'electron'
 import path from 'path'
-import { handleAppProtocol, registerAppScheme } from './protocols/app-protocol'
+import { appScheme, handleAppProtocol } from './protocols/app-protocol'
+import { apiScheme, handleApiProtocol } from './protocols/api-protocol'
 
 const devServerUrl = process.env.VITE_DEV_SERVER_URL
 const isDev = !!devServerUrl
 
-registerAppScheme()
+protocol.registerSchemesAsPrivileged([appScheme, apiScheme])
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -29,6 +30,7 @@ function createWindow() {
 
 app.whenReady().then(() => {
   handleAppProtocol(path.join(__dirname, 'web'))
+  handleApiProtocol()
   createWindow()
 })
 

@@ -7,11 +7,13 @@
   "private": true,
   "scripts": {
     "build:web": "cross-env OUT_DIR=../desktop/dist/web bun run --filter web build:electron",
-    "build:main": "tsc",
+    "build:main": "electron-vite build",
     "build:sources": "bun run build:web && bun run build:main",
     "build": "bun run build:sources && electron-builder",
     "start": "bun run build:sources && electron .",
-    "dev": "bun scripts/dev.ts"
+    "dev:renderer": "bun --filter web dev:electron",
+    "dev:main": "wait-on http://localhost:5174 && cross-env VITE_DEV_SERVER_URL=http://localhost:5174 electron-vite dev",
+    "dev": "concurrently -k -n renderer,main -c blue,magenta \"bun run dev:renderer\" \"bun run dev:main\""
   },
   "peerDependencies": {
     "typescript": "^5"
@@ -20,10 +22,14 @@
     "@repo/typescript-config": "*",
     "@types/bun": "latest",
     "@types/node": "^25.6.0",
+    "concurrently": "^9",
     "cross-env": "^7",
     "electron": "^41.5.0",
     "electron-builder": "^25.0.0",
-    "typescript": "^5"
+    "electron-vite": "^4",
+    "typescript": "^5",
+    "vite": "^8.0.3",
+    "wait-on": "^9"
   },
   "build": {
     "appId": "com.basalt.app",
