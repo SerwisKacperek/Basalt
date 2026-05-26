@@ -1,4 +1,4 @@
-FROM oven/bun:1.3.13-alpine AS pruner
+FROM oven/bun:alpine AS pruner
 WORKDIR /app
  
 RUN apk add --no-cache nodejs npm
@@ -6,7 +6,7 @@ RUN bun add -g turbo
 COPY . .
 RUN turbo prune @basalt/backend --docker
  
-FROM oven/bun:1.3.13-alpine AS installer
+FROM oven/bun:alpine AS installer
 WORKDIR /app
  
 RUN apk add --no-cache python3 make g++
@@ -17,7 +17,7 @@ RUN bun install --frozen-lockfile
  
 COPY --from=pruner /app/out/full/ .
  
-FROM oven/bun:1.3.13-alpine AS runner
+FROM oven/bun:alpine AS runner
 WORKDIR /app
  
 ENV NODE_ENV=production

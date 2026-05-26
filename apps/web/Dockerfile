@@ -1,4 +1,4 @@
-FROM oven/bun:1.3.13-alpine AS pruner
+FROM oven/bun:alpine AS pruner
 WORKDIR /app
  
 RUN apk add --no-cache nodejs npm
@@ -6,7 +6,7 @@ RUN bun add -g turbo
 COPY . .
 RUN turbo prune web --docker
  
-FROM oven/bun:1.3.13-alpine AS builder
+FROM oven/bun:alpine AS builder
 WORKDIR /app
  
 RUN apk add --no-cache python3 make g++
