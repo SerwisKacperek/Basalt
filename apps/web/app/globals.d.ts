@@ -1,7 +1,14 @@
-declare const __TARGET__: "web" | "electron";
+import type { ServiceRegistry } from "~/services/ServiceContext";
 
-interface Window {
-  electron?: {
-    platform: NodeJS.Platform;
-  };
+declare global {
+  const __TARGET__: "web" | "electron";
+
+  interface Window {
+    basalt?: {
+      platform: NodeJS.Platform;
+      services?: Partial<ServiceRegistry>;
+    };
+  }
 }
+
+export {};

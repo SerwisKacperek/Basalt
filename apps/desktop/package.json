@@ -18,6 +18,9 @@
   "peerDependencies": {
     "typescript": "^5"
   },
+  "dependencies": {
+    "@basalt/core": "*"
+  },
   "devDependencies": {
     "@repo/typescript-config": "*",
     "@types/bun": "latest",

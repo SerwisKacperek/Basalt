@@ -6,7 +6,7 @@ import { ServiceProvider } from "~/services/ServiceContext";
 import { createRegistry } from "~/services/createRegistry";
 
 const router = createBrowserRouter(routes);
-const registry = await createRegistry();
+const registry = createRegistry();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
