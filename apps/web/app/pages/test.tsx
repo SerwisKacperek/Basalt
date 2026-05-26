@@ -20,8 +20,8 @@ export function Test() {
       <p>Page used for testing the routing <a href="/">Back to home</a></p>
       <TestComponent title="Test Card" description="Sample component from @basalt/ui" />
       {health && <pre>{JSON.stringify(health, null, 2)}</pre>}
-      {__TARGET__ === "electron" && window.electron && (
-        <p>Running in Electron on {window.electron.platform}</p>
+      {window.basalt && (
+        <p>Running in Electron on {window.basalt.platform}</p>
       )}
     </div>
   );

@@ -4,6 +4,8 @@ import path from 'path'
 import { appScheme, handleAppProtocol } from './protocols/app-protocol'
 import { apiScheme, handleApiProtocol } from './protocols/api-protocol'
 import { vaultScheme, handleVaultProtocol } from './protocols/vault-protocol'
+import { createMainRegistry } from './services/registry'
+import { registerIpc } from './services/ipc-main'
 
 const devServerUrl = process.env.VITE_DEV_SERVER_URL
 const isDev = !!devServerUrl
@@ -40,7 +42,9 @@ app.whenReady().then(() => {
   handleAppProtocol(webRoot)
   handleApiProtocol(apiBase)
   handleVaultProtocol(vaultRoot)
-  
+
+  registerIpc(createMainRegistry())
+
   createWindow()
 })
 

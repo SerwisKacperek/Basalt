@@ -1,10 +1,9 @@
 import type { ServiceRegistry } from "./ServiceContext";
+import { DiagnosticsService } from "./web/DiagnosticsService";
 
-export async function createRegistry(): Promise<ServiceRegistry> {
-  if (__TARGET__ === "electron") {
-    const { createElectronRegistry } = await import("./electron");
-    return createElectronRegistry();
-  }
-  const { createWebRegistry } = await import("./web");
-  return createWebRegistry();
+export function createRegistry(): ServiceRegistry {
+  const injected = window.basalt?.services;
+  return {
+    diagnostics: injected?.diagnostics ?? new DiagnosticsService(),
+  };
 }
