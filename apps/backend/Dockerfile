@@ -4,9 +4,9 @@ WORKDIR /app
 RUN apk add --no-cache nodejs npm
 RUN bun add -g turbo
 COPY . .
-RUN turbo prune web --docker
+RUN turbo prune @basalt/backend --docker
  
-FROM oven/bun:alpine AS builder
+FROM oven/bun:alpine AS installer
 WORKDIR /app
  
 RUN apk add --no-cache python3 make g++
@@ -17,13 +17,16 @@ RUN bun install --frozen-lockfile
  
 COPY --from=pruner /app/out/full/ .
  
-RUN bun run build --filter=web
+FROM oven/bun:alpine AS runner
+WORKDIR /app
  
-FROM nginx:alpine AS runner
+ENV NODE_ENV=production
  
-COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
-
-COPY services/nginx/nginx.conf /etc/nginx/conf.d/default.conf
+RUN apk add --no-cache libstdc++
  
-EXPOSE 80
-EXPOSE 443
+COPY --from=installer /app .
+ 
+EXPOSE 8000
+ 
+CMD ["bun", "run", "apps/backend/src/index.ts"]
+ 
