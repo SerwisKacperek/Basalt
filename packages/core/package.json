@@ -5,6 +5,7 @@
     "./interfaces/*": "./src/interfaces/*.ts"
   },
   "devDependencies": {
+    "@repo/eslint-config": "*",
     "@repo/typescript-config": "*"
   }
 }

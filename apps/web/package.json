@@ -1,5 +1,5 @@
 {
-  "name": "web",
+  "name": "@basalt/web",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,7 +8,7 @@
     "dev": "vite",
     "dev:electron": "cross-env VITE_TARGET=electron vite --port 5174 --strictPort",
     "preview": "vite preview",
-    "check-types": "tsc",
+    "check-types": "tsc --noEmit",
     "lint": "eslint ."
   },
   "dependencies": {

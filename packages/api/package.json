@@ -4,14 +4,15 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "devDependencies": {
+    "@repo/eslint-config": "*",
+    "@repo/typescript-config": "*"
+  },
   "scripts": {
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
     "@basalt/backend": "*",
     "@elysiajs/eden": "latest"
-  },
-  "devDependencies": {
-    "@repo/typescript-config": "*"
   }
 }

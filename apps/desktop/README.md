@@ -6,11 +6,15 @@ Electron shell for Basalt. Contains no renderer source — builds `apps/web` wit
 
 Requires `apps/web` dependencies to be installed.
 
-```sh
-bun dev
-```
+Run the desktop dev workflow from the monorepo root (recommended):
 
-This compiles TypeScript and launches Electron pointing at `http://localhost:5173` (Vite dev server must be running).
+```sh
+# start everything
+bun dev
+
+# or run only the desktop app
+bun run dev --filter=desktop
+```
 
 ## Build
 
@@ -18,7 +22,7 @@ This compiles TypeScript and launches Electron pointing at `http://localhost:517
 bun run build
 ```
 
-Builds the renderer into `../web/dist`, copies it to `dist/web`, then packages with `electron-builder`. Outputs to `dist/`.
+Builds the renderer for the `electron` target, then builds the Electron main process and packages the app with `electron-builder`. Final installers are placed in the `release/` output directory.
 
 ## Protocols
 
