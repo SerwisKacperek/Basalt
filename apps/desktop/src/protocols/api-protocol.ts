@@ -8,8 +8,14 @@ export const apiScheme = {
 
 export function handleApiProtocol(backendBaseUrl: string) {
   protocol.handle('api', (request) => {
-    const { pathname, search } = new URL(request.url)
-    const target = new URL(`${pathname}${search}`, backendBaseUrl)
+    const urlObj = new URL(request.url)
+  
+    let cleanPath = urlObj.pathname
+    if (cleanPath.startsWith('/app/')) {
+      cleanPath = cleanPath.replace('/app', '')
+    }
+
+    const target = new URL(`${cleanPath}${urlObj.search}`, backendBaseUrl)
  
     try {
       return net.fetch(target.toString(), {
@@ -26,4 +32,3 @@ export function handleApiProtocol(backendBaseUrl: string) {
     }
   })
 }
- 

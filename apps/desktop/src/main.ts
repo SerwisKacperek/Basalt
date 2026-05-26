@@ -30,7 +30,9 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
-  const apiBase = isDev ? 'http://localhost:3000' : process.env.API_URL ?? 'http://localhost:3000';
+ const apiBase = isDev 
+    ? 'http://localhost' 
+    : process.env.API_URL ?? 'http://localhost';
 
   const webRoot = path.join(__dirname, 'web')
   const vaultRoot = path.join(app.getPath('userData'), 'vault')
