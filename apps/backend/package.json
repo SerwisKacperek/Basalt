@@ -7,23 +7,26 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
-    "type-check": "tsc --noEmit",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "bun run vitest",
+    "check-types": "tsc --noEmit"
   },
   "dependencies": {
     "@elysiajs/cors": "latest",
+    "@sinclair/typebox": "^0.34.49",
     "better-sqlite3": "^12.10.0",
     "drizzle-orm": "^0.45.2",
     "elysia": "latest",
     "pg": "^8.20.0"
   },
   "devDependencies": {
-     "@repo/eslint-config": "*",
-     "@repo/typescript-config": "*",
-     "@types/better-sqlite3": "^7.6.13",
-     "@types/pg": "^8.20.0",
-     "bun-types": "latest",
-     "drizzle-kit": "^0.31.1"
+    "@repo/eslint-config": "*",
+    "@repo/typescript-config": "*",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/pg": "^8.20.0",
+    "bun-types": "latest",
+    "drizzle-kit": "^0.31.1",
+    "vitest": "^4.1.7"
   },
   "exports": {
     ".": "./src/index.ts"
