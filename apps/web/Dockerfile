@@ -22,8 +22,8 @@ RUN bun run build --filter=web
 FROM nginx:alpine AS runner
  
 COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
-COPY services/nginx/nginx.conf /etc/nginx/nginx.conf
+
+COPY services/nginx/nginx.conf /etc/nginx/conf.d/default.conf
  
 EXPOSE 80
 EXPOSE 443
- 
