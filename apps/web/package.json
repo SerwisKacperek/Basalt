@@ -3,9 +3,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build:web": "VITE_TARGET=web && vite build",
-    "build:electron": "VITE_TARGET=electron && vite build",
+    "build": "cross-env VITE_TARGET=web vite build",
+    "build:electron": "cross-env VITE_TARGET=electron vite build",
     "dev": "vite",
+    "dev:electron": "cross-env VITE_TARGET=electron vite --port 5174 --strictPort",
     "preview": "vite preview",
     "check-types": "tsc",
     "lint": "eslint ."
@@ -14,7 +15,6 @@
     "@basalt/api": "*",
     "@basalt/core": "*",
     "@basalt/ui": "*",
-    "@elysiajs/eden": "latest",
     "react": "latest",
     "react-dom": "latest",
     "react-router": "7.15.0"
@@ -27,7 +27,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.0",
-    "elysia": "latest",
+    "cross-env": "^7",
     "eslint": "^9.39.1",
     "tailwindcss": "^4.2.2",
     "typescript": "^5.9.3",

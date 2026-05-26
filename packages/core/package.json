@@ -2,17 +2,7 @@
   "name": "@basalt/core",
   "type": "module",
   "exports": {
-    "./interfaces/*": "./src/interfaces/*.ts",
-    "./services/*": {
-      "web": "./src/services/*/index-web.ts",
-      "electron": "./src/services/*/index-electron.ts",
-      "types": "./src/services/*/index.ts",
-      "default": "./src/services/*/index.ts"
-    }
-  },
-  "dependencies": {
-    "@basalt/api": "*",
-    "@elysiajs/eden": "latest"
+    "./interfaces/*": "./src/interfaces/*.ts"
   },
   "devDependencies": {
     "@repo/typescript-config": "*"

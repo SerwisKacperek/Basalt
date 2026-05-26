@@ -3,10 +3,9 @@ import { existsSync, statSync } from 'fs'
 import path from 'path'
 import { pathToFileURL } from 'url'
 
-export function registerAppScheme() {
-  protocol.registerSchemesAsPrivileged([
-    { scheme: 'app', privileges: { secure: true, standard: true, supportFetchAPI: true } },
-  ])
+export const appScheme = {
+  scheme: 'app',
+  privileges: { secure: true, standard: true, supportFetchAPI: true },
 }
 
 export function handleAppProtocol(webRoot: string) {
