@@ -1,16 +1,16 @@
 import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
-import { createDb } from "./connection/connection.pg";
+import { createDb } from "./shared/factories/db.factory";
 
-import { healthcheckRoutes } from "./routes/healthcheck";
+import { healthcheckRoutes, createWorkspaceRoutes } from "./modules";
 
-const db = createDb(process.env.DATABASE_URL!);
+const db = createDb();
 
 export const createApp = () =>
   new Elysia({ prefix: "/api" })
     .use(cors())
-    .decorate("db", db)
-    .use(healthcheckRoutes);
+    .use(healthcheckRoutes)
+    .use(createWorkspaceRoutes(db));
 
 export type App = ReturnType<typeof createApp>;
 
