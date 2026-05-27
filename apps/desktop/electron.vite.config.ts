@@ -1,7 +1,7 @@
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
 import { resolve } from 'path'
 
-const external = ['electron']
+const external = ['electron', 'better-sqlite3']
 
 export default defineConfig({
   main: {
