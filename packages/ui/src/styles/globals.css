@@ -1,12 +1,15 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+@source "../components";
+
 @theme inline {
   --color-background: var(--bg);
   --color-foreground: var(--text);
   
   --color-primary: var(--primary);
   --color-sidebar: var(--sidebar);
+  --color-primary-foreground: var(--primary-foreground);
   
   --color-destructive: var(--error);
   --color-warning: var(--warning);
@@ -52,12 +55,14 @@
 :root, .theme-green {
   --text: #D9D9D9;
   --primary: #889E81;
+  --primary-foreground: #1E211D;
   --bg: #1E211D;
   --sidebar: #282C26;
   --error: #C45A5A;
   --warning: #D99F59;
   --success: #95B382;
   --info: #7BA7B8;
+  --radius: 0.5rem;
 }
 
 .theme-blue {
