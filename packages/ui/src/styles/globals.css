@@ -21,6 +21,8 @@
 
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
+
+  --ring: var(--success);
   
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
