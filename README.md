@@ -8,15 +8,14 @@ A local-first, cross-platform notes app. Works offline on web and desktop. Syncs
 
 - **Web/Renderer** — React + React Router v7 + Vite
 - **Desktop** — Electron (shell only; renders the web app via `app://`)
-- **API** — Elysia + Drizzle ORM + Postgres
+- **Backend** — Elysia + Drizzle ORM + Postgres / SQLite
 - **Monorepo** — Turborepo + Bun workspaces
 
 ## Quick start
 
 ```sh
 bun install
-docker compose up -d db        # start Postgres
-cp apps/api/.env.example apps/api/.env  # set DATABASE_URL
+docker compose -f docker-compose.dev.yml up -d db
 bun dev
 ```
 
@@ -28,15 +27,16 @@ See [docs/guide/installation](apps/docs/guide/installation.md) for full setup.
 |---|---|
 | `apps/web` | Renderer (PWA + Electron renderer) |
 | `apps/desktop` | Electron shell |
-| `apps/api` | REST API + MCP server |
+| `apps/backend` | REST API |
 | `apps/docs` | Documentation (VitePress) |
 
 ## Packages
 
 | Package | Description |
 |---|---|
-| `packages/core` | Service interfaces and platform implementations |
-| `packages/ui` | Shared React components and Tailwind preset |
+| `packages/core` | Service interfaces |
+| `packages/ui` | Shared React components and Tailwind presets |
+| `packages/api` | Backend types exported via Eden Treaty |
 | `packages/eslint-config` | Shared ESLint configs |
 | `packages/typescript-config` | Shared TypeScript configs |
 
@@ -47,4 +47,5 @@ bun dev              # start all apps
 bun run build        # build all apps
 bun run lint         # lint all packages
 bun run check-types  # type-check all packages
+bun run test         # run tests in applications
 ```

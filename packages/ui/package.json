@@ -8,6 +8,7 @@
     "./lib/utils": "./src/lib/utils.ts"
   },
   "devDependencies": {
+    "@repo/eslint-config": "*",
     "@repo/typescript-config": "*",
     "@types/react": "latest",
     "shadcn": "latest",

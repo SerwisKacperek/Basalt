@@ -13,17 +13,17 @@ cd Basalt
 bun install
 ```
 
+## Configure enviromental variables
+```sh
+cp .env.example .env
+cp apps/backend/.env.example apps/backend/.env
+cp apps/web/.env.example apps/web/.env
+```
+
 ## Start the database
 
 ```sh
-docker compose up -d db
-```
-
-Create `apps/api/.env`:
-
-```env
-DATABASE_URL=postgres://postgres:postgres@localhost:5432/basalt
-API_PORT=3000
+docker compose -f docker-compose.dev.yml up -d db
 ```
 
 ## Development

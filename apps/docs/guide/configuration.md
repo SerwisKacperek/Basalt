@@ -2,14 +2,14 @@
 
 ## Environment variables
 
-**`apps/api/.env`**
+**`apps/backend/.env`**
 
 | Variable       | Description                                 |
 | -------------- | ------------------------------------------- |
 | `DATABASE_URL` | Postgres connection string                  |
 | `API_PORT`     | Port for the Elysia server (default `3000`) |
 
-**`apps/web` (Vite env)**
+**`apps/web/.env` (Vite env)**
 
 | Variable           | Description                                                         |
 | ------------------ | ------------------------------------------------------------------- |

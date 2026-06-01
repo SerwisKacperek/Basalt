@@ -14,7 +14,7 @@ Basalt is a local-first, cross-platform notes app. It works fully offline and sy
 |---|---|
 | Web (offline) | Service Worker → `app.handle()` → SQLite-WASM (OPFS) |
 | Desktop (offline) | `api://` protocol → `app.handle()` → better-sqlite3 |
-| Sync | HTTPS → Node server → `app.handle()` → Postgres |
+| Sync | HTTPS → Node server → `app.handle()` → Postgres / SQLite |
 
 The same Elysia app (`createApp(db)`) runs in all three places — only the DB driver changes.
 
