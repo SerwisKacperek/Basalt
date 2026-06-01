@@ -1,4 +1,6 @@
+.turbo
 .react-router
-build
+dist
 node_modules
 README.md
+.env.example
