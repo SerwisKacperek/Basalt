@@ -1,24 +1,17 @@
 import { Elysia, t } from 'elysia';
 
 import type { Db } from '../../shared/factories/db.factory';
+import type { IController } from '../../shared/interfaces/controller.base';
 import { errorHandler } from '../../shared/middleware';
-import { WorkspaceRepository } from './workspace.repository';
-import { WorkspaceService } from './workspace.service';
+import { WorkspaceBody, WorkspaceResponse, WorkspaceUpdateBody } from '../../schema/tables/workspaces/workspace.schema';
 import { WorkspaceController } from './workspace.controller';
+import { WorkspaceService } from './workspace.service';
+import { WorkspaceRepository } from './workspace.repository';
 
-const WorkspaceBody = t.Object({ name: t.String({ minLength: 1 }) });
-const WorkspaceResponse = t.Object({
-  id: t.String(),
-  name: t.String(),
-  createdAt: t.Date(),
-  updatedAt: t.Date(),
-  deletedAt: t.Nullable(t.Date()),
-});
-
-export const createWorkspaceRoutes = (db: Db) => {
-  const controller = new WorkspaceController(
-    new WorkspaceService(new WorkspaceRepository(db)),
-  );
+export const createWorkspaceRoutes = (
+  db: Db,
+  controller: IController<'workspaces'> = new WorkspaceController(new WorkspaceService(new WorkspaceRepository(db))),
+) => {
 
   return new Elysia({ prefix: '/workspaces' })
     .use(errorHandler)
@@ -31,14 +24,14 @@ export const createWorkspaceRoutes = (db: Db) => {
     })
     .post('/', ({ body, set }) => {
       set.status = 201;
-      return controller.create(body);
+      return controller.create(body as any);
     }, {
       body: WorkspaceBody,
       response: { 201: WorkspaceResponse },
     })
-    .patch('/:id', ({ params, body }) => controller.update(params.id, body), {
+    .patch('/:id', ({ params, body }) => controller.update(params.id, body as any), {
       params: t.Object({ id: t.String() }),
-      body: t.Partial(WorkspaceBody),
+      body: WorkspaceUpdateBody,
       response: WorkspaceResponse,
     })
     .delete('/:id', ({ params }) => controller.remove(params.id), {
