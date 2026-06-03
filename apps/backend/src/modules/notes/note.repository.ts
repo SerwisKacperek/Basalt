@@ -1,10 +1,10 @@
 import { eq } from 'drizzle-orm';
 
-import type { Select, Insert } from '@/schema/types';
-import type { IRepository } from "@/shared/interfaces/repository.base";
-import type { Db as Database } from '@/shared/factories/db.factory';
-import { buildConditions, Filters, unwrap } from '@/shared/utils';
-import { schema } from '@/shared/factories/schema.factory';
+import type { Select, Insert } from '../../schema/types';
+import type { IRepository } from '../../shared/interfaces/repository.base';
+import type { Db as Database } from '../../shared/factories/db.factory';
+import { buildConditions, Filters, unwrap } from '../../shared/utils';
+import { schema } from '../../shared/factories/schema.factory';
 
 export class NoteRepository implements IRepository<'notes'> {
   constructor(private db: Database) { }

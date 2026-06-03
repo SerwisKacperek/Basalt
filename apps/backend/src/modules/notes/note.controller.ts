@@ -1,6 +1,6 @@
-import type { Select, Insert } from '@/schema/types';
-import type { IController } from '@/shared/interfaces/controller.base';
-import type { Filters } from '@/shared/utils';
+import type { Select, Insert } from '../../schema/types';
+import type { IController } from '../../shared/interfaces/controller.base';
+import type { Filters } from '../../shared/utils';
 import type { NoteService } from './note.service';
 
 export class NoteController implements IController<'notes'> {
