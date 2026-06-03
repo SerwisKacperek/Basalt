@@ -38,6 +38,7 @@ export const errorHandler = new Elysia({ name: 'error-handler' })
       return { message: 'Internal server error' };
     }
 
+    console.error('[unhandled error]', error);
     set.status = 500;
     return { message: 'Internal server error' };
   });
