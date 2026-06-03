@@ -32,19 +32,20 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
- const apiBase = isDev 
-    ? 'http://localhost' 
-    : process.env.API_URL ?? 'http://localhost';
-
+  const apiBase = isDev 
+     ? 'http://localhost' 
+     : process.env.API_URL ?? 'http://localhost';
+ 
   const webRoot = path.join(__dirname, 'web')
   const vaultRoot = path.join(app.getPath('userData'), 'vault')
-  
+   
   handleAppProtocol(webRoot)
   handleApiProtocol(apiBase)
   handleVaultProtocol(vaultRoot)
-
-  registerIpc(createMainRegistry())
-
+ 
+  
+  registerIpc(createMainRegistry(vaultRoot))
+ 
   createWindow()
 })
 

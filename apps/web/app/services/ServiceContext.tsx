@@ -1,8 +1,10 @@
 import { createContext, useContext, type ReactNode } from "react";
 import type { IDiagnosticsService } from "@basalt/core/interfaces/IDiagnosticsService";
+import type { IStorageService } from "@basalt/core/interfaces/IStorageService";
 
 export interface ServiceRegistry {
   diagnostics: IDiagnosticsService;
+  storage: IStorageService;
 }
 
 const ServiceContext = createContext<ServiceRegistry | null>(null);

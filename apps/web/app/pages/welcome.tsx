@@ -1,5 +1,6 @@
 import logoLight from "~/assets/icons/logo-light.svg";
 import logoDark from "~/assets/icons/logo-dark.svg";
+import {SomePage} from "~/pages/some";
 
 export function Welcome() {
   return (
@@ -27,6 +28,9 @@ export function Welcome() {
             <ul>
               <li>
                 <a href="test">test</a>
+              </li>
+              <li>
+                <SomePage />
               </li>
               <li>
                 <a
