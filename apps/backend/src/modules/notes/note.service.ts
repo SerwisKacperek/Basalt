@@ -1,8 +1,8 @@
-import type { Select, Insert } from '@/schema/types';
-import type { IService } from "@/shared/interfaces/service.base";
+import type { Select, Insert } from '../../schema/types';
+import type { IService } from '../../shared/interfaces/service.base';
 import type { NoteRepository } from "./note.repository";
-import type { Filters } from '@/shared/utils';
-import { NotFoundException } from "@/shared/errors";
+import type { Filters } from '../../shared/utils';
+import { NotFoundException } from '../../shared/errors';
 
 export class NoteService implements IService<'notes'> {
   constructor(private repository: NoteRepository) { }

@@ -1,7 +1,7 @@
 import { t } from 'elysia';
 import { createInsertSchema, createSelectSchema, createUpdateSchema } from 'drizzle-typebox';
 
-import { schema } from '@/shared/factories/schema.factory';
+import { schema } from '../../../shared/factories/schema.factory';
 
 const createNoteSelectSchema: any = createSelectSchema;
 const createNoteInsertSchema: any = createInsertSchema;

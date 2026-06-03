@@ -1,9 +1,9 @@
 import { Elysia, t } from 'elysia';
 
-import type { Db } from '@/shared/factories/db.factory';
-import type { IController } from '@/shared/interfaces/controller.base';
-import { errorHandler } from '@/shared/middleware';
-import { NoteBody, NoteResponse, NoteUpdateBody } from '@/schema/tables/notes/notes.schema';
+import type { Db } from '../../shared/factories/db.factory';
+import type { IController } from '../../shared/interfaces/controller.base';
+import { errorHandler } from '../../shared/middleware';
+import { NoteBody, NoteResponse, NoteUpdateBody } from '../../schema/tables/notes/notes.schema';
 import { NoteController } from './note.controller';
 import { NoteService } from './note.service';
 import { NoteRepository } from './note.repository';
