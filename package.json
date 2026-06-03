@@ -23,6 +23,7 @@
     "packages/*"
   ],
   "dependencies": {
-    "eslint": "^10.4.0"
+    "eslint": "^10.4.0",
+    "drizzle-typebox": "^0.3.3"
   }
 }
