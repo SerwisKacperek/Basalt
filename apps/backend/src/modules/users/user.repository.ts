@@ -9,6 +9,16 @@ import { schema } from '../../shared/factories/schema.factory';
 export class UserRepository implements IRepository<'users'> {
   constructor(private db: Database) { }
 
+  findByEmail(
+    email: string
+  ): Promise<Select<'users'> | null> {
+    return this.db
+      .query
+      .users
+      .findFirst({ where: (u) => eq(u.email, email) })
+      .then(row => row ?? null);
+  }
+
   findById(
     id: string
   ): Promise<Select<'users'> | null> {
@@ -20,7 +30,7 @@ export class UserRepository implements IRepository<'users'> {
   }
 
   findAll(
-    filters: Filters<Select<'users'>>
+    filters?: Filters<Select<'users'>>
   ): Promise<Select<'users'>[]> {
     return this.db
       .select()

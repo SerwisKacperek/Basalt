@@ -2,7 +2,7 @@ import type { Select, Insert } from '../../schema/types';
 import type { IService } from '../../shared/interfaces/service.base';
 import type { UserRepository } from "./user.repository";
 import type { Filters } from '../../shared/utils';
-import { NotFoundException } from '../../shared/errors';
+import { NotFoundException, ConflictException } from '../../shared/errors';
 
 export class UserService implements IService<'users'> {
   constructor(private repository: UserRepository) { }
@@ -25,6 +25,14 @@ export class UserService implements IService<'users'> {
     dto: Insert<'users'>
   ): Promise<Select<'users'>> {
     return this.repository.create(dto);
+  }
+
+  async register(email: string, password: string): Promise<Select<'users'>> {
+    const existing = await this.repository.findByEmail(email);
+    if (existing) throw new ConflictException(`Email '${email}' already in use`);
+
+    const hashed = await Bun.password.hash(password);
+    return this.repository.create({ email, password: hashed });
   }
 
   async update(

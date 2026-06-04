@@ -3,7 +3,7 @@ import type { IController } from '../../shared/interfaces/controller.base';
 import type { Filters } from '../../shared/utils';
 import type { UserService } from './user.service';
 
-export class NoteController implements IController<'users'> {
+export class UserController implements IController<'users'> {
   constructor(private service: UserService) { }
 
   getById(id: string): Promise<Select<'users'>> {
@@ -20,6 +20,10 @@ export class NoteController implements IController<'users'> {
     body: Insert<'users'>
   ): Promise<Select<'users'>> {
     return this.service.create(body);
+  }
+
+  register(email: string, password: string): Promise<Select<'users'>> {
+    return this.service.register(email, password);
   }
 
   update(
