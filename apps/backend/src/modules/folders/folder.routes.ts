@@ -12,7 +12,7 @@ export const createFolderRoutes = (
   db: Db,
   controller: IController<'folders'> = new FolderController(new FolderService(new FolderRepository(db)))
 ) => {
-  return new Elysia({ prefix: '/folders ' })
+  return new Elysia({ prefix: '/folders' })
     .use(errorHandler)
     .get('/', () => controller.getAll(), {
       response: t.Array(FolderResponse),
