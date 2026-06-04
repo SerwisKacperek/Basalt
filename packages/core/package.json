@@ -2,7 +2,11 @@
   "name": "@basalt/core",
   "type": "module",
   "exports": {
-    "./interfaces/*": "./src/interfaces/*.ts"
+    "./interfaces/*": "./src/interfaces/*.ts",
+    "./db/*": "./src/db/*.ts"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.45.2"
   },
   "dependencies": {
     "@basalt/api": "*"

@@ -1,8 +1,10 @@
 import { createContext, useContext, type ReactNode } from "react";
 import type { IDiagnosticsService } from "@basalt/core/interfaces/IDiagnosticsService";
+import type { IEditorPersistenceService } from "@basalt/core/interfaces/IEditorPersistenceService";
 
 export interface ServiceRegistry {
   diagnostics: IDiagnosticsService;
+  editorPersistence: IEditorPersistenceService;
 }
 
 const ServiceContext = createContext<ServiceRegistry | null>(null);

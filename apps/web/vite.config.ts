@@ -7,6 +7,11 @@ import { VitePWA } from "vite-plugin-pwa";
 export default defineConfig(() => {
   const target = (process.env.VITE_TARGET ?? "web") as "web" | "electron";
 
+  const coopCoepHeaders = {
+    "Cross-Origin-Opener-Policy": "same-origin",
+    "Cross-Origin-Embedder-Policy": "require-corp",
+  };
+
   return {
     base: target === "electron" ? "./" : "/",
     define: {
@@ -29,6 +34,8 @@ export default defineConfig(() => {
         },
       }),
     ],
+    server: { headers: coopCoepHeaders },
+    preview: { headers: coopCoepHeaders },
     resolve: {
       alias: {
         "~": fileURLToPath(new URL("./app", import.meta.url)),

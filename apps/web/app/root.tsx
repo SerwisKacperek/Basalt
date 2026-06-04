@@ -1,8 +1,13 @@
 import { Outlet, isRouteErrorResponse, useRouteError } from "react-router";
+import { ThemeProvider } from "@basalt/ui";
 import "./app.css";
 
 export default function Root() {
-  return <Outlet />;
+  return (
+    <ThemeProvider defaultTheme="system" storageKey="basalt-ui-theme">
+      <Outlet />
+    </ThemeProvider>
+  );
 }
 
 export function ErrorBoundary() {
