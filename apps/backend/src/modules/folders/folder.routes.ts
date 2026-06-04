@@ -5,8 +5,8 @@ import type { IController } from '../../shared/interfaces/controller.base';
 import { FolderController } from './folder.controller';
 import { FolderService } from './folder.service';
 import { FolderRepository } from './folder.repository';
-import { errorHandler } from '@/shared/middleware';
-import { FolderBody, FolderResponse } from '@/schema/tables/folders/folders.schema';
+import { errorHandler } from '../../shared/middleware';
+import { FolderBody, FolderResponse } from '../../schema/tables/folders/folders.schema';
 
 export const createFolderRoutes = (
   db: Db,

@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import type { Select, Insert } from '../../schema/types';
 import type { Db as Database } from '../../shared/factories/db.factory';
 import { buildConditions, Filters, unwrap } from '../../shared/utils';
-import { IRepository } from "@/shared/interfaces/repository.base";
+import { IRepository } from "../../shared/interfaces/repository.base";
 import { schema } from '../../shared/factories/schema.factory';
 
 export class FolderRepository implements IRepository<'folders'> {
