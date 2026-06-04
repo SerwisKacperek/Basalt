@@ -21,35 +21,50 @@ export function Sidebar() {
   const [activeNote, setActiveNote] = useState("1");
   const [isPrivateOpen, setIsPrivateOpen] = useState(true);
   const [isTeamsOpen, setIsTeamsOpen] = useState(true);
+  const [width, setWidth] = useState(240);
+
+  const initResize = (mouseDownEvent: React.MouseEvent) => {
+    mouseDownEvent.preventDefault();
+    const doResize = (mouseMoveEvent: MouseEvent) => {
+      const newWidth = mouseMoveEvent.clientX;
+      if (newWidth >= 200 && newWidth <= 500) setWidth(newWidth);
+    };
+    const stopResize = () => {
+      window.removeEventListener("mousemove", doResize);
+      window.removeEventListener("mouseup", stopResize);
+    };
+    window.addEventListener("mousemove", doResize);
+    window.addEventListener("mouseup", stopResize);
+  };
 
   return (
-    <aside className="flex flex-col h-screen max-w-[500px] bg-sidebar border-r border-primary text-text select-none">
+    <aside style={{ width: `${width}px` }} className="relative flex flex-col h-screen overflow-hidden bg-sidebar border-r border-primary select-none shrink-0">
       
       <div className="flex items-center justify-between p-4 border-b border-primary">
         <div className="flex items-center gap-4 text-text/70">
           <button className="hover:text-primary transition-colors cursor-pointer">
-            <Search size={30} />
+            <Search size={25} />
           </button>
           <button className="hover:text-primary transition-colors cursor-pointer">
-            <Plus size={30} />
+            <Plus size={25} />
           </button>
           <button className="hover:text-primary transition-colors cursor-pointer">
-            <Inbox size={30} />
+            <Inbox size={25} />
           </button>
         </div>
         <button className="text-text/50 hover:text-primary transition-colors cursor-pointer">
-          <PanelLeftClose size={30} />
+          <PanelLeftClose size={25} />
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto py-4 px-2 space-y-6 scrollbar-none">
+      <div className="flex-1 overflow-y-auto p-4 space-y-6 scrollbar-none">
         
         <div>
           <button 
             onClick={() => setIsPrivateOpen(!isPrivateOpen)}
-            className="flex items-center gap-1 w-full text-left text-xs font-bold tracking-wider text-primary mb-2 px-2 uppercase hover:opacity-80 cursor-pointer"
+            className="flex items-center gap-1 w-full text-sm font-bold tracking-wider text-primary mb-3 px-2 uppercase cursor-pointer"
           >
-            {isPrivateOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+            {isPrivateOpen ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
             Private
           </button>
           
@@ -61,7 +76,7 @@ export function Sidebar() {
                   <li key={note.id}>
                     <button
                       onClick={() => setActiveNote(note.id)}
-                      className={`flex items-center gap-2 w-full text-left px-4 py-1.5 text-sm rounded-sm transition-colors cursor-pointer
+                      className={`flex items-center gap-2 w-full text-left px-4 py-1.5 text-sm transition-colors cursor-pointer
                         ${isActive 
                           ? "bg-primary/20 text-text font-medium" 
                           : "text-text/80 hover:bg-primary/5 hover:text-text"
@@ -80,9 +95,9 @@ export function Sidebar() {
         <div>
           <button 
             onClick={() => setIsTeamsOpen(!isTeamsOpen)}
-            className="flex items-center gap-1 w-full text-left text-xs font-bold tracking-wider text-primary mb-2 px-2 uppercase hover:opacity-80 cursor-pointer"
+            className="flex items-center gap-1 w-full text-left text-sm font-bold tracking-wider text-primary mb-3 px-2 uppercase cursor-pointer"
           >
-            {isTeamsOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+            {isTeamsOpen ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
             Teamspaces
           </button>
           
@@ -101,18 +116,21 @@ export function Sidebar() {
 
       </div>
 
-      <div className="border-t border-primary/20 p-4 flex items-center justify-between bg-sidebar">
+      <div className="border-t border-primary p-4 flex items-center justify-between bg-sidebar">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center text-primary">
-            <User size={30} />
+            <User size={25} />
           </div>
-          <span className="text-sm font-medium text-text/90">Username</span>
+          <span className="text-sm font-medium">Username</span>
         </div>
-        <button className="text-text/60 hover:text-primary transition-colors cursor-pointer">
-          <Settings size={30} />
+        <button className=" hover:text-primary transition-colors cursor-pointer">
+          <Settings size={25} />
         </button>
       </div>
-
+      <div 
+        onMouseDown={initResize} 
+        className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/40 active:bg-primary transition-colors z-50 translate-x-[3px]"
+      />
     </aside>
   );
 }
