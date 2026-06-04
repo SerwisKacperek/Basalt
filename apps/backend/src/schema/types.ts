@@ -7,3 +7,6 @@ export type AppSchema = {
     $inferInsert: InferInsertModel<typeof pgSchema[K]>;
   };
 };
+
+export type Select<K extends keyof typeof pgSchema> = InferSelectModel<typeof pgSchema[K]>;
+export type Insert<K extends keyof typeof pgSchema> = InferInsertModel<typeof pgSchema[K]>;
