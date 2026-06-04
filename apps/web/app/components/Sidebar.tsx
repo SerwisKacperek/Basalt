@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import {Search, Plus, Inbox, PanelLeftClose, Settings, User, ChevronDown, ChevronRight} from "lucide-react";
+import {Search, Plus, Inbox, PanelLeftClose, PanelLeftOpen, Settings, User, ChevronDown, ChevronRight} from "lucide-react";
 
 const PRIVATE_NOTES = [
   { id: "1", title: "First Note" },
@@ -22,6 +22,7 @@ export function Sidebar() {
   const [isPrivateOpen, setIsPrivateOpen] = useState(true);
   const [isTeamsOpen, setIsTeamsOpen] = useState(true);
   const [width, setWidth] = useState(240);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const initResize = (mouseDownEvent: React.MouseEvent) => {
     mouseDownEvent.preventDefault();
@@ -36,6 +37,19 @@ export function Sidebar() {
     window.addEventListener("mousemove", doResize);
     window.addEventListener("mouseup", stopResize);
   };
+
+  if (isCollapsed) {
+    return (
+      <div className="fixed top-4 left-4 z-50 animate-in fade-in duration-200">
+        <button 
+          onClick={() => setIsCollapsed(false)}
+          className="p-2 bg-sidebar border border-primary text-text/70 hover:text-primary rounded-md transition-colors cursor-pointer shadow-md flex items-center justify-center"
+        >
+          <PanelLeftOpen size={25} />
+        </button>
+      </div>
+    );
+  }
 
   return (
     <aside style={{ width: `${width}px` }} className="relative flex flex-col h-screen overflow-hidden bg-sidebar border-r border-primary select-none shrink-0">
@@ -52,7 +66,7 @@ export function Sidebar() {
             <Inbox size={25} />
           </button>
         </div>
-        <button className="text-text/50 hover:text-primary transition-colors cursor-pointer">
+        <button onClick={() => setIsCollapsed(true)} className="text-text/50 hover:text-primary transition-colors cursor-pointer">
           <PanelLeftClose size={25} />
         </button>
       </div>
