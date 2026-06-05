@@ -54,5 +54,6 @@ export function buildRendererBridge(): RendererServiceBridge {
           merged,
         ) as Promise<void>,
 
-  };
+  }
+}
 }
