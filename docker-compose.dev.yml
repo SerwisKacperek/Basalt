@@ -1,0 +1,18 @@
+services:
+  postgres:
+    build:
+      context: ./services/postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secret}
+      BASALT_DB_NAME: ${BASALT_DB_NAME:-basalt}
+      BASALT_DB_USER: ${BASALT_DB_USER:-basalt_admin}
+      BASALT_DB_PASSWORD: ${BASALT_DB_PASSWORD:-basalt_app_secret}
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql
+
+volumes:
+  postgres_dev_data: {}

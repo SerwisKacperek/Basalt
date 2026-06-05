@@ -1,36 +1,47 @@
 {
-  "name": "web",
+  "name": "@basalt/web",
   "private": true,
   "type": "module",
   "scripts": {
-    "build:web": "VITE_TARGET=web && vite build",
-    "build:electron": "VITE_TARGET=electron && vite build",
+    "build": "cross-env VITE_TARGET=web vite build",
+    "build:electron": "cross-env VITE_TARGET=electron vite build",
     "dev": "vite",
+    "dev:electron": "cross-env VITE_TARGET=electron vite --port 5174 --strictPort",
     "preview": "vite preview",
-    "check-types": "tsc",
+    "check-types": "tsc --noEmit",
     "lint": "eslint ."
   },
   "dependencies": {
     "@basalt/api": "*",
     "@basalt/core": "*",
     "@basalt/ui": "*",
-    "@elysiajs/eden": "latest",
+    "@sqlite.org/sqlite-wasm": "^3.50.1-build1",
+    "@tiptap/extension-collaboration": "^2.10.3",
+    "@tiptap/extension-placeholder": "^2.10.3",
+    "@tiptap/pm": "^2.10.3",
+    "@tiptap/react": "^2.10.3",
+    "@tiptap/starter-kit": "^2.10.3",
+    "drizzle-orm": "^0.45.2",
+    "lucide-react": "^1.17.0",
     "react": "latest",
     "react-dom": "latest",
-    "react-router": "7.15.0"
+    "react-router": "7.15.0",
+    "yjs": "^13.6.20"
   },
   "devDependencies": {
     "@repo/eslint-config": "*",
-    "elysia": "latest",
     "@repo/typescript-config": "*",
+    "@tailwindcss/typography": "^0.5.19",
     "@tailwindcss/vite": "^4.2.2",
     "@types/node": "^22",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.0",
+    "cross-env": "^7",
     "eslint": "^9.39.1",
     "tailwindcss": "^4.2.2",
     "typescript": "^5.9.3",
-    "vite": "^8.0.3"
+    "vite": "^8.0.3",
+    "vite-plugin-pwa": "^1.3.0"
   }
 }

@@ -1,9 +1,13 @@
 import logoLight from "~/assets/icons/logo-light.svg";
 import logoDark from "~/assets/icons/logo-dark.svg";
+import { ModeToggle } from "@basalt/ui";
 
 export function Welcome() {
   return (
     <main className="flex items-center justify-center pt-16 pb-4">
+      <div className="fixed top-4 right-4">
+        <ModeToggle />
+      </div>
       <div className="flex-1 flex flex-col items-center gap-16 min-h-0">
         <header className="flex flex-col items-center gap-9">
           <div className="w-125 max-w-[100vw] p-4">
@@ -25,7 +29,25 @@ export function Welcome() {
               What&apos;s next?
             </p>
             <ul>
-              <a href="test">test</a>
+              <li>
+                <a href="test">test</a>
+              </li>
+              <li>
+                <a
+                  href="example"
+                  className="group flex items-center gap-3 self-stretch p-3 leading-normal text-blue-700 hover:underline dark:text-blue-500"
+                >
+                  shadcn example
+                </a>
+              </li>
+              <li>
+                <a
+                  href="editor"
+                  className="group flex items-center gap-3 self-stretch p-3 leading-normal text-blue-700 hover:underline dark:text-blue-500"
+                >
+                  editor
+                </a>
+              </li>
               {resources.map(({ href, text, icon }) => (
                 <li key={href}>
                   <a
