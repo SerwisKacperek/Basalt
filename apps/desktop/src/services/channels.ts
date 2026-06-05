@@ -10,4 +10,8 @@ export const CHANNELS = {
     appendUpdate: "svc:editor:appendUpdate",
     compact: "svc:editor:compact",
   },
-} as const;
+  preferences: {
+    save: "svc:preferences:save",
+    get: "svc:preferences:get",
+  },
+} as const

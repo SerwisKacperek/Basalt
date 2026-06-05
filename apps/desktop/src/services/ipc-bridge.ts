@@ -4,17 +4,23 @@ import type {
   EditorDocument,
   IEditorPersistenceService,
 } from "@basalt/core/interfaces/IEditorPersistenceService";
+import { IPreferencesService } from "./PreferencesService"; 
 import { CHANNELS } from "./channels";
 
 export interface RendererServiceBridge {
   diagnostics: IDiagnosticsService;
   editorPersistence: IEditorPersistenceService;
+  preferences: IPreferencesService; 
 }
 
 export function buildRendererBridge(): RendererServiceBridge {
   return {
     diagnostics: {
       healthcheck: () => ipcRenderer.invoke(CHANNELS.diagnostics.healthcheck),
+    },
+     preferences: { 
+      save: (data) => ipcRenderer.invoke(CHANNELS.preferences.save, data),
+      get: () => ipcRenderer.invoke(CHANNELS.preferences.get),
     },
     editorPersistence: {
       listDocuments: () =>
@@ -47,6 +53,6 @@ export function buildRendererBridge(): RendererServiceBridge {
           id,
           merged,
         ) as Promise<void>,
-    },
+
   };
 }
