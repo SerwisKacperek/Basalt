@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Collaboration from "@tiptap/extension-collaboration";
+import Placeholder from "@tiptap/extension-placeholder";
 import * as Y from "yjs";
 import { useServices } from "~/services/ServiceContext";
+import { EditorToolbar } from "./EditorToolbar";
 
 const COMPACT_AFTER_UPDATES = 100;
 const COMPACT_IDLE_MS = 30_000;
@@ -70,8 +72,16 @@ export function EditorView({ id }: { id: string }) {
   const editor = useEditor(
     {
       extensions: [
-        StarterKit.configure({ history: false }),
+        StarterKit.configure({
+          history: false,
+          heading: { levels: [1, 2, 3] },
+          codeBlock: { HTMLAttributes: { spellcheck: "false" } },
+        }),
         Collaboration.configure({ document: doc }),
+        Placeholder.configure({
+          placeholder:
+            "Start writing… use Markdown: # heading, - bullet, 1. list, ``` code, **bold**, *italic*",
+        }),
       ],
       editorProps: {
         attributes: {
@@ -84,11 +94,12 @@ export function EditorView({ id }: { id: string }) {
   );
 
   if (!ready || !editor) {
-    return <div className="p-4 text-gray-500">Loading…</div>;
+    return <div className="p-4 text-muted-foreground">Loading…</div>;
   }
 
   return (
-    <div className="border border-gray-200 dark:border-gray-700 rounded-lg">
+    <div className="border border-border rounded-lg overflow-hidden">
+      <EditorToolbar editor={editor} />
       <EditorContent editor={editor} />
     </div>
   );
