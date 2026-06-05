@@ -40,6 +40,7 @@ export default defineConfig(() => {
       alias: {
         "~": fileURLToPath(new URL("./app", import.meta.url)),
       },
+      dedupe: ["react", "react-dom"],
       conditions: [target, "browser", "module", "import"],
     },
     build: {
