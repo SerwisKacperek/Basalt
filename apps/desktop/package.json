@@ -6,7 +6,7 @@
   "main": "dist/main.js",
   "private": true,
   "scripts": {
-    "build:web": "cross-env OUT_DIR=.dist/web bun run --filter @basalt/web build:electron",
+    "build:web": "cross-env OUT_DIR=../desktop/dist/web bun run --filter @basalt/web build:electron",
     "build:main": "electron-vite build",
     "build:sources": "bun run build:web && bun run build:main",
     "build": "bun run build:sources && electron-builder",
