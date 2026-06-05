@@ -2,7 +2,13 @@ import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
 import { createDb } from "./shared/factories/db.factory";
 
-import { healthcheckRoutes, createWorkspaceRoutes, createNoteRoutes, createUserRoutes } from "./modules";
+import {
+  healthcheckRoutes,
+  createWorkspaceRoutes,
+  createNoteRoutes,
+  createUserRoutes,
+  createFolderRoutes
+} from "./modules";
 
 const db = createDb();
 
@@ -12,7 +18,8 @@ export const createApp = () =>
     .use(healthcheckRoutes)
     .use(createWorkspaceRoutes(db))
     .use(createNoteRoutes(db))
-    .use(createUserRoutes(db));
+    .use(createUserRoutes(db))
+    .use(createFolderRoutes(db));
 
 export type App = ReturnType<typeof createApp>;
 
