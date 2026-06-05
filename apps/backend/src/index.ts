@@ -6,6 +6,7 @@ import {
   healthcheckRoutes,
   createWorkspaceRoutes,
   createNoteRoutes,
+  createUserRoutes,
   createFolderRoutes
 } from "./modules";
 
@@ -17,6 +18,7 @@ export const createApp = () =>
     .use(healthcheckRoutes)
     .use(createWorkspaceRoutes(db))
     .use(createNoteRoutes(db))
+    .use(createUserRoutes(db))
     .use(createFolderRoutes(db));
 
 export type App = ReturnType<typeof createApp>;
