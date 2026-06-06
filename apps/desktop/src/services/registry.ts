@@ -15,11 +15,10 @@ export interface MainServiceRegistry {
 
 export function createMainRegistry(vaultRoot: string): MainServiceRegistry {
   const dbPath = path.join(app.getPath("userData"), "basalt-editor.db");
-  const db = openEditorDb(dbPath);
+  const { db, reset } = openEditorDb(dbPath);
   return {
     diagnostics: new DiagnosticsService(),
-    editorPersistence: new EditorPersistenceService(db),
+    editorPersistence: new EditorPersistenceService(db, reset),
     preferences: new PreferencesService(vaultRoot),
-
   };
 }

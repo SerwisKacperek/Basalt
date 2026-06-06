@@ -6,7 +6,7 @@
   "main": "dist/main.js",
   "private": true,
   "scripts": {
-    "build:web": "cross-env OUT_DIR=.dist/web bun run --filter @basalt/web build:electron",
+    "build:web": "cross-env OUT_DIR=../desktop/dist/web bun run --filter @basalt/web build:electron",
     "build:main": "electron-vite build",
     "build:sources": "bun run build:web && bun run build:main",
     "build": "bun run build:sources && electron-builder",
@@ -24,12 +24,14 @@
   },
   "dependencies": {
     "@basalt/core": "*",
+    "@basalt/db": "*",
     "better-sqlite3": "^12.4.1",
     "drizzle-orm": "^0.45.2"
   },
   "devDependencies": {
     "@repo/eslint-config": "*",
     "@repo/typescript-config": "*",
+    "@types/better-sqlite3": "^7.6.11",
     "@types/bun": "latest",
     "@types/node": "^25.6.0",
     "concurrently": "^9",

@@ -9,6 +9,7 @@ export const CHANNELS = {
     loadUpdates: "svc:editor:loadUpdates",
     appendUpdate: "svc:editor:appendUpdate",
     compact: "svc:editor:compact",
+    reset: "svc:editor:reset",
   },
   preferences: {
     save: "svc:preferences:save",

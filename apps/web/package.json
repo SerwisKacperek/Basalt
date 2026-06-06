@@ -14,6 +14,7 @@
   "dependencies": {
     "@basalt/api": "*",
     "@basalt/core": "*",
+    "@basalt/db": "*",
     "@basalt/ui": "*",
     "@sqlite.org/sqlite-wasm": "^3.50.1-build1",
     "@tiptap/extension-collaboration": "^2.10.3",

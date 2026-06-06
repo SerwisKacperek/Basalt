@@ -1,4 +1,4 @@
-import { app, BrowserWindow, protocol } from 'electron'
+import { app, BrowserWindow, protocol, session } from 'electron'
 import path from 'path'
 
 import { appScheme, handleAppProtocol } from './protocols/app-protocol'
@@ -22,7 +22,7 @@ function createWindow() {
       nodeIntegration: false,
       sandbox: true,
     },
-  }) 
+  })
   if (isDev) {
     win.loadURL(devServerUrl)
     win.webContents.openDevTools({ mode: 'detach' })
@@ -31,21 +31,25 @@ function createWindow() {
   }
 }
 
-app.whenReady().then(() => {
-  const apiBase = isDev 
-     ? 'http://localhost' 
-     : process.env.API_URL ?? 'http://localhost';
- 
+app.whenReady().then(async () => {
+  const apiBase = isDev
+    ? 'http://localhost'
+    : process.env.API_URL ?? 'http://localhost';
+
+  await session.defaultSession.clearStorageData({
+    storages: ['serviceworkers', 'cachestorage'],
+  })
+
   const webRoot = path.join(__dirname, 'web')
   const vaultRoot = path.join(app.getPath('userData'), 'vault')
-   
+
   handleAppProtocol(webRoot)
   handleApiProtocol(apiBase)
   handleVaultProtocol(vaultRoot)
- 
-  
+
+
   registerIpc(createMainRegistry(vaultRoot))
- 
+
   createWindow()
 })
 

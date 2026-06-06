@@ -20,19 +20,26 @@ export default defineConfig(() => {
     plugins: [
       tailwindcss(),
       react(),
-      VitePWA({
-        manifest: false,
-        includeAssets: [
-          "favicon.ico",
-          "apple-touch-icon.png",
-          "mask-icon.svg",
-          "manifest.webmanifest",
-        ],
-        strategies: "generateSW",
-        workbox: {
-          globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
-        },
-      }),
+      // A service worker is only meaningful for the web target. In the packaged
+      // Electron app (served over the custom app:// protocol) it precaches and
+      // intercepts requests, which breaks asset/route loading after a build.
+      ...(target === "web"
+        ? [
+            VitePWA({
+              manifest: false,
+              includeAssets: [
+                "favicon.ico",
+                "apple-touch-icon.png",
+                "mask-icon.svg",
+                "manifest.webmanifest",
+              ],
+              strategies: "generateSW",
+              workbox: {
+                globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
+              },
+            }),
+          ]
+        : []),
     ],
     server: { headers: coopCoepHeaders },
     preview: { headers: coopCoepHeaders },
