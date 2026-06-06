@@ -1,73 +1,15 @@
-import { useEffect, useRef, useState } from "react";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Collaboration from "@tiptap/extension-collaboration";
 import Placeholder from "@tiptap/extension-placeholder";
-import * as Y from "yjs";
-import { useServices } from "~/services/ServiceContext";
+import { Button } from "@basalt/ui";
 import { EditorToolbar } from "./EditorToolbar";
-
-const COMPACT_AFTER_UPDATES = 100;
-const COMPACT_IDLE_MS = 30_000;
+import { EditorStatusBar } from "./EditorStatusBar";
+import { useNoteDocument } from "./useNoteDocument";
 
 export function EditorView({ id }: { id: string }) {
-  const { editorPersistence } = useServices();
-  const [doc] = useState(() => new Y.Doc());
-  const [ready, setReady] = useState(false);
-  const updateCountRef = useRef(0);
-  const compactTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const skipNextLocalUpdate = useRef(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    editorPersistence.loadUpdates(id).then((updates) => {
-      if (cancelled) return;
-      skipNextLocalUpdate.current = true;
-      Y.transact(
-        doc,
-        () => {
-          for (const u of updates) Y.applyUpdate(doc, u);
-        },
-        "load",
-      );
-      skipNextLocalUpdate.current = false;
-      setReady(true);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [id, doc, editorPersistence]);
-
-  useEffect(() => {
-    const scheduleCompact = () => {
-      if (compactTimerRef.current) clearTimeout(compactTimerRef.current);
-      compactTimerRef.current = setTimeout(() => {
-        const merged = Y.encodeStateAsUpdate(doc);
-        editorPersistence.compact(id, merged).catch(console.error);
-        updateCountRef.current = 0;
-      }, COMPACT_IDLE_MS);
-    };
-
-    const onUpdate = (update: Uint8Array, origin: unknown) => {
-      if (origin === "load") return;
-      editorPersistence.appendUpdate(id, update).catch(console.error);
-      updateCountRef.current++;
-      if (updateCountRef.current >= COMPACT_AFTER_UPDATES) {
-        if (compactTimerRef.current) clearTimeout(compactTimerRef.current);
-        const merged = Y.encodeStateAsUpdate(doc);
-        editorPersistence.compact(id, merged).catch(console.error);
-        updateCountRef.current = 0;
-      } else {
-        scheduleCompact();
-      }
-    };
-
-    doc.on("update", onUpdate);
-    return () => {
-      doc.off("update", onUpdate);
-      if (compactTimerRef.current) clearTimeout(compactTimerRef.current);
-    };
-  }, [id, doc, editorPersistence]);
+  const { doc, ready, loadError, status, error, retry, reload } =
+    useNoteDocument(id);
 
   const editor = useEditor(
     {
@@ -93,6 +35,21 @@ export function EditorView({ id }: { id: string }) {
     [doc],
   );
 
+  if (loadError) {
+    return (
+      <div className="border border-border rounded-lg p-6 space-y-3">
+        <p className="text-red-600 dark:text-red-400">
+          Couldn’t load this note: {loadError.message}
+        </p>
+        <p className="text-sm text-muted-foreground">
+          The local database may be busy or out of date. Retry, or rebuild the
+          database from the documents list.
+        </p>
+        <Button onClick={reload}>Retry</Button>
+      </div>
+    );
+  }
+
   if (!ready || !editor) {
     return <div className="p-4 text-muted-foreground">Loading…</div>;
   }
@@ -101,6 +58,7 @@ export function EditorView({ id }: { id: string }) {
     <div className="border border-border rounded-lg overflow-hidden">
       <EditorToolbar editor={editor} />
       <EditorContent editor={editor} />
+      <EditorStatusBar status={status} error={error} onRetry={retry} />
     </div>
   );
 }

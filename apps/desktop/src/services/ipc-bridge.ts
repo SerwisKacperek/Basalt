@@ -1,7 +1,7 @@
 import { ipcRenderer } from "electron";
 import type { IDiagnosticsService } from "@basalt/core/interfaces/IDiagnosticsService";
 import type {
-  EditorDocument,
+  EditorNote,
   IEditorPersistenceService,
 } from "@basalt/core/interfaces/IEditorPersistenceService";
 import { IPreferencesService } from "./PreferencesService"; 
@@ -23,16 +23,16 @@ export function buildRendererBridge(): RendererServiceBridge {
       get: () => ipcRenderer.invoke(CHANNELS.preferences.get),
     },
     editorPersistence: {
-      listDocuments: () =>
+      listNotes: () =>
         ipcRenderer.invoke(CHANNELS.editorPersistence.list) as Promise<
-          EditorDocument[]
+          EditorNote[]
         >,
-      createDocument: (title: string) =>
+      createNote: (name: string) =>
         ipcRenderer.invoke(
           CHANNELS.editorPersistence.create,
-          title,
-        ) as Promise<EditorDocument>,
-      deleteDocument: (id: string) =>
+          name,
+        ) as Promise<EditorNote>,
+      deleteNote: (id: string) =>
         ipcRenderer.invoke(CHANNELS.editorPersistence.delete, id) as Promise<void>,
       loadUpdates: async (id: string) => {
         const rows = (await ipcRenderer.invoke(
@@ -53,7 +53,8 @@ export function buildRendererBridge(): RendererServiceBridge {
           id,
           merged,
         ) as Promise<void>,
-
-  }
-}
+      reset: () =>
+        ipcRenderer.invoke(CHANNELS.editorPersistence.reset) as Promise<void>,
+    },
+  };
 }

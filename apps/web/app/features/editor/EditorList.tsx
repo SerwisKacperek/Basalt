@@ -1,18 +1,20 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
-import type { EditorDocument } from "@basalt/core/interfaces/IEditorPersistenceService";
+import type { EditorNote } from "@basalt/core/interfaces/IEditorPersistenceService";
 import { Button, Input } from "@basalt/ui";
 import { useServices } from "~/services/ServiceContext";
 
 export function EditorList() {
   const { editorPersistence } = useServices();
-  const [docs, setDocs] = useState<EditorDocument[] | null>(null);
+  const [docs, setDocs] = useState<EditorNote[] | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [title, setTitle] = useState("Untitled");
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [rebuildOpen, setRebuildOpen] = useState(false);
+  const [rebuilding, setRebuilding] = useState(false);
 
   const refresh = () => {
-    editorPersistence.listDocuments().then(setDocs).catch(console.error);
+    editorPersistence.listNotes().then(setDocs).catch(console.error);
   };
 
   useEffect(() => {
@@ -29,7 +31,7 @@ export function EditorList() {
     const trimmed = title.trim();
     if (!trimmed) return;
     setCreateOpen(false);
-    await editorPersistence.createDocument(trimmed);
+    await editorPersistence.createNote(trimmed);
     refresh();
   };
 
@@ -37,15 +39,34 @@ export function EditorList() {
     if (!deleteId) return;
     const id = deleteId;
     setDeleteId(null);
-    await editorPersistence.deleteDocument(id);
+    await editorPersistence.deleteNote(id);
     refresh();
+  };
+
+  const confirmRebuild = async () => {
+    setRebuilding(true);
+    try {
+      await editorPersistence.reset();
+      setDocs([]);
+      refresh();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setRebuilding(false);
+      setRebuildOpen(false);
+    }
   };
 
   return (
     <div className="max-w-2xl mx-auto p-6 space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Documents</h1>
-        <Button onClick={openCreate}>New document</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setRebuildOpen(true)}>
+            Rebuild DB
+          </Button>
+          <Button onClick={openCreate}>New document</Button>
+        </div>
       </div>
       {docs === null ? (
         <p className="text-muted-foreground">Loading…</p>
@@ -59,7 +80,7 @@ export function EditorList() {
                 to={`/editor/${d.id}`}
                 className="text-blue-700 dark:text-blue-400 hover:underline flex-1"
               >
-                {d.title}
+                {d.name}
               </Link>
               <span className="text-xs text-muted-foreground mr-3">
                 {new Date(d.updatedAt).toLocaleString()}
@@ -119,6 +140,32 @@ export function EditorList() {
             </Button>
             <Button variant="destructive" onClick={confirmDelete}>
               Delete
+            </Button>
+          </div>
+        </Modal>
+      )}
+
+      {rebuildOpen && (
+        <Modal onClose={() => setRebuildOpen(false)} title="Rebuild database?">
+          <p className="text-muted-foreground mb-4">
+            This wipes the local database and recreates it from scratch. All
+            documents on this device will be permanently deleted. Use this to
+            recover from a corrupt or stale database.
+          </p>
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setRebuildOpen(false)}
+              disabled={rebuilding}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmRebuild}
+              disabled={rebuilding}
+            >
+              {rebuilding ? "Rebuilding…" : "Rebuild"}
             </Button>
           </div>
         </Modal>
