@@ -1,4 +1,16 @@
-import { blob, index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import {
+  customType,
+  index,
+  integer,
+  sqliteTable,
+  text,
+} from "drizzle-orm/sqlite-core";
+
+const bytes = customType<{ data: Uint8Array; driverData: Uint8Array }>({
+  dataType: () => "blob",
+  fromDriver: (value) => new Uint8Array(value),
+  toDriver: (value) => value,
+});
 
 export const notes = sqliteTable("notes", {
   id: text("id")
@@ -19,9 +31,7 @@ export const noteUpdates = sqliteTable(
     noteId: text("note_id")
       .notNull()
       .references(() => notes.id, { onDelete: "cascade" }),
-    updateBlob: blob("update_blob", { mode: "buffer" })
-      .$type<Uint8Array>()
-      .notNull(),
+    updateBlob: bytes("update_blob").notNull(),
     createdAt: integer("created_at").notNull(),
   },
   (t) => [index("idx_note_updates_note").on(t.noteId, t.id)],

@@ -148,7 +148,7 @@ export class EditorPersistenceService implements IEditorPersistenceService {
       .from(noteUpdates)
       .where(eq(noteUpdates.noteId, id))
       .orderBy(asc(noteUpdates.id));
-    return rows.map((r) => new Uint8Array(r.updateBlob));
+    return rows.map((r) => r.updateBlob);
   }
 
   async appendUpdate(id: string, update: Uint8Array): Promise<void> {

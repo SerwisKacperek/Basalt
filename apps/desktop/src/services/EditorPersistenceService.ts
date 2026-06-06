@@ -60,15 +60,14 @@ export class EditorPersistenceService implements IEditorPersistenceService {
       .where(eq(noteUpdates.noteId, id))
       .orderBy(asc(noteUpdates.id))
       .all();
-    return rows.map((r) => new Uint8Array(r.updateBlob));
+    return rows.map((r) => r.updateBlob);
   }
 
   async appendUpdate(id: string, update: Uint8Array): Promise<void> {
     const now = Date.now();
-    const buf = Buffer.from(update);
     this.db.transaction((tx) => {
       tx.insert(noteUpdates)
-        .values({ noteId: id, updateBlob: buf, createdAt: now })
+        .values({ noteId: id, updateBlob: update, createdAt: now })
         .run();
       tx.update(notes).set({ updatedAt: now }).where(eq(notes.id, id)).run();
     });
@@ -76,11 +75,10 @@ export class EditorPersistenceService implements IEditorPersistenceService {
 
   async compact(id: string, mergedUpdate: Uint8Array): Promise<void> {
     const now = Date.now();
-    const buf = Buffer.from(mergedUpdate);
     this.db.transaction((tx) => {
       tx.delete(noteUpdates).where(eq(noteUpdates.noteId, id)).run();
       tx.insert(noteUpdates)
-        .values({ noteId: id, updateBlob: buf, createdAt: now })
+        .values({ noteId: id, updateBlob: mergedUpdate, createdAt: now })
         .run();
       tx.update(notes).set({ updatedAt: now }).where(eq(notes.id, id)).run();
     });
