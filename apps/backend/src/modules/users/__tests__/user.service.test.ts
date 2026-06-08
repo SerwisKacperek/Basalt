@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
 import { UserService } from '../user.service';
-import { NotFoundException, ConflictException } from '../../../shared/errors';
+import { NotFoundException, ConflictException } from '@basalt/domain';
 
 beforeAll(() => {
   vi.stubGlobal('Bun', {

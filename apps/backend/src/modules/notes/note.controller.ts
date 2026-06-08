@@ -1,7 +1,6 @@
-import type { Select, Insert } from '../../schema/types';
+import type { Select, Insert, Filters } from '@basalt/domain';
 import type { IController } from '../../shared/interfaces/controller.base';
-import type { Filters } from '../../shared/utils';
-import type { NoteService } from './note.service';
+import type { NoteService } from '@basalt/domain';
 
 export class NoteController implements IController<'notes'> {
   constructor(private service: NoteService) { }

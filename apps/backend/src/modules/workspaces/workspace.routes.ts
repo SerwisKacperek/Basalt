@@ -2,15 +2,15 @@ import { Elysia, t } from 'elysia';
 
 import type { Db } from '../../shared/factories/db.factory';
 import type { IController } from '../../shared/interfaces/controller.base';
+import { schema } from '../../shared/factories/schema.factory';
 import { errorHandler } from '../../shared/middleware';
 import { WorkspaceBody, WorkspaceResponse, WorkspaceUpdateBody } from '../../schema/tables/workspaces/workspace.schema';
 import { WorkspaceController } from './workspace.controller';
-import { WorkspaceService } from './workspace.service';
-import { WorkspaceRepository } from './workspace.repository';
+import { WorkspaceService, WorkspaceRepository } from '@basalt/domain';
 
 export const createWorkspaceRoutes = (
   db: Db,
-  controller: IController<'workspaces'> = new WorkspaceController(new WorkspaceService(new WorkspaceRepository(db))),
+  controller: IController<'workspaces'> = new WorkspaceController(new WorkspaceService(new WorkspaceRepository(db as any, schema))),
 ) => {
 
   return new Elysia({ prefix: '/workspaces' })

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { createFolderRoutes } from '@/modules/folders/folder.routes';
-import { NotFoundException } from '@/shared/errors';
+import { NotFoundException } from '@basalt/domain';
 
 const db = null as any;
 

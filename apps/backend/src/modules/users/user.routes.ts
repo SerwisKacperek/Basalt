@@ -1,15 +1,16 @@
 import { Elysia, t } from 'elysia';
 
 import type { Db } from '../../shared/factories/db.factory';
+import { schema } from '../../shared/factories/schema.factory';
 import { errorHandler } from '../../shared/middleware';
 import { UserResponse, UserRegisterBody, UserUpdateBody } from '../../schema/tables/users/users.schema';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
-import { UserRepository } from './user.repository';
+import { UserRepository } from '@basalt/domain';
 
 export const createUserRoutes = (
   db: Db,
-  controller: UserController = new UserController(new UserService(new UserRepository(db))),
+  controller: UserController = new UserController(new UserService(new UserRepository(db as any, schema))),
 ) => {
   return new Elysia({ prefix: '/users' })
     .use(errorHandler)

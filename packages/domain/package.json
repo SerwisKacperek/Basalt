@@ -1,0 +1,16 @@
+{
+  "name": "@basalt/domain",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema/pg": "./src/schema/adapters/pg.ts",
+    "./schema/sqlite": "./src/schema/adapters/sqlite.ts"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.45.2"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "*",
+    "@types/pg": "^8.20.0"
+  }
+}

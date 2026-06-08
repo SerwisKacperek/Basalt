@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { createUserRoutes } from '../user.routes';
-import { ConflictException, NotFoundException } from '../../../shared/errors';
+import { ConflictException, NotFoundException } from '@basalt/domain';
 
 const mockUser = {
   id: 'user-1',

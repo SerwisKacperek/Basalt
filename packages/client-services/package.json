@@ -1,0 +1,18 @@
+{
+  "name": "@basalt/client-services",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@basalt/api": "*",
+    "@basalt/core": "*",
+    "@basalt/domain": "*"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "*"
+  }
+}

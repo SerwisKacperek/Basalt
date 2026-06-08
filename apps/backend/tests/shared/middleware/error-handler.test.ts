@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { Elysia, t, NotFoundError, InternalServerError } from 'elysia';
 import { errorHandler } from '@/shared/middleware/error-handler';
-import { HttpException } from '@/shared/errors/http.exception';
+import { DomainException } from '@basalt/domain';
 
 const app = new Elysia()
   .use(errorHandler)
-  .get('/http-exception', () => { throw new HttpException(403, 'Forbidden'); })
+  .get('/http-exception', () => { throw new DomainException(403, 'Forbidden'); })
   .get('/not-found', () => { throw new NotFoundError('Resource not found'); })
   .get('/internal', () => { throw new InternalServerError(); })
   .get('/generic', () => { throw new Error('boom'); })
@@ -14,12 +14,12 @@ const app = new Elysia()
   });
 
 describe('errorHandler', () => {
-  it('handles HttpException with correct status', async () => {
+  it('handles DomainException with correct status', async () => {
     const res = await app.handle(new Request('http://localhost/http-exception'));
     expect(res.status).toBe(403);
   });
 
-  it('handles HttpException with correct message body', async () => {
+  it('handles DomainException with correct message body', async () => {
     const res = await app.handle(new Request('http://localhost/http-exception'));
     expect(await res.json()).toEqual({ message: 'Forbidden' });
   });

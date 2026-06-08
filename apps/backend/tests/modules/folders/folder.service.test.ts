@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { FolderService } from '@/modules/folders/folder.service';
-import { NotFoundException } from '@/shared/errors';
+import { FolderService, NotFoundException } from '@basalt/domain';
 
 const folder = {
   id: '1',

@@ -23,15 +23,18 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@basalt/api": "*",
+    "@basalt/client-services": "*",
     "@basalt/core": "*",
     "@basalt/db": "*",
+    "@basalt/domain": "*",
     "better-sqlite3": "^12.4.1",
     "drizzle-orm": "^0.45.2"
   },
   "devDependencies": {
     "@repo/eslint-config": "*",
     "@repo/typescript-config": "*",
-    "@types/better-sqlite3": "^7.6.11",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/bun": "latest",
     "@types/node": "^25.6.0",
     "concurrently": "^9",
