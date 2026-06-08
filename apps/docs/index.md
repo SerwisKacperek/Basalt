@@ -12,6 +12,9 @@ hero:
     - theme: alt
       text: View on GitHub
       link: https://github.com/SerwisKacperek/Basalt
+  image:
+    src: /icon.svg
+    alt: Basalt
 
 features:
   - icon: 📝
