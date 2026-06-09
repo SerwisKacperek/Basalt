@@ -1,10 +1,12 @@
-import { asc, desc, eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { drizzle, type SqliteRemoteDatabase } from "drizzle-orm/sqlite-proxy";
 import type {
-  EditorDocument,
+  EditorNote,
   IEditorPersistenceService,
 } from "@basalt/core/interfaces/IEditorPersistenceService";
-import { documentUpdates, documents } from "@basalt/core/db/editor-schema";
+import type { INoteService } from "@basalt/core/interfaces/INoteService";
+import type { Select } from "@basalt/domain";
+import { noteUpdates, notes as editorNotes } from "@basalt/db/schema";
 
 type SqlMethod = "all" | "get" | "values" | "run";
 
@@ -22,6 +24,10 @@ type WorkerReq =
       reqId: number;
       kind: "batch";
       queries: { sql: string; params: unknown[]; method: SqlMethod }[];
+    }
+  | {
+      reqId: number;
+      kind: "reset";
     };
 
 type WorkerRes =
@@ -91,73 +97,79 @@ function makeDb(client: WorkerClient): SqliteRemoteDatabase {
   );
 }
 
+function toEditorNote(note: Select<"notes">): EditorNote {
+  return {
+    id: note.id,
+    name: note.name,
+    folderId: note.folder_id ?? null,
+    workspaceId: note.workspace_id ?? null,
+    createdAt: note.createdAt.getTime(),
+    updatedAt: note.updatedAt.getTime(),
+  };
+}
+
 export class EditorPersistenceService implements IEditorPersistenceService {
   private db: SqliteRemoteDatabase;
+  private client: WorkerClient;
 
-  constructor() {
-    this.db = makeDb(new WorkerClient());
+  constructor(private noteService: INoteService) {
+    this.client = new WorkerClient();
+    this.db = makeDb(this.client);
   }
 
-  async listDocuments(): Promise<EditorDocument[]> {
-    return this.db
-      .select({
-        id: documents.id,
-        title: documents.title,
-        createdAt: documents.createdAt,
-        updatedAt: documents.updatedAt,
-      })
-      .from(documents)
-      .orderBy(desc(documents.updatedAt));
+  async reset(): Promise<void> {
+    await this.client.send({ kind: "reset" });
   }
 
-  async createDocument(title: string): Promise<EditorDocument> {
-    const id = crypto.randomUUID();
+  async listNotes(): Promise<EditorNote[]> {
+    const notes = await this.noteService.findAll();
+    return notes.map(toEditorNote);
+  }
+
+  async createNote(name: string): Promise<EditorNote> {
+    const domainNote = await this.noteService.create({ name });
     const now = Date.now();
-    await this.db
-      .insert(documents)
-      .values({ id, title, createdAt: now, updatedAt: now });
-    return { id, title, createdAt: now, updatedAt: now };
+    await this.db.insert(editorNotes).values({
+      id: domainNote.id,
+      name: domainNote.name,
+      createdAt: now,
+      updatedAt: now,
+    });
+    return toEditorNote(domainNote);
   }
 
-  async deleteDocument(id: string): Promise<void> {
-    await this.db.delete(documents).where(eq(documents.id, id));
+  async deleteNote(id: string): Promise<void> {
+    await this.db.delete(editorNotes).where(eq(editorNotes.id, id));
+    await this.noteService.delete(id);
   }
 
   async loadUpdates(id: string): Promise<Uint8Array[]> {
     const rows = await this.db
-      .select({ updateBlob: documentUpdates.updateBlob })
-      .from(documentUpdates)
-      .where(eq(documentUpdates.documentId, id))
-      .orderBy(asc(documentUpdates.id));
-    return rows.map((r) => new Uint8Array(r.updateBlob));
+      .select({ updateBlob: noteUpdates.updateBlob })
+      .from(noteUpdates)
+      .where(eq(noteUpdates.noteId, id))
+      .orderBy(asc(noteUpdates.id));
+    return rows.map((r) => r.updateBlob);
   }
 
   async appendUpdate(id: string, update: Uint8Array): Promise<void> {
     const now = Date.now();
     await this.db.batch([
       this.db
-        .insert(documentUpdates)
-        .values({ documentId: id, updateBlob: update, createdAt: now }),
-      this.db
-        .update(documents)
-        .set({ updatedAt: now })
-        .where(eq(documents.id, id)),
+        .insert(noteUpdates)
+        .values({ noteId: id, updateBlob: update, createdAt: now }),
+      this.db.update(editorNotes).set({ updatedAt: now }).where(eq(editorNotes.id, id)),
     ]);
   }
 
   async compact(id: string, mergedUpdate: Uint8Array): Promise<void> {
     const now = Date.now();
     await this.db.batch([
+      this.db.delete(noteUpdates).where(eq(noteUpdates.noteId, id)),
       this.db
-        .delete(documentUpdates)
-        .where(eq(documentUpdates.documentId, id)),
-      this.db
-        .insert(documentUpdates)
-        .values({ documentId: id, updateBlob: mergedUpdate, createdAt: now }),
-      this.db
-        .update(documents)
-        .set({ updatedAt: now })
-        .where(eq(documents.id, id)),
+        .insert(noteUpdates)
+        .values({ noteId: id, updateBlob: mergedUpdate, createdAt: now }),
+      this.db.update(editorNotes).set({ updatedAt: now }).where(eq(editorNotes.id, id)),
     ]);
   }
 }

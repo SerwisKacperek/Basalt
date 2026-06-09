@@ -1,0 +1,24 @@
+{
+  "name": "@basalt/db",
+  "type": "module",
+  "exports": {
+    "./schema": "./src/schema.ts",
+    "./migrate": "./src/migrate.ts",
+    "./migrations-bundle": "./src/migrations-bundle.ts",
+    "./migrations/*": "./migrations/*"
+  },
+  "scripts": {
+    "generate": "drizzle-kit generate",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.45.2"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "*",
+    "@repo/typescript-config": "*",
+    "drizzle-kit": "^0.31.1",
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,6 +1,6 @@
-import type { Select, Insert } from '../../schema/types';
-import type { schema as pgSchema } from '../../schema/adapters/pg';
-import type { Filters } from '../utils/filters';
+import type { Select, Insert } from '@basalt/domain';
+import type { schema as pgSchema } from '@basalt/domain/schema/pg';
+import type { Filters } from '@basalt/domain';
 
 export interface IController<K extends keyof typeof pgSchema> {
   getById(id: string): Promise<Select<K>>;

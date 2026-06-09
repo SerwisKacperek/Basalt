@@ -11,14 +11,17 @@ const dialectConfigs = {
   },
 } as const;
 
-const adapterName = { postgresql: 'pg', sqlite: 'sqlite' } as const;
+const schemaPath = {
+  postgresql: '../../packages/domain/src/schema/adapters/pg.ts',
+  sqlite: '../../packages/domain/src/schema/adapters/sqlite.ts',
+} as const;
 
 type Dialect = keyof typeof dialectConfigs;
 const dialect = (process.env.DB_DIALECT ?? 'postgresql') as Dialect;
 
 export default defineConfig({
   ...dialectConfigs[dialect],
-  schema: `./src/schema/index.${adapterName[dialect]}.ts`,
+  schema: schemaPath[dialect],
   out: './db/migrations',
   verbose: true,
   strict: true,

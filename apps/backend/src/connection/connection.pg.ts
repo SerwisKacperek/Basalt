@@ -1,7 +1,7 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from 'pg';
 
-import { schema } from "../schema/adapters/pg";
+import { schema } from "@basalt/domain/schema/pg";
 
 export function createDb(connectionString: string) {
   const pool = new Pool({ connectionString });

@@ -1,24 +1,24 @@
 import { describe, it, expect } from 'vitest';
-import { HttpException } from '@/shared/errors/http.exception';
+import { DomainException } from '@basalt/domain';
 
-describe('HttpException', () => {
+describe('DomainException', () => {
   it('sets statusCode', () => {
-    expect(new HttpException(400, 'Bad request').statusCode).toBe(400);
+    expect(new DomainException(400, 'Bad request').statusCode).toBe(400);
   });
 
   it('sets message', () => {
-    expect(new HttpException(400, 'Bad request').message).toBe('Bad request');
+    expect(new DomainException(400, 'Bad request').message).toBe('Bad request');
   });
 
-  it('sets name to HttpException', () => {
-    expect(new HttpException(500, 'err').name).toBe('HttpException');
+  it('sets name to DomainException', () => {
+    expect(new DomainException(500, 'err').name).toBe('DomainException');
   });
 
   it('is instanceof Error', () => {
-    expect(new HttpException(400, 'err')).toBeInstanceOf(Error);
+    expect(new DomainException(400, 'err')).toBeInstanceOf(Error);
   });
 
   it('preserves arbitrary status codes', () => {
-    expect(new HttpException(418, "I'm a teapot").statusCode).toBe(418);
+    expect(new DomainException(418, "I'm a teapot").statusCode).toBe(418);
   });
 });
