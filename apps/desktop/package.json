@@ -28,6 +28,7 @@
     "@basalt/db": "*",
     "@basalt/domain": "*",
     "better-sqlite3": "^12.4.1",
+    "dotenv": "^16",
     "drizzle-orm": "^0.45.2"
   },
   "devDependencies": {

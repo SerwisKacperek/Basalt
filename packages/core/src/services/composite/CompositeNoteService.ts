@@ -45,4 +45,30 @@ export class CompositeNoteService implements INoteService {
       );
     }
   }
+
+  /** Pull remote state and reconcile local. Remote is source of truth. */
+  async sync(): Promise<void> {
+    if (!this.remote) return;
+    const [remoteNotes, localNotes] = await Promise.all([
+      this.remote.findAll(),
+      this.local.findAll(),
+    ]);
+    const localIds = new Set(localNotes.map((n) => n.id));
+    const remoteIds = new Set(remoteNotes.map((n) => n.id));
+
+    for (const note of remoteNotes) {
+      const { id, ...fields } = note;
+      if (localIds.has(id)) {
+        await this.local.update(id, fields as Partial<Insert<"notes">>);
+      } else {
+        await this.local.create(note as Insert<"notes">);
+      }
+    }
+
+    for (const note of localNotes) {
+      if (!remoteIds.has(note.id)) {
+        await this.local.delete(note.id);
+      }
+    }
+  }
 }

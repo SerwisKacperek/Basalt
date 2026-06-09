@@ -14,25 +14,25 @@ export class RemoteFolderService implements IFolderService {
   }
 
   async findById(id: string): Promise<Select<"folders">> {
-    const { data, error } = await this.api.api.folders({ id }).get();
+    const { data, error } = await (this.api as any).api.folders[id].get();
     if (error || !data) throw new NotFoundException("Folder", id);
     return data as Select<"folders">;
   }
 
   async create(dto: Insert<"folders">): Promise<Select<"folders">> {
-    const { data, error } = await this.api.api.folders.post({ body: dto });
+    const { data, error } = await (this.api as any).api.folders.post(dto);
     if (error || !data) throw new Error(`Remote folders.create failed: ${String(error)}`);
     return data as Select<"folders">;
   }
 
   async update(id: string, dto: Partial<Insert<"folders">>): Promise<Select<"folders">> {
-    const { data, error } = await this.api.api.folders({ id }).patch({ body: dto });
+    const { data, error } = await (this.api as any).api.folders[id].patch(dto);
     if (error || !data) throw new NotFoundException("Folder", id);
     return data as Select<"folders">;
   }
 
   async delete(id: string): Promise<void> {
-    const { error } = await this.api.api.folders({ id }).delete();
+    const { error } = await (this.api as any).api.folders[id].delete();
     if (error) throw new NotFoundException("Folder", id);
   }
 }

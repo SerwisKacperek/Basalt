@@ -32,7 +32,11 @@ export function createRegistry(): ServiceRegistry {
   const remoteFolders = new RemoteFolderService(apiClient);
   const remoteWorkspaces = new RemoteWorkspaceService(apiClient);
 
-  const compositeNotes = injected?.notes ?? new CompositeNoteService(localNotes, remoteNotes);
+  const compositeNotes = new CompositeNoteService(localNotes, remoteNotes);
+
+  if (!injected) {
+    compositeNotes.sync().catch((err: unknown) => console.error("[sync] notes:", err));
+  }
 
   return {
     diagnostics: injected?.diagnostics ?? new DiagnosticsService(),
@@ -40,6 +44,6 @@ export function createRegistry(): ServiceRegistry {
     storage: injected?.storage ?? new LocalStorageService(),
     workspaces: injected?.workspaces ?? new CompositeWorkspaceService(localWorkspaces, remoteWorkspaces),
     folders: injected?.folders ?? new CompositeFolderService(localFolders, remoteFolders),
-    notes: compositeNotes,
+    notes: injected?.notes ?? compositeNotes,
   };
 }

@@ -14,25 +14,25 @@ export class RemoteNoteService implements INoteService {
   }
 
   async findById(id: string): Promise<Select<"notes">> {
-    const { data, error } = await this.api.api.notes({ id }).get();
+    const { data, error } = await (this.api as any).api.notes[id].get();
     if (error || !data) throw new NotFoundException("Note", id);
     return data as Select<"notes">;
   }
 
   async create(dto: Insert<"notes">): Promise<Select<"notes">> {
-    const { data, error } = await this.api.api.notes.post({ body: dto });
+    const { data, error } = await (this.api as any).api.notes.post(dto);
     if (error || !data) throw new Error(`Remote notes.create failed: ${String(error)}`);
     return data as Select<"notes">;
   }
 
   async update(id: string, dto: Partial<Insert<"notes">>): Promise<Select<"notes">> {
-    const { data, error } = await this.api.api.notes({ id }).patch({ body: dto });
+    const { data, error } = await (this.api as any).api.notes[id].patch(dto);
     if (error || !data) throw new NotFoundException("Note", id);
     return data as Select<"notes">;
   }
 
   async delete(id: string): Promise<void> {
-    const { error } = await this.api.api.notes({ id }).delete();
+    const { error } = await (this.api as any).api.notes[id].delete();
     if (error) throw new NotFoundException("Note", id);
   }
 }
