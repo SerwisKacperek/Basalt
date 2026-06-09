@@ -38,9 +38,16 @@ export interface MainServiceRegistry {
   notes: INoteService;
 }
 
+function resolveApiUrl(): string | null {
+  const base = process.env.API_URL;
+  const port = process.env.API_PORT;
+  if (!base && !port) return null;
+  if (base && port && !/:\d+$/.test(base)) return `${base}:${port}`;
+  return base ?? (port ? `http://localhost:${port}` : null);
+}
+
 function createApiClient() {
-  const url = process.env.API_URL
-    ?? (process.env.API_PORT ? `http://localhost:${process.env.API_PORT}` : null);
+  const url = resolveApiUrl();
   return url ? clientFactory(url) : null;
 }
 
@@ -61,9 +68,10 @@ export function createMainRegistry(vaultRoot: string): MainServiceRegistry {
   const remoteNotes = apiClient ? new RemoteNoteService(apiClient) : null;
 
   const compositeNotes = new CompositeNoteService(localNotes, remoteNotes);
+  compositeNotes.sync().catch((err) => console.error("[sync] notes:", err));
 
   return {
-    diagnostics: new DiagnosticsService(),
+    diagnostics: new DiagnosticsService(apiClient),
     editorPersistence: new EditorPersistenceService(db, reset, compositeNotes),
     preferences: new PreferencesService(vaultRoot),
     workspaces: new CompositeWorkspaceService(localWorkspaces, remoteWorkspaces),
