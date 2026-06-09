@@ -9,8 +9,8 @@ export const notes = pgTable(
   'notes',
   {
     id: uuid('id').primaryKey().default(sql`uuidv7()`),
-    folder_id: uuid('folder_id').notNull().references(() => folders.id),
-    workspace_id: uuid('workspace_id').notNull().references(() => workspaces.id),
+    folder_id: uuid('folder_id').references(() => folders.id),
+    workspace_id: uuid('workspace_id').references(() => workspaces.id),
     name: varchar({ length: 255 }).notNull(),
     ...timestamps,
   }

@@ -60,12 +60,14 @@ export function createMainRegistry(vaultRoot: string): MainServiceRegistry {
   const remoteFolders = apiClient ? new RemoteFolderService(apiClient) : null;
   const remoteNotes = apiClient ? new RemoteNoteService(apiClient) : null;
 
+  const compositeNotes = new CompositeNoteService(localNotes, remoteNotes);
+
   return {
     diagnostics: new DiagnosticsService(),
-    editorPersistence: new EditorPersistenceService(db, reset),
+    editorPersistence: new EditorPersistenceService(db, reset, compositeNotes),
     preferences: new PreferencesService(vaultRoot),
     workspaces: new CompositeWorkspaceService(localWorkspaces, remoteWorkspaces),
     folders: new CompositeFolderService(localFolders, remoteFolders),
-    notes: new CompositeNoteService(localNotes, remoteNotes),
+    notes: compositeNotes,
   };
 }

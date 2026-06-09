@@ -32,12 +32,14 @@ export function createRegistry(): ServiceRegistry {
   const remoteFolders = new RemoteFolderService(apiClient);
   const remoteWorkspaces = new RemoteWorkspaceService(apiClient);
 
+  const compositeNotes = injected?.notes ?? new CompositeNoteService(localNotes, remoteNotes);
+
   return {
     diagnostics: injected?.diagnostics ?? new DiagnosticsService(),
-    editorPersistence: injected?.editorPersistence ?? new EditorPersistenceService(),
+    editorPersistence: injected?.editorPersistence ?? new EditorPersistenceService(compositeNotes),
     storage: injected?.storage ?? new LocalStorageService(),
     workspaces: injected?.workspaces ?? new CompositeWorkspaceService(localWorkspaces, remoteWorkspaces),
     folders: injected?.folders ?? new CompositeFolderService(localFolders, remoteFolders),
-    notes: injected?.notes ?? new CompositeNoteService(localNotes, remoteNotes),
+    notes: compositeNotes,
   };
 }

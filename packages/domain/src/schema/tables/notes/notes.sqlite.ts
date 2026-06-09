@@ -8,8 +8,8 @@ export const notes = sqliteTable(
   'notes',
   {
     id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
-    folder_id: text('folder_id').notNull().references(() => folders.id),
-    workspace_id: text('workspace_id').notNull().references(() => workspaces.id),
+    folder_id: text('folder_id').references(() => folders.id),
+    workspace_id: text('workspace_id').references(() => workspaces.id),
     name: text('name').notNull(),
     ...timestamps,
   }

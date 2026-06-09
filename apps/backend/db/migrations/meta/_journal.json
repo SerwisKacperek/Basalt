@@ -15,6 +15,13 @@
       "when": 1780074362809,
       "tag": "0001_opposite_the_phantom",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1781035340207,
+      "tag": "0002_fuzzy_shadowcat",
+      "breakpoints": true
     }
   ]
 }
