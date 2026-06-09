@@ -1,6 +1,7 @@
 /// <reference lib="webworker" />
 import sqlite3InitModule, { type Database } from "@sqlite.org/sqlite-wasm";
-import { DOMAIN_BOOTSTRAP_SQL } from "@basalt/domain";
+import { splitSqlStatements } from "@basalt/domain/migrate";
+import { migrations } from "@basalt/domain/migrations-bundle";
 
 type SqlMethod = "all" | "get" | "values" | "run";
 
@@ -26,22 +27,73 @@ type Res =
 
 let dbReady: Promise<Database> | null = null;
 
+const OPEN_RETRIES = 10;
+const OPEN_RETRY_DELAY_MS = 150;
+
+const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 async function openDb(): Promise<Database> {
   const sqlite3 = await sqlite3InitModule({
     print: () => {},
     printErr: (msg: string) => console.error("[sqlite-wasm:domain]", msg),
   });
-  const poolUtil = await sqlite3.installOpfsSAHPoolVfs({
-    name: "basalt-domain-pool",
-  });
-  const db = new poolUtil.OpfsSAHPoolDb("/basalt-domain.db");
-  db.exec("PRAGMA foreign_keys = ON;");
-  db.exec(DOMAIN_BOOTSTRAP_SQL);
-  return db;
+  let lastError: unknown;
+  for (let attempt = 0; attempt < OPEN_RETRIES; attempt++) {
+    try {
+      const poolUtil = await sqlite3.installOpfsSAHPoolVfs({
+        name: "basalt-domain-pool",
+      });
+      const db = new poolUtil.OpfsSAHPoolDb("/basalt-domain.db");
+      db.exec("PRAGMA foreign_keys = ON;");
+      runMigrations(db);
+      return db;
+    } catch (e) {
+      lastError = e;
+      await delay(OPEN_RETRY_DELAY_MS);
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error(String(lastError));
+}
+
+function runMigrations(db: Database): void {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS __drizzle_migrations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      tag TEXT NOT NULL UNIQUE,
+      created_at INTEGER NOT NULL
+    );
+  `);
+  for (const migration of migrations) {
+    const applied: unknown[][] = [];
+    db.exec({
+      sql: "SELECT 1 FROM __drizzle_migrations WHERE tag = ?",
+      bind: [migration.tag],
+      rowMode: "array",
+      resultRows: applied as unknown as never[],
+    });
+    if (applied.length > 0) continue;
+    db.exec("BEGIN");
+    try {
+      for (const statement of splitSqlStatements(migration.sql)) db.exec(statement);
+      db.exec({
+        sql: "INSERT INTO __drizzle_migrations (tag, created_at) VALUES (?, ?)",
+        bind: [migration.tag, Date.now()],
+      });
+      db.exec("COMMIT");
+    } catch (e) {
+      db.exec("ROLLBACK");
+      throw e;
+    }
+  }
 }
 
 function getDb(): Promise<Database> {
-  if (!dbReady) dbReady = openDb();
+  if (!dbReady) {
+    dbReady = openDb().catch((e) => {
+      dbReady = null;
+      throw e;
+    });
+  }
   return dbReady;
 }
 

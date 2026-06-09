@@ -1,16 +1,23 @@
 {
   "name": "@basalt/domain",
   "type": "module",
+  "scripts": {
+    "db:generate": "drizzle-kit generate"
+  },
   "exports": {
     ".": "./src/index.ts",
     "./schema/pg": "./src/schema/adapters/pg.ts",
-    "./schema/sqlite": "./src/schema/adapters/sqlite.ts"
+    "./schema/sqlite": "./src/schema/adapters/sqlite.ts",
+    "./migrate": "./src/migrate.ts",
+    "./migrations-bundle": "./src/migrations-bundle.ts",
+    "./migrations/*": "./migrations/*"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2"
   },
   "devDependencies": {
     "@repo/typescript-config": "*",
-    "@types/pg": "^8.20.0"
+    "@types/pg": "^8.20.0",
+    "drizzle-kit": "^0.31.1"
   }
 }
