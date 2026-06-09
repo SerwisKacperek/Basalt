@@ -55,10 +55,10 @@ export function EditorView({ id }: { id: string }) {
   }
 
   return (
-    <div className="border border-border rounded-lg overflow-hidden">
-      <EditorToolbar editor={editor} />
-      <EditorContent editor={editor} />
+    <div className="overflow-hidden">
       <EditorStatusBar status={status} error={error} onRetry={retry} />
+      <EditorContent editor={editor} />
+      <EditorToolbar editor={editor} />
     </div>
   );
 }
