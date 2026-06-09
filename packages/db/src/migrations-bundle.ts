@@ -6,7 +6,7 @@ import journal from "../migrations/meta/_journal.json";
  * Electron main process) and avoids reading from disk at runtime, which breaks
  * once the code is bundled / packaged into an asar.
  */
-const sqlFiles = import.meta.glob("../migrations/*.sql", {
+const sqlFiles = (import.meta as any).glob("../migrations/*.sql", {
   query: "?raw",
   eager: true,
   import: "default",
