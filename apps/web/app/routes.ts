@@ -5,6 +5,7 @@ import Test from "~/routes/test";
 import Example from "~/routes/example";
 import EditorList from "~/routes/editor-list";
 import Editor from "~/routes/editor";
+import Main from "~/routes/main";
 
 export const routes: RouteObject[] = [
   {
@@ -31,6 +32,10 @@ export const routes: RouteObject[] = [
       {
         path: "editor/:id",
         Component: Editor,
+      },
+      {
+        path: "main",
+        Component: Main,
       },
     ],
   },

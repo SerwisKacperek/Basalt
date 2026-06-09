@@ -55,9 +55,11 @@ export function EditorView({ id }: { id: string }) {
   }
 
   return (
-    <div className="overflow-hidden">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       <EditorStatusBar status={status} error={error} onRetry={retry} />
-      <EditorContent editor={editor} />
+      <div className="flex-1 min-h-0 overflow-auto pb-24 scrollbar-none">
+        <EditorContent editor={editor} className="h-full" />
+      </div>
       <EditorToolbar editor={editor} />
     </div>
   );
