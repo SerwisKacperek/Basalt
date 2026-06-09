@@ -12,7 +12,7 @@ export function EditorStatusBar({
   onRetry: () => void;
 }) {
   return (
-    <div className="flex items-center justify-end gap-2 border-t border-border px-4 py-1.5 text-xs text-muted-foreground">
+    <div className="flex items-center justify-end gap-2 px-4 py-1.5 text-xs text-muted-foreground">
       {status === "saving" && (
         <span className="flex items-center gap-1.5">
           <Loader2 className="h-3.5 w-3.5 animate-spin" />
