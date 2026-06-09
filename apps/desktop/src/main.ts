@@ -1,11 +1,14 @@
-import { app, BrowserWindow, protocol, session } from 'electron'
-import path from 'path'
+import { config as loadDotenv } from 'dotenv';
+import { app, BrowserWindow, protocol, session } from 'electron';
+import path from 'path';
 
-import { appScheme, handleAppProtocol } from './protocols/app-protocol'
-import { apiScheme, handleApiProtocol } from './protocols/api-protocol'
-import { vaultScheme, handleVaultProtocol } from './protocols/vault-protocol'
-import { createMainRegistry } from './services/registry'
-import { registerIpc } from './services/ipc-main'
+loadDotenv();
+
+import { appScheme, handleAppProtocol } from './protocols/app-protocol';
+import { apiScheme, handleApiProtocol } from './protocols/api-protocol';
+import { vaultScheme, handleVaultProtocol } from './protocols/vault-protocol';
+import { createMainRegistry } from './services/registry';
+import { registerIpc } from './services/ipc-main';
 
 const devServerUrl = process.env.VITE_DEV_SERVER_URL
 const isDev = !!devServerUrl
@@ -32,9 +35,12 @@ function createWindow() {
 }
 
 app.whenReady().then(async () => {
-  const apiBase = isDev
-    ? 'http://localhost'
-    : process.env.API_URL ?? 'http://localhost';
+  const apiBase = (() => {
+    const base = process.env.API_URL ?? 'http://localhost';
+    const port = process.env.API_PORT;
+    if (port && !/:\d+$/.test(base)) return `${base}:${port}`;
+    return base;
+  })();
 
   await session.defaultSession.clearStorageData({
     storages: ['serviceworkers', 'cachestorage'],

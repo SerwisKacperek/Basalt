@@ -1,6 +1,7 @@
 import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
 import { createDb } from "./shared/factories/db.factory";
+import { logger } from "./shared/middleware";
 
 import {
   healthcheckRoutes,
@@ -15,6 +16,7 @@ const db = createDb();
 export const createApp = () =>
   new Elysia({ prefix: "/api" })
     .use(cors())
+    .use(logger)
     .use(healthcheckRoutes)
     .use(createWorkspaceRoutes(db))
     .use(createNoteRoutes(db))

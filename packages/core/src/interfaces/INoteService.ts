@@ -1,12 +1,10 @@
-import type { ApiClient } from "@basalt/api";
-
-type NoteApi = ApiClient["api"]["notes"];
-type NoteItemApi = ReturnType<NoteApi>;
+import type { Select, Insert } from '@basalt/domain';
+import type { Filters } from '@basalt/domain';
 
 export interface INoteService {
-  getAll(): ReturnType<NoteApi["get"]>;
-  getById(id: string): ReturnType<NoteItemApi["get"]>;
-  create(body: { name: string; workspace_id: string; folder_id: string }): ReturnType<NoteApi["post"]>;
-  update(id: string, body: { name?: string }): ReturnType<NoteItemApi["patch"]>;
-  remove(id: string): ReturnType<NoteItemApi["delete"]>;
+  findById(id: string): Promise<Select<'notes'>>;
+  findAll(filters?: Filters<Select<'notes'>>): Promise<Select<'notes'>[]>;
+  create(dto: Insert<'notes'>): Promise<Select<'notes'>>;
+  update(id: string, dto: Partial<Insert<'notes'>>): Promise<Select<'notes'>>;
+  delete(id: string): Promise<void>;
 }

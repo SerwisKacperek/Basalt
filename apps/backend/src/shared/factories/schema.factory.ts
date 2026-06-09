@@ -1,7 +1,6 @@
-import { schema as pgSchema } from '../../schema/adapters/pg';
-import { schema as sqliteSchema } from '../../schema/adapters/sqlite';
+import { schema as pgSchema } from '@basalt/domain/schema/pg';
+import { schema as sqliteSchema } from '@basalt/domain/schema/sqlite';
 
-// Keep postgres schema as canonical typing for callers.
 export type Schema = typeof pgSchema;
 
 export function getSchema(): Schema {

@@ -1,12 +1,10 @@
-import type { ApiClient } from "@basalt/api";
-
-type UserApi = ApiClient["api"]["users"];
-type UserItemApi = ReturnType<UserApi>;
+import type { Select, Insert } from '@basalt/domain';
+import type { Filters } from '@basalt/domain';
 
 export interface IUserService {
-  register(body: { email: string; password: string }): ReturnType<UserApi["register"]["post"]>;
-  getAll(): ReturnType<UserApi["get"]>;
-  getById(id: string): ReturnType<UserItemApi["get"]>;
-  update(id: string, body: { email?: string }): ReturnType<UserItemApi["patch"]>;
-  remove(id: string): ReturnType<UserItemApi["delete"]>;
+  findById(id: string): Promise<Select<'users'>>;
+  findAll(filters?: Filters<Select<'users'>>): Promise<Select<'users'>[]>;
+  create(dto: Insert<'users'>): Promise<Select<'users'>>;
+  update(id: string, dto: Partial<Insert<'users'>>): Promise<Select<'users'>>;
+  delete(id: string): Promise<void>;
 }

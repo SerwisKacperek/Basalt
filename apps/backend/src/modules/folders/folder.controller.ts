@@ -1,7 +1,6 @@
-import type { Select, Insert } from '../../schema/types';
+import type { Select, Insert, Filters } from '@basalt/domain';
 import type { IController } from '../../shared/interfaces/controller.base';
-import type { Filters } from '../../shared/utils';
-import type { FolderService } from './folder.service';
+import type { FolderService } from '@basalt/domain';
 
 export class FolderController implements IController<'folders'> {
   constructor(private service: FolderService) { }

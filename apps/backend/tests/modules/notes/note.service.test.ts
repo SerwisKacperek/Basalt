@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { NoteService } from '@/modules/notes/note.service';
-import { NotFoundException } from '@/shared/errors';
+import { NoteService, NotFoundException } from '@basalt/domain';
 
 const note = {
   id: '1',

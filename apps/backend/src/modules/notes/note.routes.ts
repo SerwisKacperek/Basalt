@@ -2,15 +2,15 @@ import { Elysia, t } from 'elysia';
 
 import type { Db } from '../../shared/factories/db.factory';
 import type { IController } from '../../shared/interfaces/controller.base';
+import { schema } from '../../shared/factories/schema.factory';
 import { errorHandler } from '../../shared/middleware';
 import { NoteBody, NoteResponse, NoteUpdateBody } from '../../schema/tables/notes/notes.schema';
 import { NoteController } from './note.controller';
-import { NoteService } from './note.service';
-import { NoteRepository } from './note.repository';
+import { NoteService, NoteRepository } from '@basalt/domain';
 
 export const createNoteRoutes = (
   db: Db,
-  controller: IController<'notes'> = new NoteController(new NoteService(new NoteRepository(db))),
+  controller: IController<'notes'> = new NoteController(new NoteService(new NoteRepository(db as any, schema))),
 ) => {
 
   return new Elysia({ prefix: '/notes' })

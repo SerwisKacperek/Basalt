@@ -6,11 +6,11 @@ import {
   InternalServerError
 } from 'elysia';
 
-import { HttpException } from '../errors';
+import { DomainException } from '@basalt/domain';
 
 export const errorHandler = new Elysia({ name: 'error-handler' })
   .onError({ as: 'global' }, ({ error, set }) => {
-    if (error instanceof HttpException) {
+    if (error instanceof DomainException) {
       set.status = error.statusCode;
       return { message: error.message };
     }

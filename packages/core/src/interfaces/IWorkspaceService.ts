@@ -1,12 +1,10 @@
-import type { ApiClient } from "@basalt/api";
-
-type WorkspaceApi = ApiClient["api"]["workspaces"];
-type WorkspaceItemApi = ReturnType<WorkspaceApi>;
+import type { Select, Insert } from '@basalt/domain';
+import type { Filters } from '@basalt/domain';
 
 export interface IWorkspaceService {
-  getAll(): ReturnType<WorkspaceApi["get"]>;
-  getById(id: string): ReturnType<WorkspaceItemApi["get"]>;
-  create(body: { name: string }): ReturnType<WorkspaceApi["post"]>;
-  update(id: string, body: { name?: string }): ReturnType<WorkspaceItemApi["patch"]>;
-  remove(id: string): ReturnType<WorkspaceItemApi["delete"]>;
+  findById(id: string): Promise<Select<'workspaces'>>;
+  findAll(filters?: Filters<Select<'workspaces'>>): Promise<Select<'workspaces'>[]>;
+  create(dto: Insert<'workspaces'>): Promise<Select<'workspaces'>>;
+  update(id: string, dto: Partial<Insert<'workspaces'>>): Promise<Select<'workspaces'>>;
+  delete(id: string): Promise<void>;
 }

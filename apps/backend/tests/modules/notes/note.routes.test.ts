@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { createNoteRoutes } from '@/modules/notes/note.routes';
 
 const db = null as any;
-import { NotFoundException } from '@/shared/errors';
+import { NotFoundException } from '@basalt/domain';
 
 const note = {
   id: '1',
