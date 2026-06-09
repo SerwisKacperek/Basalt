@@ -13,7 +13,6 @@
   },
   "dependencies": {
     "@basalt/api": "*",
-    "@basalt/client-services": "*",
     "@basalt/core": "*",
     "@basalt/db": "*",
     "@basalt/domain": "*",

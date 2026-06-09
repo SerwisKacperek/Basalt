@@ -17,7 +17,7 @@ import {
   CompositeNoteService,
   CompositeFolderService,
   CompositeWorkspaceService,
-} from "@basalt/client-services";
+} from "@basalt/core/services";
 
 export function createRegistry(): ServiceRegistry {
   const injected = window.basalt?.services;

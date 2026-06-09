@@ -26,7 +26,7 @@ import {
   CompositeWorkspaceService,
   CompositeFolderService,
   CompositeNoteService,
-} from "@basalt/client-services";
+} from "@basalt/core/services";
 import { clientFactory } from "@basalt/api";
 
 export interface MainServiceRegistry {
