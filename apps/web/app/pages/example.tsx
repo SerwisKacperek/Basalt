@@ -106,7 +106,7 @@ export function Example() {
         <Separator />
 
         <Button variant="ghost" asChild>
-          <a href="/">← Back to home</a>
+          <a href="/debug">← Back to debug</a>
         </Button>
       </div>
     </main>

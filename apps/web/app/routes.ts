@@ -5,6 +5,7 @@ import Test from "~/routes/test";
 import Example from "~/routes/example";
 import EditorList from "~/routes/editor-list";
 import Editor from "~/routes/editor";
+import { Welcome } from "~/pages/welcome";
 
 export const routes: RouteObject[] = [
   {
@@ -14,6 +15,10 @@ export const routes: RouteObject[] = [
     children: [
       {
         index: true,
+        Component: Welcome,
+      },
+      {
+        path: "debug",
         Component: Home,
       },
       {

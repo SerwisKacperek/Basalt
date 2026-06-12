@@ -1,5 +1,5 @@
-import { Welcome } from "~/pages/welcome";
+import { DebugPage } from "~/pages/debug";
 
 export default function Home() {
-  return <Welcome />;
+  return <DebugPage />;
 }

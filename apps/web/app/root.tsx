@@ -1,11 +1,17 @@
 import { Outlet, isRouteErrorResponse, useRouteError } from "react-router";
 import { ThemeProvider } from "@basalt/ui";
+import { DebugTopbar } from "~/components/DebugTopbar";
 import "./app.css";
 
 export default function Root() {
   return (
     <ThemeProvider defaultTheme="system" storageKey="basalt-ui-theme">
-      <Outlet />
+      <div className="min-h-screen bg-background text-slate-950 dark:text-white">
+        <DebugTopbar />
+        <main className="pt-3">
+          <Outlet />
+        </main>
+      </div>
     </ThemeProvider>
   );
 }
