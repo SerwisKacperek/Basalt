@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
@@ -37,9 +36,17 @@ export function SettingsModal({ storage }: SettingsModalProps) {
     loadSettings();
   }, [storage]);
 
-  const applyTheme = (t: string) => {
-    if (t === 'dark') document.documentElement.classList.add('dark');
-    else if (t === 'light') document.documentElement.classList.remove('dark');
+
+  const applyTheme = (t: 'light' | 'dark' | 'system') => {
+    const root = document.documentElement;
+    root.classList.remove('light', 'dark');
+
+    if (t === 'system') {
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      root.classList.add(systemTheme);
+    } else {
+      root.classList.add(t);
+    }
   };
 
   const handleThemeChange = async (newTheme: 'light' | 'dark' | 'system') => {
@@ -56,7 +63,10 @@ export function SettingsModal({ storage }: SettingsModalProps) {
         </Button>
       </DialogTrigger>
       
-      <DialogContent className="sm:max-w-150 h-112.5 flex flex-col p-0 gap-0 overflow-hidden">
+      <DialogContent 
+        aria-describedby={undefined} 
+        className="sm:max-w-[600px] h-[450px] flex flex-col p-0 gap-0 overflow-hidden"
+      >
         <DialogHeader className="p-6 pb-2">
           <DialogTitle className="text-xl font-semibold">Ustawienia</DialogTitle>
         </DialogHeader>
