@@ -34,10 +34,10 @@ export function registerIpc(registry: MainServiceRegistry) {
   );
 
   ipcMain.handle(CHANNELS.preferences.save, (_, data) =>
-    registry.preferences.save(data),
+    registry.preferences.saveData("app_preferences", data),
   );
   ipcMain.handle(CHANNELS.preferences.get, () =>
-    registry.preferences.get(),
+    registry.preferences.getData("app_preferences"),
   );
 
   ipcMain.handle(CHANNELS.workspaces.findAll, (_e, filters?) =>

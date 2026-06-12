@@ -1,4 +1,4 @@
-export interface IStorageService {
-  saveData(key: string, data: any): Promise<void>;
-  getData(key: string): Promise<any>;
+export interface IStorageService <T = any >{
+  saveData(key: string, data: T): Promise<void>;
+  getData(key: string): Promise<T | null>;
 }
