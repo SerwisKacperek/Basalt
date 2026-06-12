@@ -14,18 +14,18 @@ export default function Main() {
             First Note
           </h1>
           <div className="flex items-center gap-2">
-            <p className="text-sm text-muted-foreground whitespace-nowrap">
+            <p className="text-sm text-muted-foreground whitespace-nowrap mx-2">
               Last edited: Today, 10:00 AM
             </p>
-            <Button className="mx-2">
+            <Button className="mx-0.2">
               <Share2 size={16} />
               Share
             </Button>
-            <Button className="mx-2">
+            <Button className="mx-0.2">
               <Save size={16} />
               Save
             </Button>
-            <Button className="mx-2">
+            <Button className="mx-0.2">
               <Ellipsis size={16} />
               More
             </Button>
