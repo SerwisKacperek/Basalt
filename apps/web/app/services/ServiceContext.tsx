@@ -2,11 +2,17 @@ import { createContext, useContext, type ReactNode } from "react";
 import type { IDiagnosticsService } from "@basalt/core/interfaces/IDiagnosticsService";
 import type { IEditorPersistenceService } from "@basalt/core/interfaces/IEditorPersistenceService";
 import type { IStorageService } from "@basalt/core/interfaces/IStorageService";
+import type { IWorkspaceService } from "@basalt/core/interfaces/IWorkspaceService";
+import type { IFolderService } from "@basalt/core/interfaces/IFolderService";
+import type { INoteService } from "@basalt/core/interfaces/INoteService";
 
 export interface ServiceRegistry {
   diagnostics: IDiagnosticsService;
   editorPersistence: IEditorPersistenceService;
   storage: IStorageService;
+  workspaces: IWorkspaceService;
+  folders: IFolderService;
+  notes: INoteService;
 }
 
 const ServiceContext = createContext<ServiceRegistry | null>(null);

@@ -1,16 +1,29 @@
-import { randomUUID } from "node:crypto";
-import { asc, desc, eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import type {
   EditorNote,
   IEditorPersistenceService,
 } from "@basalt/core/interfaces/IEditorPersistenceService";
-import { noteUpdates, notes } from "@basalt/db/schema";
+import type { INoteService } from "@basalt/core/interfaces/INoteService";
+import type { Select } from "@basalt/domain";
+import { noteUpdates, notes as editorNotes } from "@basalt/db/schema";
 import type { EditorDb } from "../db/connection";
+
+function toEditorNote(note: Select<"notes">): EditorNote {
+  return {
+    id: note.id,
+    name: note.name,
+    folderId: note.folder_id ?? null,
+    workspaceId: note.workspace_id ?? null,
+    createdAt: note.createdAt.getTime(),
+    updatedAt: note.updatedAt.getTime(),
+  };
+}
 
 export class EditorPersistenceService implements IEditorPersistenceService {
   constructor(
     private readonly db: EditorDb,
     private readonly resetDb: () => void,
+    private readonly noteService: INoteService,
   ) {}
 
   async reset(): Promise<void> {
@@ -18,39 +31,23 @@ export class EditorPersistenceService implements IEditorPersistenceService {
   }
 
   async listNotes(): Promise<EditorNote[]> {
-    return this.db
-      .select({
-        id: notes.id,
-        name: notes.name,
-        folderId: notes.folderId,
-        workspaceId: notes.workspaceId,
-        createdAt: notes.createdAt,
-        updatedAt: notes.updatedAt,
-      })
-      .from(notes)
-      .orderBy(desc(notes.updatedAt))
-      .all();
+    const notes = await this.noteService.findAll();
+    return notes.map(toEditorNote);
   }
 
   async createNote(name: string): Promise<EditorNote> {
-    const id = randomUUID();
+    const domainNote = await this.noteService.create({ name });
     const now = Date.now();
     this.db
-      .insert(notes)
-      .values({ id, name, createdAt: now, updatedAt: now })
+      .insert(editorNotes)
+      .values({ id: domainNote.id, name: domainNote.name, createdAt: now, updatedAt: now })
       .run();
-    return {
-      id,
-      name,
-      folderId: null,
-      workspaceId: null,
-      createdAt: now,
-      updatedAt: now,
-    };
+    return toEditorNote(domainNote);
   }
 
   async deleteNote(id: string): Promise<void> {
-    this.db.delete(notes).where(eq(notes.id, id)).run();
+    this.db.delete(editorNotes).where(eq(editorNotes.id, id)).run();
+    await this.noteService.delete(id);
   }
 
   async loadUpdates(id: string): Promise<Uint8Array[]> {
@@ -69,7 +66,7 @@ export class EditorPersistenceService implements IEditorPersistenceService {
       tx.insert(noteUpdates)
         .values({ noteId: id, updateBlob: update, createdAt: now })
         .run();
-      tx.update(notes).set({ updatedAt: now }).where(eq(notes.id, id)).run();
+      tx.update(editorNotes).set({ updatedAt: now }).where(eq(editorNotes.id, id)).run();
     });
   }
 
@@ -80,7 +77,7 @@ export class EditorPersistenceService implements IEditorPersistenceService {
       tx.insert(noteUpdates)
         .values({ noteId: id, updateBlob: mergedUpdate, createdAt: now })
         .run();
-      tx.update(notes).set({ updatedAt: now }).where(eq(notes.id, id)).run();
+      tx.update(editorNotes).set({ updatedAt: now }).where(eq(editorNotes.id, id)).run();
     });
   }
 }

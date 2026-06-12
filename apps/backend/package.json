@@ -13,6 +13,7 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@basalt/domain": "*",
     "@elysiajs/cors": "latest",
     "@sinclair/typebox": "^0.34.49",
     "better-sqlite3": "^12.10.0",

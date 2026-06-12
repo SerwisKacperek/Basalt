@@ -1,6 +1,5 @@
-import type { Select, Insert } from '../../schema/types';
+import type { Select, Insert, Filters } from '@basalt/domain';
 import type { IController } from '../../shared/interfaces/controller.base';
-import type { Filters } from '../../shared/utils';
 import type { UserService } from './user.service';
 
 export class UserController implements IController<'users'> {

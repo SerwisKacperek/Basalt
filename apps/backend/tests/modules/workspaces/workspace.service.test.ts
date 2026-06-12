@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { WorkspaceService } from '@/modules/workspaces/workspace.service';
-import { NotFoundException } from '@/shared/errors';
+import { WorkspaceService, NotFoundException } from '@basalt/domain';
 
 const ws = { id: '1', name: 'Test', createdAt: new Date(), updatedAt: new Date(), deletedAt: null };
 

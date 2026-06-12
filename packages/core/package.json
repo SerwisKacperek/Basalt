@@ -1,11 +1,17 @@
 {
   "name": "@basalt/core",
   "type": "module",
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
   "exports": {
-    "./interfaces/*": "./src/interfaces/*.ts"
+    "./interfaces/*": "./src/interfaces/*.ts",
+    "./services": "./src/services/index.ts"
   },
   "dependencies": {
-    "@basalt/api": "*"
+    "@basalt/api": "*",
+    "@basalt/domain": "*",
+    "drizzle-orm": "^0.45.2"
   },
   "devDependencies": {
     "@repo/eslint-config": "*",

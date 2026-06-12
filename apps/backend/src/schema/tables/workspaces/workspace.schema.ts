@@ -12,7 +12,7 @@ const workspaces = schema.workspaces;
 export const WorkspaceResponse = createWorkspaceSelectSchema(workspaces);
 export const WorkspaceBody = t.Pick(
   createWorkspaceInsertSchema(workspaces),
-  ['name'],
+  ['id', 'name'],
 );
 export const WorkspaceUpdateBody = t.Pick(
   createWorkspaceUpdateSchema(workspaces),

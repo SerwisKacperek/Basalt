@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { createWorkspaceRoutes } from '@/modules/workspaces/workspace.routes';
 
 const db = null as any;
-import { NotFoundException } from '@/shared/errors';
+import { NotFoundException } from '@basalt/domain';
 
 const ws = { id: '1', name: 'Test', createdAt: new Date(), updatedAt: new Date(), deletedAt: null };
 

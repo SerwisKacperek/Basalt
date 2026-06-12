@@ -2,15 +2,15 @@ import { Elysia, t } from 'elysia';
 
 import type { Db } from '../../shared/factories/db.factory';
 import type { IController } from '../../shared/interfaces/controller.base';
+import { schema } from '../../shared/factories/schema.factory';
 import { FolderController } from './folder.controller';
-import { FolderService } from './folder.service';
-import { FolderRepository } from './folder.repository';
+import { FolderService, FolderRepository } from '@basalt/domain';
 import { errorHandler } from '../../shared/middleware';
 import { FolderBody, FolderResponse } from '../../schema/tables/folders/folders.schema';
 
 export const createFolderRoutes = (
   db: Db,
-  controller: IController<'folders'> = new FolderController(new FolderService(new FolderRepository(db)))
+  controller: IController<'folders'> = new FolderController(new FolderService(new FolderRepository(db as any, schema)))
 ) => {
   return new Elysia({ prefix: '/folders' })
     .use(errorHandler)

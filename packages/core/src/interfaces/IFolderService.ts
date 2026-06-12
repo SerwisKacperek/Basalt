@@ -1,12 +1,10 @@
-import type { ApiClient } from "@basalt/api";
-
-type FolderApi = ApiClient["api"]["folders"];
-type FolderItemApi = ReturnType<FolderApi>;
+import type { Select, Insert } from '@basalt/domain';
+import type { Filters } from '@basalt/domain';
 
 export interface IFolderService {
-  getAll(): ReturnType<FolderApi["get"]>;
-  getById(id: string): ReturnType<FolderItemApi["get"]>;
-  create(body: { name: string; workspace_id: string }): ReturnType<FolderApi["post"]>;
-  update(id: string, body: { name?: string }): ReturnType<FolderItemApi["patch"]>;
-  remove(id: string): ReturnType<FolderItemApi["delete"]>;
+  findById(id: string): Promise<Select<'folders'>>;
+  findAll(filters?: Filters<Select<'folders'>>): Promise<Select<'folders'>[]>;
+  create(dto: Insert<'folders'>): Promise<Select<'folders'>>;
+  update(id: string, dto: Partial<Insert<'folders'>>): Promise<Select<'folders'>>;
+  delete(id: string): Promise<void>;
 }

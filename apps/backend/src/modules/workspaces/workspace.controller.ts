@@ -1,7 +1,6 @@
-import type { Select, Insert } from '../../schema/types';
+import type { Select, Insert, Filters } from '@basalt/domain';
 import type { IController } from '../../shared/interfaces/controller.base';
-import type { Filters } from '../../shared/utils/filters';
-import type { WorkspaceService } from './workspace.service';
+import type { WorkspaceService } from '@basalt/domain';
 
 export class WorkspaceController implements IController<'workspaces'> {
   constructor(private service: WorkspaceService) {}

@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { NotFoundException } from '@/shared/errors/not-found.exception';
-import { HttpException } from '@/shared/errors/http.exception';
+import { NotFoundException, DomainException } from '@basalt/domain';
 
 describe('NotFoundException', () => {
   it('sets statusCode 404', () => {
@@ -15,8 +14,8 @@ describe('NotFoundException', () => {
     expect(new NotFoundException('X', '1').name).toBe('NotFoundException');
   });
 
-  it('is instanceof HttpException', () => {
-    expect(new NotFoundException('X', '1')).toBeInstanceOf(HttpException);
+  it('is instanceof DomainException', () => {
+    expect(new NotFoundException('X', '1')).toBeInstanceOf(DomainException);
   });
 
   it('is instanceof Error', () => {
