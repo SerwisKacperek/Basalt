@@ -8,7 +8,7 @@ export default function Root() {
     <ThemeProvider defaultTheme="system" storageKey="basalt-ui-theme">
       <div className="min-h-screen bg-background text-slate-950 dark:text-white">
         <DebugTopbar />
-        <main className="pt-3">
+        <main>
           <Outlet />
         </main>
       </div>

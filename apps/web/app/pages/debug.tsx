@@ -40,8 +40,7 @@ export function DebugPage() {
             Dedykowana strona debug
           </h1>
           <p className="max-w-3xl text-base leading-7 text-slate-600 dark:text-slate-300">
-            Tutaj znajdziesz spis podstron testowych aplikacji. Wszystkie linki prowadzą do aktualnych stron,
-            które były wcześniej dostępne bezpośrednio z głównej strony.
+            Tutaj znajdziesz spis podstron testowych aplikacji.
           </p>
         </section>
 
