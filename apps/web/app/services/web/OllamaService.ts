@@ -1,0 +1,171 @@
+import type { IStorageService } from "@basalt/core/interfaces/IStorageService";
+
+export const DEFAULT_OLLAMA_ENDPOINT =
+  "http://localhost:11434/v1/chat/completions";
+export const DEFAULT_OLLAMA_MODEL = "llama3.2:latest";
+export const APP_SETTINGS_KEY = "app-settings";
+
+export interface AppSettings {
+  theme?: "light" | "dark" | "system";
+  ollamaEndpoint?: string;
+}
+
+export interface OllamaChatMessage {
+  role: "system" | "user" | "assistant";
+  content: string;
+}
+
+export interface OllamaChatCompletionRequest {
+  model: string;
+  messages: OllamaChatMessage[];
+  temperature: number;
+}
+
+export interface OllamaChatCompletionResponse {
+  choices?: Array<{
+    message?: {
+      role?: string;
+      content?: string;
+    };
+  }>;
+}
+
+export interface IOllamaService {
+  testConnection(): Promise<void>;
+  formatNote(content: string): Promise<string>;
+}
+
+export class OllamaError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "OllamaError";
+  }
+}
+
+export class OllamaService implements IOllamaService {
+  constructor(private readonly storage: IStorageService) {}
+
+  async testConnection(): Promise<void> {
+    await this.complete([
+      {
+        role: "system",
+        content: "Reply with exactly OK.",
+      },
+      {
+        role: "user",
+        content: "Connection test.",
+      },
+    ]);
+  }
+
+  async formatNote(content: string): Promise<string> {
+    if (!content.trim()) {
+      throw new OllamaError("Notatka jest pusta.");
+    }
+
+    const formatted = await this.complete([
+      {
+        role: "system",
+        content: [
+          "You are an expert note editor.",
+          "Correct spelling, grammar, punctuation, typos, style, and layout.",
+          "Preserve the original meaning, language, facts, links, and code.",
+          "Improve readability with short paragraphs, headings, and lists where useful.",
+          "Return only clean HTML suitable for a rich text editor.",
+          "Use only common semantic tags such as p, h1, h2, h3, ul, ol, li, strong, em, blockquote, pre, code, a, and br.",
+          "Do not include markdown fences, explanations, or commentary.",
+        ].join(" "),
+      },
+      {
+        role: "user",
+        content,
+      },
+    ]);
+
+    const cleaned = formatted
+      .replace(/^```(?:html)?\s*/i, "")
+      .replace(/\s*```$/i, "")
+      .trim();
+
+    if (!cleaned.startsWith("<")) {
+      throw new OllamaError(
+        "Ollama nie zwróciła treści w formacie obsługiwanym przez edytor.",
+      );
+    }
+
+    return cleaned;
+  }
+
+  private async complete(messages: OllamaChatMessage[]): Promise<string> {
+    const endpoint = await this.getEndpoint();
+    const body: OllamaChatCompletionRequest = {
+      model: DEFAULT_OLLAMA_MODEL,
+      messages,
+      temperature: 0.7,
+    };
+
+    let response: Response;
+    try {
+      response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer ollama",
+        },
+        body: JSON.stringify(body),
+      });
+    } catch {
+      throw new OllamaError(
+        "Nie udało się połączyć z Ollamą. Sprawdź, czy usługa działa i zezwala na połączenia z aplikacji.",
+      );
+    }
+
+    if (!response.ok) {
+      throw new OllamaError(
+        `Ollama zwróciła błąd HTTP ${response.status}. Sprawdź endpoint i dostępność modelu ${DEFAULT_OLLAMA_MODEL}.`,
+      );
+    }
+
+    let data: OllamaChatCompletionResponse;
+    try {
+      data = (await response.json()) as OllamaChatCompletionResponse;
+    } catch {
+      throw new OllamaError(
+        "Ollama zwróciła odpowiedź w nieprawidłowym formacie.",
+      );
+    }
+
+    const content = data.choices?.[0]?.message?.content;
+    if (typeof content !== "string" || !content.trim()) {
+      throw new OllamaError("Odpowiedź Ollamy nie zawiera oczekiwanej treści.");
+    }
+
+    return content;
+  }
+
+  private async getEndpoint(): Promise<string> {
+    const settings = (await this.storage.getData(
+      APP_SETTINGS_KEY,
+    )) as AppSettings | null;
+    const endpoint =
+      settings?.ollamaEndpoint === undefined
+        ? DEFAULT_OLLAMA_ENDPOINT
+        : settings.ollamaEndpoint.trim();
+
+    if (!endpoint) {
+      throw new OllamaError("Endpoint Ollamy nie może być pusty.");
+    }
+
+    try {
+      const url = new URL(endpoint);
+      if (url.protocol !== "http:" && url.protocol !== "https:") {
+        throw new Error("Unsupported protocol");
+      }
+      return url.toString();
+    } catch {
+      throw new OllamaError(
+        "Endpoint Ollamy musi być poprawnym adresem HTTP lub HTTPS.",
+      );
+    }
+  }
+}
