@@ -27,6 +27,21 @@ const DialogOverlay: React.ForwardRefExoticComponent<
 ))
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
 
+const DialogDescription: React.ForwardRefExoticComponent<
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description> & 
+  React.RefAttributes<React.ElementRef<typeof DialogPrimitive.Description>>
+> = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Description>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
+>(({ className, ...props }, ref) => (
+  <DialogPrimitive.Description
+    ref={ref}
+    className={cn("text-sm text-muted-foreground", className)}
+    {...props}
+  />
+))
+DialogDescription.displayName = DialogPrimitive.Description.displayName
+
 const DialogContent: React.ForwardRefExoticComponent<
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & 
   React.RefAttributes<React.ElementRef<typeof DialogPrimitive.Content>>
@@ -86,6 +101,20 @@ const DialogTitle: React.ForwardRefExoticComponent<
 ))
 DialogTitle.displayName = DialogPrimitive.Title.displayName
 
+const DialogFooter: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
+  className,
+  ...props
+}) => (
+  <div
+    className={cn(
+      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
+      className
+    )}
+    {...props}
+  />
+)
+DialogFooter.displayName = "DialogFooter"
+
 export {
   Dialog,
   DialogPortal,
@@ -95,4 +124,6 @@ export {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
+  DialogFooter,
 }
