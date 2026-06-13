@@ -1,7 +1,7 @@
 import type { ServiceRegistry } from "./ServiceContext";
 import { DiagnosticsService } from "./web/DiagnosticsService";
 import { EditorPersistenceService } from "./web/EditorPersistenceService";
-import { LocalStorageService } from "./web/LocalStorageService";
+import { StorageService } from "./web/StorageService";
 import { createDomainDb } from "./web/DomainDbService";
 import { local as apiClient } from "../api-client/eden";
 
@@ -41,7 +41,7 @@ export function createRegistry(): ServiceRegistry {
   return {
     diagnostics: injected?.diagnostics ?? new DiagnosticsService(),
     editorPersistence: injected?.editorPersistence ?? new EditorPersistenceService(compositeNotes),
-    storage: injected?.storage ?? new LocalStorageService(),
+    storage: injected?.storage ?? new StorageService(),
     workspaces: injected?.workspaces ?? new CompositeWorkspaceService(localWorkspaces, remoteWorkspaces),
     folders: injected?.folders ?? new CompositeFolderService(localFolders, remoteFolders),
     notes: injected?.notes ?? compositeNotes,

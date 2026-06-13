@@ -8,9 +8,9 @@ import type { IDiagnosticsService } from "@basalt/core/interfaces/IDiagnosticsSe
 import type { IEditorPersistenceService } from "@basalt/core/interfaces/IEditorPersistenceService";
 
 import { DiagnosticsService } from "./DiagnosticsService";
-import { PreferencesService, IPreferencesService } from "./PreferencesService";
+import { StorageService } from "./StorageService";
 import { EditorPersistenceService } from "./EditorPersistenceService";
-
+import type { IStorageService } from "@basalt/core/interfaces/IStorageService";
 import type { IWorkspaceService } from "@basalt/core/interfaces/IWorkspaceService";
 import type { IFolderService } from "@basalt/core/interfaces/IFolderService";
 import type { INoteService } from "@basalt/core/interfaces/INoteService";
@@ -28,11 +28,12 @@ import {
   CompositeNoteService,
 } from "@basalt/core/services";
 import { clientFactory } from "@basalt/api";
+import { PreferenceSchema } from "@basalt/domain/schema/storage";
 
 export interface MainServiceRegistry {
   diagnostics: IDiagnosticsService;
   editorPersistence: IEditorPersistenceService;
-  preferences: IPreferencesService;
+  preferences: IStorageService<PreferenceSchema>;
   workspaces: IWorkspaceService;
   folders: IFolderService;
   notes: INoteService;
@@ -73,7 +74,7 @@ export function createMainRegistry(vaultRoot: string): MainServiceRegistry {
   return {
     diagnostics: new DiagnosticsService(apiClient),
     editorPersistence: new EditorPersistenceService(db, reset, compositeNotes),
-    preferences: new PreferencesService(vaultRoot),
+    preferences: new StorageService(vaultRoot),
     workspaces: new CompositeWorkspaceService(localWorkspaces, remoteWorkspaces),
     folders: new CompositeFolderService(localFolders, remoteFolders),
     notes: compositeNotes,

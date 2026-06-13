@@ -1,59 +1,23 @@
-import { useState, useEffect } from 'react';
-
+import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import { Separator } from "../ui/separator";
 import { Badge } from "../ui/badge";
-
 import { Moon, Sun, Monitor, User, Settings, BarChart3, LogIn, LogOut } from "lucide-react";
+import { useTheme } from "../theme-provider";
 
-interface SimpleStorage {
-  saveData: (key: string, data: any) => Promise<void>;
-  getData: (key: string) => Promise<any>;
+export interface SettingsPanelProps {
+  
 }
 
-interface SettingsModalProps {
-  storage: SimpleStorage; 
-}
+export function SettingsPanel({}: SettingsPanelProps) {
 
-export function SettingsModal({ storage }: SettingsModalProps) {
   const [activeTab, setActiveTab] = useState<'account' | 'appearance' | 'stats'>('account');
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
-
+  const { theme, setTheme } = useTheme();
   const stats = { notesCount: 142, usedSpace: 4.2, maxSpace: 50 };
   const progressPercent = Math.min((stats.usedSpace / stats.maxSpace) * 100, 100);
-
-  useEffect(() => {
-    const loadSettings = async () => {
-      const saved = await storage.getData('app-settings');
-      if (saved?.theme) {
-        setTheme(saved.theme);
-        applyTheme(saved.theme);
-      }
-    };
-    loadSettings();
-  }, [storage]);
-
-
-  const applyTheme = (t: 'light' | 'dark' | 'system') => {
-    const root = document.documentElement;
-    root.classList.remove('light', 'dark');
-
-    if (t === 'system') {
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-      root.classList.add(systemTheme);
-    } else {
-      root.classList.add(t);
-    }
-  };
-
-  const handleThemeChange = async (newTheme: 'light' | 'dark' | 'system') => {
-    setTheme(newTheme);
-    applyTheme(newTheme);
-    await storage.saveData('app-settings', { theme: newTheme });
-  };
 
   return (
     <Dialog>
@@ -65,7 +29,7 @@ export function SettingsModal({ storage }: SettingsModalProps) {
       
       <DialogContent 
         aria-describedby={undefined} 
-        className="sm:max-w-[600px] h-[450px] flex flex-col p-0 gap-0 overflow-hidden"
+        className="sm:max-w-150 h-112.5 flex flex-col p-0 gap-0 overflow-hidden"
       >
         <DialogHeader className="p-6 pb-2">
           <DialogTitle className="text-xl font-semibold">Ustawienia</DialogTitle>
@@ -79,29 +43,27 @@ export function SettingsModal({ storage }: SettingsModalProps) {
               className="w-full justify-start gap-2 px-3 h-9 text-sm"
               onClick={() => setActiveTab('account')}
             >
-              <User className="h-4 w-4" />
-              <span>Konto</span>
+              <User className="h-4 w-4" /> <span>Konto</span>
             </Button>
             <Button 
               variant={activeTab === 'appearance' ? 'secondary' : 'ghost'} 
               className="w-full justify-start gap-2 px-3 h-9 text-sm"
               onClick={() => setActiveTab('appearance')}
             >
-              <Sun className="h-4 w-4" />
-              <span>Wygląd</span>
+              <Sun className="h-4 w-4" /> <span>Wygląd</span>
             </Button>
             <Button 
               variant={activeTab === 'stats' ? 'secondary' : 'ghost'} 
               className="w-full justify-start gap-2 px-3 h-9 text-sm"
               onClick={() => setActiveTab('stats')}
             >
-              <BarChart3 className="h-4 w-4" />
-              <span>Statystyki</span>
+              <BarChart3 className="h-4 w-4" /> <span>Statystyki</span>
             </Button>
           </div>
 
           {/* Zawartość */}
           <div className="flex-1 p-6 overflow-y-auto">
+            {/* Zakładka: Konto */}
             {activeTab === 'account' && (
               <div className="space-y-4">
                 <div>
@@ -137,24 +99,46 @@ export function SettingsModal({ storage }: SettingsModalProps) {
               </div>
             )}
 
+            {/* Zakładka: Wygląd */}
             {activeTab === 'appearance' && (
               <div className="space-y-4">
-                <div><h3 className="text-sm font-medium">Motyw aplikacji</h3></div>
+                <div>
+                  <h3 className="text-sm font-medium">Motyw aplikacji</h3>
+                  <p className="text-xs text-muted-foreground">Wybierz kolor przewodni dla swojego interfejsu.</p>
+                </div>
                 <Separator />
                 <div className="grid grid-cols-3 gap-2">
-                  <Button variant={theme === "light" ? "default" : "outline"} className="flex flex-col gap-1.5 h-16 pt-2" onClick={() => handleThemeChange("light")}>
-                    <Sun className="h-4 w-4" /> <span className="text-[11px]">Jasny</span>
+                  <Button 
+                    variant={theme === "theme-green" ? "default" : "outline"} 
+                    className="flex flex-col gap-1.5 h-16 pt-2" 
+                    onClick={() => setTheme("theme-green")}
+                  >
+                    <div className="h-4 w-4 rounded-full bg-[#889E81]" /> 
+                    <span className="text-[11px]">Zielony</span>
                   </Button>
-                  <Button variant={theme === "dark" ? "default" : "outline"} className="flex flex-col gap-1.5 h-16 pt-2" onClick={() => handleThemeChange("dark")}>
-                    <Moon className="h-4 w-4" /> <span className="text-[11px]">Ciemny</span>
+                  
+                  <Button 
+                    variant={theme === "theme-blue" ? "default" : "outline"} 
+                    className="flex flex-col gap-1.5 h-16 pt-2" 
+                    onClick={() => setTheme("theme-blue")}
+                  >
+                    <div className="h-4 w-4 rounded-full bg-[#5DADE2]" /> 
+                    <span className="text-[11px]">Niebieski</span>
                   </Button>
-                  <Button variant={theme === "system" ? "default" : "outline"} className="flex flex-col gap-1.5 h-16 pt-2" onClick={() => handleThemeChange("system")}>
-                    <Monitor className="h-4 w-4" /> <span className="text-[11px]">System</span>
+                  
+                  <Button 
+                    variant={theme === "theme-purple" ? "default" : "outline"} 
+                    className="flex flex-col gap-1.5 h-16 pt-2" 
+                    onClick={() => setTheme("theme-purple")}
+                  >
+                    <div className="h-4 w-4 rounded-full bg-[#9B59B6]" /> 
+                    <span className="text-[11px]">Fioletowy</span>
                   </Button>
                 </div>
               </div>
             )}
 
+            {/* Zakładka: Statystyki */}
             {activeTab === 'stats' && (
               <div className="space-y-4">
                 <div><h3 className="text-sm font-medium">Twoje zasoby</h3></div>

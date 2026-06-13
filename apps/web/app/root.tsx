@@ -1,10 +1,13 @@
 import { Outlet, isRouteErrorResponse, useRouteError } from "react-router";
-import { ThemeProvider } from "@basalt/ui";
+import { ThemeProvider } from "@basalt/ui"; 
+import { useServices } from "~/services/ServiceContext"; 
 import "./app.css";
 
 export default function Root() {
+  const { storage } = useServices();
+
   return (
-    <ThemeProvider defaultTheme="system" storageKey="basalt-ui-theme">
+    <ThemeProvider defaultTheme="theme-green" storageKey="app_preferences" storage={storage}>
       <Outlet />
     </ThemeProvider>
   );
