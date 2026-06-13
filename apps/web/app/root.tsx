@@ -9,9 +9,9 @@ export default function Root() {
 
   return (
     <ThemeProvider defaultTheme="theme-green" storageKey="app_preferences" storage={storage}>
-      <div className="min-h-screen bg-background text-slate-950 dark:text-white">
+      <div className="flex h-screen flex-col overflow-hidden bg-background text-slate-950 dark:text-white">
         <DebugTopbar />
-        <main>
+        <main className="min-h-0 flex-1 overflow-auto">
           <Outlet />
         </main>
       </div>

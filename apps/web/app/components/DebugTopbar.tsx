@@ -2,6 +2,8 @@ import { Link, useLocation } from "react-router";
 import { Button } from "@basalt/ui";
 
 const navLinks = [
+  { to: "/", label: "Root" },
+  { to: "/main", label: "Main" },
   { to: "/test", label: "Test" },
   { to: "/example", label: "Example" },
   { to: "/editor", label: "Editor" },
