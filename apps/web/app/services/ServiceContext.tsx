@@ -6,6 +6,7 @@ import type { PreferenceSchema } from "@basalt/domain/schema/storage";
 import type { IWorkspaceService } from "@basalt/core/interfaces/IWorkspaceService";
 import type { IFolderService } from "@basalt/core/interfaces/IFolderService";
 import type { INoteService } from "@basalt/core/interfaces/INoteService";
+import type { IOllamaService } from "./web/OllamaService";
 
 export interface ServiceRegistry {
   diagnostics: IDiagnosticsService;
@@ -14,6 +15,7 @@ export interface ServiceRegistry {
   workspaces: IWorkspaceService;
   folders: IFolderService;
   notes: INoteService;
+  ollama: IOllamaService;
 }
 
 const ServiceContext = createContext<ServiceRegistry | null>(null);
@@ -25,11 +27,14 @@ export function ServiceProvider({
   value: ServiceRegistry;
   children: ReactNode;
 }) {
-  return <ServiceContext.Provider value={value}>{children}</ServiceContext.Provider>;
+  return (
+    <ServiceContext.Provider value={value}>{children}</ServiceContext.Provider>
+  );
 }
 
 export function useServices(): ServiceRegistry {
   const ctx = useContext(ServiceContext);
-  if (!ctx) throw new Error("useServices must be used inside <ServiceProvider>");
+  if (!ctx)
+    throw new Error("useServices must be used inside <ServiceProvider>");
   return ctx;
 }
