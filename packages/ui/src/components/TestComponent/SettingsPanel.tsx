@@ -50,7 +50,7 @@ export function SettingsPanel({
   const [ollamaEndpoint, setOllamaEndpoint] = useState("");
   const [connectionStatus, setConnectionStatus] =
     useState<ConnectionStatus>(null);
-  const [isTesting, setIsTesting] = useState<boolean>(true);
+  const [isTesting, setIsTesting] = useState<boolean>(false);
 
   const stats = { notesCount: 142, usedSpace: 4.2, maxSpace: 50 };
   const progressPercent = Math.min(
