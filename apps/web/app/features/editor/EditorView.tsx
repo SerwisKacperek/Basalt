@@ -6,6 +6,7 @@ import { Button } from "@basalt/ui";
 import { EditorToolbar } from "./EditorToolbar";
 import { EditorStatusBar } from "./EditorStatusBar";
 import { useNoteDocument } from "./useNoteDocument";
+import {BotMessageSquare} from "lucide-react";
 
 export function EditorView({ id }: { id: string }) {
   const { doc, ready, loadError, status, error, retry, reload } =
@@ -55,10 +56,15 @@ export function EditorView({ id }: { id: string }) {
   }
 
   return (
-    <div className="overflow-hidden">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       <EditorStatusBar status={status} error={error} onRetry={retry} />
-      <EditorContent editor={editor} />
-      <EditorToolbar editor={editor} />
+      <div className="flex-1 min-h-0 overflow-auto pb-24 scrollbar-none">
+        <EditorContent editor={editor} className="h-full" />
+      </div>
+      <div className="flex flex-row gap-4 items-center p-4">
+        <EditorToolbar editor={editor}/>
+        <BotMessageSquare size={50} className=" mr-8 border border-border rounded-full p-2"/>
+      </div>
     </div>
   );
 }

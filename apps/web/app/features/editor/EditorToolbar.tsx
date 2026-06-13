@@ -143,7 +143,7 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
   };
 
   return (
-    <div className="flex flex-wrap m-5 bg-sidebar items-center gap-1 border border-border rounded-lg px-2 py-1.5">
+    <div className="sticky bottom-5 mx-auto z-10 w-full max-w-200 flex flex-wrap items-center gap-1 border border-border bg-sidebar rounded-lg px-2 py-1.5">
       {GROUPS.map((group, gi) => (
         <div key={gi} className="flex items-center gap-0.5">
           {gi > 0 && <span className="mx-1 h-5 w-px bg-border" aria-hidden />}

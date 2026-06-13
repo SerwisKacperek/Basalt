@@ -42,7 +42,7 @@ export function Sidebar() {
 
   if (isCollapsed) {
     return (
-      <div className="fixed top-4 left-4 z-50 animate-in fade-in duration-200">
+      <div className="fixed top-20 left-4 z-50 animate-in fade-in duration-200">
         <button 
           onClick={() => setIsCollapsed(false)}
           className="p-2 bg-sidebar border border-primary hover:text-primary rounded-md transition-colors cursor-pointer shadow-md flex items-center justify-center text-text/70"
