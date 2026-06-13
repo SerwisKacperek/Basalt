@@ -8,13 +8,13 @@ import type { IWorkspaceService } from "@basalt/core/interfaces/IWorkspaceServic
 import type { IFolderService } from "@basalt/core/interfaces/IFolderService";
 import type { INoteService } from "@basalt/core/interfaces/INoteService";
 import type { Select, Insert, Filters } from "@basalt/domain";
-import { IPreferencesService } from "./PreferencesService";
+import { IStorageService } from "@basalt/core/interfaces/IStorageService";
 import { CHANNELS } from "./channels";
-
+import type { PreferenceSchema } from "@basalt/domain/schema/storage";
 export interface RendererServiceBridge {
   diagnostics: IDiagnosticsService;
   editorPersistence: IEditorPersistenceService;
-  preferences: IPreferencesService;
+  storage: IStorageService<PreferenceSchema>;
   workspaces: IWorkspaceService;
   folders: IFolderService;
   notes: INoteService;
@@ -25,9 +25,9 @@ export function buildRendererBridge(): RendererServiceBridge {
     diagnostics: {
       healthcheck: () => ipcRenderer.invoke(CHANNELS.diagnostics.healthcheck),
     },
-    preferences: {
-      save: (data) => ipcRenderer.invoke(CHANNELS.preferences.save, data),
-      get: () => ipcRenderer.invoke(CHANNELS.preferences.get),
+    storage: {
+      saveData: (data) => ipcRenderer.invoke(CHANNELS.preferences.save, data),
+      getData: () => ipcRenderer.invoke(CHANNELS.preferences.get),
     },
     editorPersistence: {
       listNotes: () =>

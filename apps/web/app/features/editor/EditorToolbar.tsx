@@ -14,8 +14,11 @@ import {
   Redo2,
   Strikethrough,
   Undo2,
+  Loader2,
+  Sparkles,
 } from "lucide-react";
-import type { ComponentType } from "react";
+import { useState, type ComponentType } from "react";
+import { useServices } from "~/services/ServiceContext";
 
 type ToolbarButton = {
   icon: ComponentType<{ className?: string }>;
@@ -100,6 +103,9 @@ const GROUPS: ToolbarButton[][] = [
 ];
 
 export function EditorToolbar({ editor }: { editor: Editor }) {
+  const { ollama } = useServices();
+  const [isFormatting, setIsFormatting] = useState(false);
+  const [formatError, setFormatError] = useState<string | null>(null);
   // Subscribe to selection/content changes so active states stay in sync.
   const editorState = useEditorState({
     editor,
@@ -112,8 +118,32 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
 
   let buttonIndex = 0;
 
+  const formatNote = async () => {
+    setIsFormatting(true);
+    setFormatError(null);
+    const original = editor.getHTML();
+    try {
+      const formatted = await ollama.formatNote(original);
+      if (editor.getHTML() !== original) {
+        throw new Error(
+          "Notatka zmieniła się podczas formatowania. Wynik nie został zastosowany.",
+        );
+      }
+      editor.commands.setContent(formatted);
+      editor.commands.focus("end");
+    } catch (error) {
+      setFormatError(
+        error instanceof Error
+          ? error.message
+          : "Nie udało się sformatować notatki.",
+      );
+    } finally {
+      setIsFormatting(false);
+    }
+  };
+
   return (
-    <div className="flex flex-wrap m-5 bg-sidebar items-center gap-1 border border-border rounded-lg px-2 py-1.5">
+    <div className="sticky bottom-5 mx-auto z-10 w-full max-w-200 flex flex-wrap items-center gap-1 border border-border bg-sidebar rounded-lg px-2 py-1.5">
       {GROUPS.map((group, gi) => (
         <div key={gi} className="flex items-center gap-0.5">
           {gi > 0 && <span className="mx-1 h-5 w-px bg-border" aria-hidden />}
@@ -143,6 +173,33 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
       ))}
 
       <div className="ml-auto flex items-center gap-0.5">
+        {formatError && (
+          <span
+            role="alert"
+            title={formatError}
+            className="max-w-64 truncate px-2 text-xs text-destructive"
+          >
+            {formatError}
+          </span>
+        )}
+        <button
+          type="button"
+          title="Popraw i sformatuj notatkę z Ollamą"
+          aria-label="Popraw i sformatuj notatkę z Ollamą"
+          disabled={isFormatting || editor.isEmpty}
+          onClick={formatNote}
+          className="flex h-8 items-center justify-center gap-1.5 rounded-md px-2 text-foreground/80 transition-colors hover:bg-primary/10 hover:text-primary disabled:opacity-40 disabled:hover:bg-transparent"
+        >
+          {isFormatting ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Sparkles className="h-4 w-4" />
+          )}
+          <span className="hidden sm:inline">
+            {isFormatting ? "Formatowanie..." : "Formatuj AI"}
+          </span>
+        </button>
+        <span className="mx-1 h-5 w-px bg-border" aria-hidden />
         <button
           type="button"
           title="Undo"

@@ -1,14 +1,10 @@
 import logoLight from "~/assets/icons/logo-light.svg";
 import logoDark from "~/assets/icons/logo-dark.svg";
-import { ModeToggle } from "@basalt/ui";
-import {SomePage} from "~/pages/some";
+import {SettingsPage} from "~/pages/SettingsPage";
 
 export function Welcome() {
   return (
     <main className="flex items-center justify-center pt-16 pb-4">
-      <div className="fixed top-4 right-4">
-        <ModeToggle />
-      </div>
       <div className="flex-1 flex flex-col items-center gap-16 min-h-0">
         <header className="flex flex-col items-center gap-9">
           <div className="w-125 max-w-[100vw] p-4">
@@ -34,7 +30,7 @@ export function Welcome() {
                 <a href="test">test</a>
               </li>
               <li>
-                <SomePage />
+                <SettingsPage />
               </li>
               <li>
                 <a
@@ -50,6 +46,11 @@ export function Welcome() {
                   className="group flex items-center gap-3 self-stretch p-3 leading-normal text-blue-700 hover:underline dark:text-blue-500"
                 >
                   editor
+                </a>
+              </li>
+              <li>
+                <a href="/main" className="group flex items-center gap-3 self-stretch p-3 leading-normal text-blue-700 hover:underline dark:text-blue-500">
+                  main
                 </a>
               </li>
               {resources.map(({ href, text, icon }) => (
