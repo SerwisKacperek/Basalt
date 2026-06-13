@@ -31,6 +31,8 @@ export interface OllamaChatCompletionResponse {
 }
 
 export interface IOllamaService {
+  getEndpoint(): Promise<string>;
+  setEndpoint(endpoint: string): Promise<void>;
   testConnection(): Promise<void>;
   formatNote(content: string): Promise<string>;
 }
@@ -44,6 +46,44 @@ export class OllamaError extends Error {
 
 export class OllamaService implements IOllamaService {
   constructor(private readonly storage: IStorageService) {}
+
+  async getEndpoint(): Promise<string> {
+    const settings = (await this.storage.getData(
+      APP_SETTINGS_KEY,
+    )) as AppSettings | null;
+    const endpoint =
+      settings?.ollamaEndpoint === undefined
+        ? DEFAULT_OLLAMA_ENDPOINT
+        : settings.ollamaEndpoint.trim();
+
+    if (!endpoint) {
+      throw new OllamaError("Endpoint Ollamy nie może być pusty.");
+    }
+
+    try {
+      const url = new URL(endpoint);
+      if (url.protocol !== "http:" && url.protocol !== "https:") {
+        throw new Error("Unsupported protocol");
+      }
+      return url.toString();
+    } catch {
+      throw new OllamaError(
+        "Endpoint Ollamy musi być poprawnym adresem HTTP lub HTTPS.",
+      );
+    }
+  }
+
+  async setEndpoint(endpoint: string): Promise<void> {
+    const normalizedEndpoint = endpoint.trim();
+    const currentSettings = (await this.storage.getData(
+      APP_SETTINGS_KEY,
+    )) as AppSettings | null;
+
+    await this.storage.saveData(APP_SETTINGS_KEY, {
+      ...(currentSettings ?? {}),
+      ollamaEndpoint: normalizedEndpoint,
+    });
+  }
 
   async testConnection(): Promise<void> {
     await this.complete([
@@ -143,29 +183,4 @@ export class OllamaService implements IOllamaService {
     return content;
   }
 
-  private async getEndpoint(): Promise<string> {
-    const settings = (await this.storage.getData(
-      APP_SETTINGS_KEY,
-    )) as AppSettings | null;
-    const endpoint =
-      settings?.ollamaEndpoint === undefined
-        ? DEFAULT_OLLAMA_ENDPOINT
-        : settings.ollamaEndpoint.trim();
-
-    if (!endpoint) {
-      throw new OllamaError("Endpoint Ollamy nie może być pusty.");
-    }
-
-    try {
-      const url = new URL(endpoint);
-      if (url.protocol !== "http:" && url.protocol !== "https:") {
-        throw new Error("Unsupported protocol");
-      }
-      return url.toString();
-    } catch {
-      throw new OllamaError(
-        "Endpoint Ollamy musi być poprawnym adresem HTTP lub HTTPS.",
-      );
-    }
-  }
 }
