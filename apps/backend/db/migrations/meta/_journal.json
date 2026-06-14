@@ -22,6 +22,13 @@
       "when": 1781035340207,
       "tag": "0002_fuzzy_shadowcat",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1781453987867,
+      "tag": "0003_tranquil_lady_ursula",
+      "breakpoints": true
     }
   ]
 }

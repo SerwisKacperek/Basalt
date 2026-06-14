@@ -12,9 +12,9 @@ const notes = schema.notes;
 export const NoteResponse = createNoteSelectSchema(notes);
 export const NoteBody = t.Pick(
   createNoteInsertSchema(notes),
-  ['id', 'folder_id', 'workspace_id', 'name'],
+  ['id', 'folder_id', 'workspace_id', 'name', 'position'],
 );
 export const NoteUpdateBody = t.Pick(
   createNoteUpdateSchema(notes),
-  ['folder_id', 'workspace_id', 'name'],
+  ['folder_id', 'workspace_id', 'name', 'position'],
 );

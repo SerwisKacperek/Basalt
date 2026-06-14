@@ -3,6 +3,7 @@ export interface EditorNote {
   name: string;
   folderId: string | null;
   workspaceId: string | null;
+  position: number;
   createdAt: number;
   updatedAt: number;
 }

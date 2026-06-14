@@ -1,8 +1,11 @@
 import type { IWorkspaceService } from "@basalt/core/interfaces/IWorkspaceService";
 import type { Select, Insert } from "@basalt/domain";
 import type { Filters } from "@basalt/domain";
+import { RemoteGate } from "./RemoteGate";
 
 export class CompositeWorkspaceService implements IWorkspaceService {
+  private gate = new RemoteGate("composite:workspaces");
+
   constructor(
     private local: IWorkspaceService,
     private remote: IWorkspaceService | null,
@@ -19,30 +22,18 @@ export class CompositeWorkspaceService implements IWorkspaceService {
   async create(dto: Insert<"workspaces">): Promise<Select<"workspaces">> {
     const fullDto = { ...dto, id: dto.id ?? crypto.randomUUID() };
     const result = await this.local.create(fullDto);
-    if (this.remote) {
-      this.remote.create(fullDto).catch((err) =>
-        console.error("[composite:workspaces] remote create failed:", err),
-      );
-    }
+    if (this.remote) this.gate.run(() => this.remote!.create(fullDto));
     return result;
   }
 
   async update(id: string, dto: Partial<Insert<"workspaces">>): Promise<Select<"workspaces">> {
     const result = await this.local.update(id, dto);
-    if (this.remote) {
-      this.remote.update(id, dto).catch((err) =>
-        console.error("[composite:workspaces] remote update failed:", err),
-      );
-    }
+    if (this.remote) this.gate.run(() => this.remote!.update(id, dto));
     return result;
   }
 
   async delete(id: string): Promise<void> {
     await this.local.delete(id);
-    if (this.remote) {
-      this.remote.delete(id).catch((err) =>
-        console.error("[composite:workspaces] remote delete failed:", err),
-      );
-    }
+    if (this.remote) this.gate.run(() => this.remote!.delete(id));
   }
 }

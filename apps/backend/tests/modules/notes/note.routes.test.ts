@@ -9,6 +9,7 @@ const note = {
   name: 'Test Note',
   workspace_id: 'ws-1',
   folder_id: 'f-1',
+  position: 0,
   createdAt: new Date(),
   updatedAt: new Date(),
   deletedAt: null,
@@ -105,14 +106,14 @@ describe('note routes', () => {
       expect((await post(app, '/notes', { workspace_id: 'ws-1', folder_id: 'f-1' })).status).toBe(422);
     });
 
-    it('returns 422 when workspace_id is missing', async () => {
+    it('allows creating a note without a workspace_id', async () => {
       const { app } = makeApp();
-      expect((await post(app, '/notes', { name: 'New', folder_id: 'f-1' })).status).toBe(422);
+      expect((await post(app, '/notes', { name: 'New', folder_id: 'f-1' })).status).toBe(201);
     });
 
-    it('returns 422 when folder_id is missing', async () => {
+    it('allows creating a root note without a folder_id', async () => {
       const { app } = makeApp();
-      expect((await post(app, '/notes', { name: 'New', workspace_id: 'ws-1' })).status).toBe(422);
+      expect((await post(app, '/notes', { name: 'New', workspace_id: 'ws-1' })).status).toBe(201);
     });
 
     it('returns 400 for invalid JSON', async () => {
