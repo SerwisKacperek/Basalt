@@ -5,7 +5,7 @@ import Placeholder from "@tiptap/extension-placeholder";
 import { Button } from "@basalt/ui";
 import { EditorToolbar } from "./EditorToolbar";
 import { useNoteDocument } from "./useNoteDocument";
-import { AlertCircle, BotMessageSquare } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 
 export function EditorView({ id }: { id: string }) {
   const { doc, loadError, status, error, retry, reload } = useNoteDocument(id);
@@ -76,18 +76,8 @@ export function EditorView({ id }: { id: string }) {
             </div>
           </div>
         )}
-        <div className="mx-auto flex w-full max-w-200 items-center gap-3">
-          <div className="min-w-0 flex-1">
-            {editor && <EditorToolbar editor={editor} />}
-          </div>
-          <button
-            type="button"
-            aria-label="AI assistant"
-            title="AI assistant"
-            className="shrink-0 rounded-full border border-border p-2 text-foreground/80 transition-colors hover:text-primary"
-          >
-            <BotMessageSquare size={20} />
-          </button>
+        <div className="mx-auto w-full max-w-200">
+          {editor && <EditorToolbar editor={editor} />}
         </div>
       </div>
     </div>

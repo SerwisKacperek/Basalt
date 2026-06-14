@@ -17,8 +17,18 @@ import {
   Loader2,
   Sparkles,
 } from "lucide-react";
-import { useState, type ComponentType } from "react";
+import { Fragment, useState, type ComponentType } from "react";
 import { useServices } from "~/services/ServiceContext";
+import {
+  Button,
+  Separator,
+  Toggle,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+  toast,
+} from "@basalt/ui";
 
 type ToolbarButton = {
   icon: ComponentType<{ className?: string }>;
@@ -105,7 +115,6 @@ const GROUPS: ToolbarButton[][] = [
 export function EditorToolbar({ editor }: { editor: Editor }) {
   const { ollama } = useServices();
   const [isFormatting, setIsFormatting] = useState(false);
-  const [formatError, setFormatError] = useState<string | null>(null);
   // Subscribe to selection/content changes so active states stay in sync.
   const editorState = useEditorState({
     editor,
@@ -116,26 +125,21 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
     }),
   });
 
-  let buttonIndex = 0;
-
   const formatNote = async () => {
     setIsFormatting(true);
-    setFormatError(null);
     const original = editor.getHTML();
     try {
       const formatted = await ollama.formatNote(original);
       if (editor.getHTML() !== original) {
         throw new Error(
-          "Notatka zmieniła się podczas formatowania. Wynik nie został zastosowany.",
+          "The note changed while formatting. The result was not applied.",
         );
       }
       editor.commands.setContent(formatted);
       editor.commands.focus("end");
     } catch (error) {
-      setFormatError(
-        error instanceof Error
-          ? error.message
-          : "Nie udało się sformatować notatki.",
+      toast.error(
+        error instanceof Error ? error.message : "Couldn't format the note.",
       );
     } finally {
       setIsFormatting(false);
@@ -143,84 +147,102 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
   };
 
   return (
-    <div className="sticky bottom-5 mx-auto z-10 w-full max-w-200 flex flex-wrap items-center gap-1 border border-border bg-sidebar rounded-lg px-2 py-1.5">
-      {GROUPS.map((group, gi) => (
-        <div key={gi} className="flex items-center gap-0.5">
-          {gi > 0 && <span className="mx-1 h-5 w-px bg-border" aria-hidden />}
-          {group.map((btn) => {
-            const active = editorState.states[buttonIndex++];
-            const Icon = btn.icon;
-            return (
-              <button
-                key={btn.label}
-                type="button"
-                title={btn.label}
-                aria-label={btn.label}
-                aria-pressed={active}
-                onClick={() => btn.run(editor)}
-                className={
-                  "flex h-8 w-8 items-center justify-center rounded-md transition-colors hover:bg-sidebar " +
-                  (active
-                    ? "bg-primary text-primary-foreground"
-                    : "text-foreground/80")
-                }
+    <TooltipProvider delayDuration={300}>
+      <div className="sticky bottom-5 mx-auto z-10 flex w-full max-w-200 flex-nowrap items-center gap-1 overflow-x-auto scrollbar-thin rounded-lg border border-border bg-sidebar px-2 py-1.5">
+        {GROUPS.map((group, gi) => {
+          const offset = GROUPS.slice(0, gi).reduce((n, g) => n + g.length, 0);
+          return (
+            <Fragment key={gi}>
+              {gi > 0 && (
+                <Separator
+                  orientation="vertical"
+                  className="mx-1 h-5 shrink-0"
+                />
+              )}
+              <div
+                className="flex shrink-0 items-center gap-0.5"
+                aria-label={`Formatting group ${gi + 1}`}
               >
-                <Icon className="h-4 w-4" />
-              </button>
-            );
-          })}
-        </div>
-      ))}
+                {group.map((btn, i) => {
+                  const Icon = btn.icon;
+                  return (
+                    <Tooltip key={btn.label}>
+                      <TooltipTrigger asChild>
+                        <Toggle
+                          size="sm"
+                          pressed={editorState.states[offset + i]}
+                          onPressedChange={() => btn.run(editor)}
+                          aria-label={btn.label}
+                          className="size-8 shrink-0 text-foreground/80 aria-pressed:bg-primary aria-pressed:text-primary-foreground aria-pressed:hover:bg-primary aria-pressed:hover:text-primary-foreground"
+                        >
+                          <Icon className="h-4 w-4" />
+                        </Toggle>
+                      </TooltipTrigger>
+                      <TooltipContent>{btn.label}</TooltipContent>
+                    </Tooltip>
+                  );
+                })}
+              </div>
+            </Fragment>
+          );
+        })}
 
-      <div className="ml-auto flex items-center gap-0.5">
-        {formatError && (
-          <span
-            role="alert"
-            title={formatError}
-            className="max-w-64 truncate px-2 text-xs text-destructive"
-          >
-            {formatError}
-          </span>
-        )}
-        <button
-          type="button"
-          title="Popraw i sformatuj notatkę z Ollamą"
-          aria-label="Popraw i sformatuj notatkę z Ollamą"
-          disabled={isFormatting || editor.isEmpty}
-          onClick={formatNote}
-          className="flex h-8 items-center justify-center gap-1.5 rounded-md px-2 text-foreground/80 transition-colors hover:bg-primary/10 hover:text-primary disabled:opacity-40 disabled:hover:bg-transparent"
-        >
-          {isFormatting ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Sparkles className="h-4 w-4" />
-          )}
-          <span className="hidden sm:inline">
-            {isFormatting ? "Formatowanie..." : "Formatuj AI"}
-          </span>
-        </button>
-        <span className="mx-1 h-5 w-px bg-border" aria-hidden />
-        <button
-          type="button"
-          title="Undo"
-          aria-label="Undo"
-          disabled={!editorState.canUndo}
-          onClick={() => editor.chain().focus().undo().run()}
-          className="flex h-8 w-8 items-center justify-center rounded-md text-foreground/80 transition-colors hover:bg-sidebar disabled:opacity-40 disabled:hover:bg-transparent"
-        >
-          <Undo2 className="h-4 w-4" />
-        </button>
-        <button
-          type="button"
-          title="Redo"
-          aria-label="Redo"
-          disabled={!editorState.canRedo}
-          onClick={() => editor.chain().focus().redo().run()}
-          className="flex h-8 w-8 items-center justify-center rounded-md text-foreground/80 transition-colors hover:bg-sidebar disabled:opacity-40 disabled:hover:bg-transparent"
-        >
-          <Redo2 className="h-4 w-4" />
-        </button>
+        <div className="ml-auto flex shrink-0 items-center gap-0.5 pl-1">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label="Clean up & format note with AI"
+                disabled={isFormatting || editor.isEmpty}
+                onClick={formatNote}
+                className="h-8 gap-1.5 px-2 text-foreground/80 hover:bg-primary/10 hover:text-primary"
+              >
+                {isFormatting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4" />
+                )}
+                <span className="hidden sm:inline">
+                  {isFormatting ? "Formatting…" : "Format with AI"}
+                </span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Clean up &amp; format note with AI</TooltipContent>
+          </Tooltip>
+          <Separator orientation="vertical" className="mx-1 h-5 shrink-0" />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Undo"
+                className="size-8 text-foreground/80"
+                disabled={!editorState.canUndo}
+                onClick={() => editor.chain().focus().undo().run()}
+              >
+                <Undo2 className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Undo</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Redo"
+                className="size-8 text-foreground/80"
+                disabled={!editorState.canRedo}
+                onClick={() => editor.chain().focus().redo().run()}
+              >
+                <Redo2 className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Redo</TooltipContent>
+          </Tooltip>
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
   );
 }

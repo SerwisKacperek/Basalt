@@ -1,4 +1,4 @@
-import { SettingsPanel } from '@basalt/ui';
+import { SettingsPanel } from '~/components/SettingsPanel';
 import { useServices } from '~/services/ServiceContext';
 
 

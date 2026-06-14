@@ -1,5 +1,5 @@
 import { Outlet, isRouteErrorResponse, useRouteError } from "react-router";
-import { ThemeProvider } from "@basalt/ui";
+import { ThemeProvider, Toaster } from "@basalt/ui";
 import { DebugPanel } from "~/components/DebugPanel";
 import { useServices } from "~/services/ServiceContext"; 
 import "./app.css";
@@ -14,6 +14,7 @@ export default function Root() {
           <Outlet />
         </main>
         <DebugPanel />
+        <Toaster position="bottom-right" />
       </div>
     </ThemeProvider>
   );
