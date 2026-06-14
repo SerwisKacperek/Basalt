@@ -43,7 +43,7 @@ export function Sidebar() {
   if (isCollapsed) {
     return (
       <div className="fixed top-20 left-4 z-50 animate-in fade-in duration-200">
-        <button 
+        <button
           onClick={() => setIsCollapsed(false)}
           className="p-2 bg-sidebar border border-primary hover:text-primary rounded-md transition-colors cursor-pointer shadow-md flex items-center justify-center text-text/70"
         >
@@ -55,8 +55,8 @@ export function Sidebar() {
 
   return (
     <aside style={{ width: `${width}px` }} className="relative flex flex-col h-screen overflow-hidden bg-sidebar border-r border-primary select-none shrink-0">
-      
-      <div className="flex items-center justify-between p-4 border-b border-primary h-[65px] shrink-0">
+
+      <div className="flex items-center justify-between p-4 border-b border-primary h-16 shrink-0">
         {isSearching ? (
           <div className="flex items-center gap-2 w-full animate-in fade-in duration-150">
             <div className="relative flex-1">
@@ -77,7 +77,7 @@ export function Sidebar() {
         ) : (
           <>
             <div className="flex items-center gap-4 text-text/70">
-              <button 
+              <button
                 onClick={() => setIsSearching(true)}
                 className="hover:text-primary transition-colors cursor-pointer"
               >
@@ -90,8 +90,8 @@ export function Sidebar() {
                 <Inbox size={25} />
               </button>
             </div>
-            <button 
-              onClick={() => setIsCollapsed(true)} 
+            <button
+              onClick={() => setIsCollapsed(true)}
               className="text-text/50 hover:text-primary transition-colors cursor-pointer shrink-0 ml-auto"
             >
               <PanelLeftClose size={25} />
@@ -101,16 +101,16 @@ export function Sidebar() {
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-6 scrollbar-none">
-        
+
         <div>
-          <button 
+          <button
             onClick={() => setIsPrivateOpen(!isPrivateOpen)}
             className="flex items-center gap-1 w-full text-sm font-bold tracking-wider text-primary mb-3 px-2 uppercase cursor-pointer truncate"
           >
             {isPrivateOpen ? <ChevronDown size={20} className="shrink-0" /> : <ChevronRight size={20} className="shrink-0" />}
             <span className="truncate">Private</span>
           </button>
-          
+
           {isPrivateOpen && (
             <ul className="space-y-0.5">
               {PRIVATE_NOTES.map((note) => {
@@ -120,8 +120,8 @@ export function Sidebar() {
                     <button
                       onClick={() => setActiveNote(note.id)}
                       className={`flex items-center gap-2 w-full text-left px-4 py-1.5 text-sm transition-colors cursor-pointer truncate
-                        ${isActive 
-                          ? "bg-primary/20 text-text font-medium" 
+                        ${isActive
+                          ? "bg-primary/20 text-text font-medium"
                           : "text-text/80 hover:bg-primary/5 hover:text-text"
                         }`}
                     >
@@ -136,14 +136,14 @@ export function Sidebar() {
         </div>
 
         <div>
-          <button 
+          <button
             onClick={() => setIsTeamsOpen(!isTeamsOpen)}
             className="flex items-center gap-1 w-full text-left text-sm font-bold tracking-wider text-primary mb-3 px-2 uppercase cursor-pointer truncate"
           >
             {isTeamsOpen ? <ChevronDown size={20} className="shrink-0" /> : <ChevronRight size={20} className="shrink-0" />}
             <span className="truncate">Teamspaces</span>
           </button>
-          
+
           {isTeamsOpen && (
             <ul className="space-y-0.5">
               {TEAMSPACES.map((team) => (
@@ -171,9 +171,9 @@ export function Sidebar() {
         </button>
       </div>
 
-      <div 
-        onMouseDown={initResize} 
-        className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/40 active:bg-primary transition-colors z-50 translate-x-[3px]"
+      <div
+        onMouseDown={initResize}
+        className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:bg-primary/40 active:bg-primary transition-colors z-50 translate-x-0.75"
       />
     </aside>
   );

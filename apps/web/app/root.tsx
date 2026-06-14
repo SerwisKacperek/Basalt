@@ -1,6 +1,6 @@
 import { Outlet, isRouteErrorResponse, useRouteError } from "react-router";
 import { ThemeProvider } from "@basalt/ui";
-import { DebugTopbar } from "~/components/DebugTopbar";
+import { DebugPanel } from "~/components/DebugPanel";
 import { useServices } from "~/services/ServiceContext"; 
 import "./app.css";
 
@@ -10,10 +10,10 @@ export default function Root() {
   return (
     <ThemeProvider defaultTheme="theme-green" storageKey="app_preferences" storage={storage}>
       <div className="flex h-screen flex-col overflow-hidden bg-background text-slate-950 dark:text-white">
-        <DebugTopbar />
         <main className="min-h-0 flex-1 overflow-auto">
           <Outlet />
         </main>
+        <DebugPanel />
       </div>
     </ThemeProvider>
   );

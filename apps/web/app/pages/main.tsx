@@ -8,7 +8,7 @@ export default function Main() {
     <div className="flex h-screen overflow-hidden">
       <Sidebar />
       <main className="flex flex-1 min-h-0 flex-col overflow-hidden">
-        <header className="h-[65px] border-b border-border p-4 flex items-center justify-between gap-4">
+        <header className="h-16 border-b border-border p-4 flex items-center justify-between gap-4">
           <h1 className="flex items-center gap-2 text-xl font-bold">
             <BookLock size={24} />
             First Note
