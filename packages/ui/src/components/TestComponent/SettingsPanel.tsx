@@ -109,9 +109,9 @@ export function SettingsPanel({
         </Button>
       </DialogTrigger>
 
-      <DialogContent 
-        aria-describedby={undefined} 
-        className="sm:max-w-150 h-112.5 flex flex-col p-0 gap-0 overflow-hidden"
+      <DialogContent
+        aria-describedby={undefined}
+        className="sm:max-w-150 h-112.5 flex flex-col p-0 gap-0 overflow-hidden border-primary"
       >
         <DialogHeader className="p-6 pb-2">
           <DialogTitle className="text-xl font-semibold">
@@ -119,18 +119,18 @@ export function SettingsPanel({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 flex flex-col sm:flex-row h-full overflow-hidden border-t">
+        <div className="flex-1 flex flex-col sm:flex-row h-full overflow-hidden border-t border-primary">
           {/* Menu boczne */}
-          <div className="flex sm:flex-col justify-start bg-muted/40 p-2 sm:w-40 space-y-0 sm:space-y-1 space-x-1 sm:space-x-0 border-r">
-            <Button 
-              variant={activeTab === 'account' ? 'secondary' : 'ghost'} 
+          <div className="flex sm:flex-col justify-start bg-muted/40 p-2 sm:w-40 space-y-0 sm:space-y-1 space-x-1 sm:space-x-0 border-r border-primary">
+            <Button
+              variant={activeTab === 'account' ? 'secondary' : 'ghost'}
               className="w-full justify-start gap-2 px-3 h-9 text-sm"
               onClick={() => setActiveTab('account')}
             >
               <User className="h-4 w-4" /> <span>Konto</span>
             </Button>
-            <Button 
-              variant={activeTab === 'appearance' ? 'secondary' : 'ghost'} 
+            <Button
+              variant={activeTab === 'appearance' ? 'secondary' : 'ghost'}
               className="w-full justify-start gap-2 px-3 h-9 text-sm"
               onClick={() => setActiveTab('appearance')}
             >
@@ -143,8 +143,8 @@ export function SettingsPanel({
             >
               <Bot className="h-4 w-4" /> <span>AI</span>
             </Button>
-            <Button 
-              variant={activeTab === 'stats' ? 'secondary' : 'ghost'} 
+            <Button
+              variant={activeTab === 'stats' ? 'secondary' : 'ghost'}
               className="w-full justify-start gap-2 px-3 h-9 text-sm"
               onClick={() => setActiveTab('stats')}
             >
@@ -168,7 +168,7 @@ export function SettingsPanel({
 
                 {isLoggedIn ? (
                   <div className="space-y-4">
-                    <div className="flex items-center gap-3 p-2 bg-muted/30 rounded-lg border">
+                    <div className="flex items-center gap-3 p-2 bg-muted/30 rounded-lg border border-primary">
                       <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-sm text-primary">
                         U
                       </div>
@@ -217,30 +217,30 @@ export function SettingsPanel({
                 </div>
                 <Separator />
                 <div className="grid grid-cols-3 gap-2">
-                  <Button 
-                    variant={theme === "theme-green" ? "default" : "outline"} 
-                    className="flex flex-col gap-1.5 h-16 pt-2" 
+                  <Button
+                    variant={theme === "theme-green" ? "default" : "outline"}
+                    className="flex flex-col gap-1.5 h-16 pt-2"
                     onClick={() => setTheme("theme-green")}
                   >
-                    <div className="h-4 w-4 rounded-full bg-[#889E81]" /> 
+                    <div className="h-4 w-4 rounded-full bg-[#889E81]" />
                     <span className="text-[11px]">Zielony</span>
                   </Button>
-                  
-                  <Button 
-                    variant={theme === "theme-blue" ? "default" : "outline"} 
-                    className="flex flex-col gap-1.5 h-16 pt-2" 
+
+                  <Button
+                    variant={theme === "theme-blue" ? "default" : "outline"}
+                    className="flex flex-col gap-1.5 h-16 pt-2"
                     onClick={() => setTheme("theme-blue")}
                   >
-                    <div className="h-4 w-4 rounded-full bg-[#5DADE2]" /> 
+                    <div className="h-4 w-4 rounded-full bg-[#5DADE2]" />
                     <span className="text-[11px]">Niebieski</span>
                   </Button>
-                  
-                  <Button 
-                    variant={theme === "theme-purple" ? "default" : "outline"} 
-                    className="flex flex-col gap-1.5 h-16 pt-2" 
+
+                  <Button
+                    variant={theme === "theme-purple" ? "default" : "outline"}
+                    className="flex flex-col gap-1.5 h-16 pt-2"
                     onClick={() => setTheme("theme-purple")}
                   >
-                    <div className="h-4 w-4 rounded-full bg-[#9B59B6]" /> 
+                    <div className="h-4 w-4 rounded-full bg-[#9B59B6]" />
                     <span className="text-[11px]">Fioletowy</span>
                   </Button>
                 </div>

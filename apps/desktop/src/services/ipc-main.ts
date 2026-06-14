@@ -13,6 +13,11 @@ export function registerIpc(registry: MainServiceRegistry) {
   ipcMain.handle(CHANNELS.editorPersistence.create, (_e, name: string) =>
     registry.editorPersistence.createNote(name),
   );
+  ipcMain.handle(
+    CHANNELS.editorPersistence.rename,
+    (_e, id: string, name: string) =>
+      registry.editorPersistence.renameNote(id, name),
+  );
   ipcMain.handle(CHANNELS.editorPersistence.delete, (_e, id: string) =>
     registry.editorPersistence.deleteNote(id),
   );

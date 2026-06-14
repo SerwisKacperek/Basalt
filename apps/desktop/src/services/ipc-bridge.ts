@@ -34,6 +34,8 @@ export function buildRendererBridge(): RendererServiceBridge {
         ipcRenderer.invoke(CHANNELS.editorPersistence.list) as Promise<EditorNote[]>,
       createNote: (name: string) =>
         ipcRenderer.invoke(CHANNELS.editorPersistence.create, name) as Promise<EditorNote>,
+      renameNote: (id: string, name: string) =>
+        ipcRenderer.invoke(CHANNELS.editorPersistence.rename, id, name) as Promise<EditorNote>,
       deleteNote: (id: string) =>
         ipcRenderer.invoke(CHANNELS.editorPersistence.delete, id) as Promise<void>,
       loadUpdates: async (id: string) => {

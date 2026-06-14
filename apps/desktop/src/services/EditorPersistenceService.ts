@@ -45,6 +45,16 @@ export class EditorPersistenceService implements IEditorPersistenceService {
     return toEditorNote(domainNote);
   }
 
+  async renameNote(id: string, name: string): Promise<EditorNote> {
+    const domainNote = await this.noteService.update(id, { name });
+    this.db
+      .update(editorNotes)
+      .set({ name, updatedAt: Date.now() })
+      .where(eq(editorNotes.id, id))
+      .run();
+    return toEditorNote(domainNote);
+  }
+
   async deleteNote(id: string): Promise<void> {
     this.db.delete(editorNotes).where(eq(editorNotes.id, id)).run();
     await this.noteService.delete(id);

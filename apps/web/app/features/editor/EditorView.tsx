@@ -4,16 +4,15 @@ import Collaboration from "@tiptap/extension-collaboration";
 import Placeholder from "@tiptap/extension-placeholder";
 import { Button } from "@basalt/ui";
 import { EditorToolbar } from "./EditorToolbar";
-import { EditorStatusBar } from "./EditorStatusBar";
 import { useNoteDocument } from "./useNoteDocument";
-import {BotMessageSquare} from "lucide-react";
+import { AlertCircle, BotMessageSquare } from "lucide-react";
 
 export function EditorView({ id }: { id: string }) {
-  const { doc, ready, loadError, status, error, retry, reload } =
-    useNoteDocument(id);
+  const { doc, loadError, status, error, retry, reload } = useNoteDocument(id);
 
   const editor = useEditor(
     {
+      immediatelyRender: true,
       extensions: [
         StarterKit.configure({
           history: false,
@@ -29,7 +28,7 @@ export function EditorView({ id }: { id: string }) {
       editorProps: {
         attributes: {
           class:
-            "prose prose-sm dark:prose-invert focus:outline-none min-h-[60vh] max-w-none px-4 py-3",
+            "prose prose-sm dark:prose-invert focus:outline-none flex-1 min-h-[60vh] max-w-none px-4 py-3",
         },
       },
     },
@@ -51,19 +50,45 @@ export function EditorView({ id }: { id: string }) {
     );
   }
 
-  if (!ready || !editor) {
-    return <div className="p-4 text-muted-foreground">Loading…</div>;
-  }
-
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <EditorStatusBar status={status} error={error} onRetry={retry} />
-      <div className="flex-1 min-h-0 overflow-auto pb-24 scrollbar-none">
-        <EditorContent editor={editor} className="h-full" />
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto scrollbar-thin">
+        <div className="mx-auto flex w-full max-w-200 flex-1 flex-col">
+          <EditorContent editor={editor} className="flex flex-1 flex-col" />
+        </div>
       </div>
-      <div className="flex flex-row gap-4 items-center p-4">
-        <EditorToolbar editor={editor}/>
-        <BotMessageSquare size={50} className=" mr-8 border border-border rounded-full p-2"/>
+      <div className="relative shrink-0 border-t border-border px-4 h-16 flex items-center">
+        {status === "error" && (
+          <div className="absolute bottom-full left-1/2 z-20 mb-3 -translate-x-1/2">
+            <div className="flex items-center gap-2 rounded-lg border border-destructive/50 bg-background px-3 py-2 text-sm text-destructive shadow-lg">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span className="max-w-80 truncate">
+                {error?.message ?? "Failed to save"}
+              </span>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={retry}
+                className="h-6 px-2"
+              >
+                Retry
+              </Button>
+            </div>
+          </div>
+        )}
+        <div className="mx-auto flex w-full max-w-200 items-center gap-3">
+          <div className="min-w-0 flex-1">
+            {editor && <EditorToolbar editor={editor} />}
+          </div>
+          <button
+            type="button"
+            aria-label="AI assistant"
+            title="AI assistant"
+            className="shrink-0 rounded-full border border-border p-2 text-foreground/80 transition-colors hover:text-primary"
+          >
+            <BotMessageSquare size={20} />
+          </button>
+        </div>
       </div>
     </div>
   );

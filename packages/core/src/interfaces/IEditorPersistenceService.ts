@@ -10,6 +10,7 @@ export interface EditorNote {
 export interface IEditorPersistenceService {
   listNotes(): Promise<EditorNote[]>;
   createNote(name: string): Promise<EditorNote>;
+  renameNote(id: string, name: string): Promise<EditorNote>;
   deleteNote(id: string): Promise<void>;
   loadUpdates(id: string): Promise<Uint8Array[]>;
   appendUpdate(id: string, update: Uint8Array): Promise<void>;
