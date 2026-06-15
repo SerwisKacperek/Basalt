@@ -16,6 +16,7 @@ import {
   Undo2,
   Loader2,
   Sparkles,
+  ScanText,
 } from "lucide-react";
 import { useState, type ComponentType } from "react";
 import { useServices } from "~/services/ServiceContext";
@@ -104,8 +105,10 @@ const GROUPS: ToolbarButton[][] = [
 
 export function EditorToolbar({ editor }: { editor: Editor }) {
   const { ollama } = useServices();
-  const [isFormatting, setIsFormatting] = useState(false);
-  const [formatError, setFormatError] = useState<string | null>(null);
+  const [activeAiAction, setActiveAiAction] = useState<
+    "formatting" | "summarizing" | null
+  >(null);
+  const [aiError, setAiError] = useState<string | null>(null);
   // Subscribe to selection/content changes so active states stay in sync.
   const editorState = useEditorState({
     editor,
@@ -118,29 +121,43 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
 
   let buttonIndex = 0;
 
-  const formatNote = async () => {
-    setIsFormatting(true);
-    setFormatError(null);
+  const runAiAction = async (
+    action: (content: string) => Promise<string>,
+    actionName: "formatting" | "summarizing",
+    fallbackError: string,
+  ) => {
+    setActiveAiAction(actionName);
+    setAiError(null);
     const original = editor.getHTML();
     try {
-      const formatted = await ollama.formatNote(original);
+      const result = await action(original);
       if (editor.getHTML() !== original) {
         throw new Error(
-          "Notatka zmieniła się podczas formatowania. Wynik nie został zastosowany.",
+          "Notatka zmieniła się podczas pracy Ollamy. Wynik nie został zastosowany.",
         );
       }
-      editor.commands.setContent(formatted);
+      editor.commands.setContent(result);
       editor.commands.focus("end");
     } catch (error) {
-      setFormatError(
-        error instanceof Error
-          ? error.message
-          : "Nie udało się sformatować notatki.",
-      );
+      setAiError(error instanceof Error ? error.message : fallbackError);
     } finally {
-      setIsFormatting(false);
+      setActiveAiAction(null);
     }
   };
+
+  const formatNote = () =>
+    runAiAction(
+      (content) => ollama.formatNote(content),
+      "formatting",
+      "Nie udało się sformatować notatki.",
+    );
+
+  const summarizeNote = () =>
+    runAiAction(
+      (content) => ollama.summarizeNote(content),
+      "summarizing",
+      "Nie udało się streścić notatki.",
+    );
 
   return (
     <div className="sticky bottom-5 mx-auto z-10 w-full max-w-200 flex flex-wrap items-center gap-1 border border-border bg-sidebar rounded-lg px-2 py-1.5">
@@ -173,30 +190,51 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
       ))}
 
       <div className="ml-auto flex items-center gap-0.5">
-        {formatError && (
+        {aiError && (
           <span
             role="alert"
-            title={formatError}
+            title={aiError}
             className="max-w-64 truncate px-2 text-xs text-destructive"
           >
-            {formatError}
+            {aiError}
           </span>
         )}
         <button
           type="button"
           title="Popraw i sformatuj notatkę z Ollamą"
           aria-label="Popraw i sformatuj notatkę z Ollamą"
-          disabled={isFormatting || editor.isEmpty}
+          disabled={activeAiAction !== null || editor.isEmpty}
           onClick={formatNote}
           className="flex h-8 items-center justify-center gap-1.5 rounded-md px-2 text-foreground/80 transition-colors hover:bg-primary/10 hover:text-primary disabled:opacity-40 disabled:hover:bg-transparent"
         >
-          {isFormatting ? (
+          {activeAiAction === "formatting" ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
             <Sparkles className="h-4 w-4" />
           )}
           <span className="hidden sm:inline">
-            {isFormatting ? "Formatowanie..." : "Formatuj AI"}
+            {activeAiAction === "formatting"
+              ? "Formatowanie..."
+              : "Formatuj AI"}
+          </span>
+        </button>
+        <button
+          type="button"
+          title="Streść notatkę z Ollamą"
+          aria-label="Streść notatkę z Ollamą"
+          disabled={activeAiAction !== null || editor.isEmpty}
+          onClick={summarizeNote}
+          className="flex h-8 items-center justify-center gap-1.5 rounded-md px-2 text-foreground/80 transition-colors hover:bg-primary/10 hover:text-primary disabled:opacity-40 disabled:hover:bg-transparent"
+        >
+          {activeAiAction === "summarizing" ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <ScanText className="h-4 w-4" />
+          )}
+          <span className="hidden sm:inline">
+            {activeAiAction === "summarizing"
+              ? "Streszczanie..."
+              : "Streść AI"}
           </span>
         </button>
         <span className="mx-1 h-5 w-px bg-border" aria-hidden />
