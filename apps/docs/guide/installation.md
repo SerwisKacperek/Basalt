@@ -4,6 +4,7 @@
 
 - [Bun](https://bun.sh) 1.3+
 - [Docker](https://docker.com) (for the Postgres database)
+- [PostgreSQL](https://postgresql.org) 18+ (if running the database outside of Docker)
 
 ## Setup
 
