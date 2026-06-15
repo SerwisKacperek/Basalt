@@ -35,6 +35,7 @@ export interface IOllamaService {
   setEndpoint(endpoint: string): Promise<void>;
   testConnection(): Promise<void>;
   formatNote(content: string): Promise<string>;
+  summarizeNote(content: string): Promise<string>;
 }
 
 export class OllamaError extends Error {
@@ -122,18 +123,35 @@ export class OllamaService implements IOllamaService {
       },
     ]);
 
-    const cleaned = formatted
-      .replace(/^```(?:html)?\s*/i, "")
-      .replace(/\s*```$/i, "")
-      .trim();
+    return this.cleanEditorHtml(formatted);
+  }
 
-    if (!cleaned.startsWith("<")) {
-      throw new OllamaError(
-        "Ollama nie zwróciła treści w formacie obsługiwanym przez edytor.",
-      );
+  async summarizeNote(content: string): Promise<string> {
+    if (!content.trim()) {
+      throw new OllamaError("Notatka jest pusta.");
     }
 
-    return cleaned;
+    const summary = await this.complete([
+      {
+        role: "system",
+        content: [
+          "You are an expert at summarizing notes.",
+          "Create a concise summary in the same language as the source.",
+          "Preserve the key ideas, facts, decisions, dates, names, and action items.",
+          "Do not add information that is not present in the source.",
+          "Use a short heading and bullet points where useful.",
+          "Return only clean HTML suitable for a rich text editor.",
+          "Use only common semantic tags such as p, h1, h2, h3, ul, ol, li, strong, em, blockquote, pre, code, a, and br.",
+          "Do not include markdown fences, explanations, or commentary.",
+        ].join(" "),
+      },
+      {
+        role: "user",
+        content,
+      },
+    ]);
+
+    return this.cleanEditorHtml(summary);
   }
 
   private async complete(messages: OllamaChatMessage[]): Promise<string> {
@@ -183,4 +201,18 @@ export class OllamaService implements IOllamaService {
     return content;
   }
 
+  private cleanEditorHtml(content: string): string {
+    const cleaned = content
+      .replace(/^```(?:html)?\s*/i, "")
+      .replace(/\s*```$/i, "")
+      .trim();
+
+    if (!cleaned.startsWith("<")) {
+      throw new OllamaError(
+        "Ollama nie zwróciła treści w formacie obsługiwanym przez edytor.",
+      );
+    }
+
+    return cleaned;
+  }
 }
