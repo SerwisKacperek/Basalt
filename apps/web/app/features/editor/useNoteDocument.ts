@@ -23,13 +23,13 @@ export interface NoteDocument {
 }
 
 /**
- * Owns the Yjs document lifecycle for a single note: loads the persisted update
- * history, streams local edits back to storage, and compacts the update log.
- * Surfaces save status / errors instead of swallowing them, and flushes a final
- * snapshot when the tab is hidden or the component unmounts.
+ * Owns the Yjs document lifecycle for a single note: loads the persisted
+ * snapshot + operations, streams local edits back to storage, and compacts
+ * the operation log. Surfaces save status / errors instead of swallowing
+ * them, and flushes a final snapshot when the tab is hidden or unmounts.
  */
 export function useNoteDocument(id: string): NoteDocument {
-  const { editorPersistence } = useServices();
+  const { editorPersistence, syncService } = useServices();
   const [doc] = useState(() => new Y.Doc());
   const [ready, setReady] = useState(false);
   const [loadError, setLoadError] = useState<Error | null>(null);
@@ -64,34 +64,36 @@ export function useNoteDocument(id: string): NoteDocument {
   }, []);
 
   // Persist the full current state. Used for compaction and for recovery, since
-  // a CRDT snapshot supersedes any individual update that failed to save.
+  // a CRDT snapshot supersedes any individual operation that failed to save.
   const compact = useCallback(() => {
     updateCountRef.current = 0;
     if (compactTimerRef.current) {
       clearTimeout(compactTimerRef.current);
       compactTimerRef.current = null;
     }
-    const merged = Y.encodeStateAsUpdate(doc);
-    runWrite(() => editorPersistence.compact(id, merged));
+    const mergedData = Y.encodeStateAsUpdate(doc);
+    const stateVector = Y.encodeStateVector(doc);
+    runWrite(() => editorPersistence.compact(id, mergedData, stateVector));
   }, [doc, id, editorPersistence, runWrite]);
 
   const retry = useCallback(() => compact(), [compact]);
   const reload = useCallback(() => setLoadAttempt((n) => n + 1), []);
 
-  // Load persisted history. Always resolves to either `ready` or `loadError`,
-  // so the editor never hangs on an indefinite loading state.
+  // Load persisted snapshot + operations. Always resolves to either `ready` or
+  // `loadError`, so the editor never hangs on an indefinite loading state.
   useEffect(() => {
     let cancelled = false;
     setReady(false);
     setLoadError(null);
     editorPersistence
-      .loadUpdates(id)
-      .then((updates) => {
+      .loadNote(id)
+      .then(({ snapshot, operations }) => {
         if (cancelled) return;
         Y.transact(
           doc,
           () => {
-            for (const u of updates) Y.applyUpdate(doc, u);
+            if (snapshot) Y.applyUpdate(doc, snapshot);
+            for (const op of operations) Y.applyUpdate(doc, op);
           },
           "load",
         );
@@ -115,7 +117,7 @@ export function useNoteDocument(id: string): NoteDocument {
 
     const onUpdate = (update: Uint8Array, origin: unknown) => {
       if (origin === "load") return;
-      runWrite(() => editorPersistence.appendUpdate(id, update));
+      runWrite(() => editorPersistence.appendOperation(id, update));
       updateCountRef.current += 1;
       if (updateCountRef.current >= COMPACT_AFTER_UPDATES) compact();
       else scheduleCompact();
@@ -130,6 +132,13 @@ export function useNoteDocument(id: string): NoteDocument {
       }
     };
   }, [id, doc, editorPersistence, runWrite, compact]);
+
+  // Connect to WS sync after local state is loaded. Disconnect on note change or unmount.
+  useEffect(() => {
+    if (!ready) return;
+    syncService.connect(id, doc);
+    return () => syncService.disconnect();
+  }, [id, doc, ready, syncService]);
 
   // Flush a final snapshot when the page is hidden or unmounted so a pending
   // (debounced) compaction is not lost.

@@ -7,6 +7,7 @@ import type { IWorkspaceService } from "@basalt/core/interfaces/IWorkspaceServic
 import type { IFolderService } from "@basalt/core/interfaces/IFolderService";
 import type { INoteService } from "@basalt/core/interfaces/INoteService";
 import type { IOllamaService } from "./web/OllamaService";
+import type { SyncService } from "./web/SyncService";
 
 export interface ServiceRegistry {
   diagnostics: IDiagnosticsService;
@@ -16,6 +17,7 @@ export interface ServiceRegistry {
   folders: IFolderService;
   notes: INoteService;
   ollama: IOllamaService;
+  syncService: SyncService;
 }
 
 const ServiceContext = createContext<ServiceRegistry | null>(null);

@@ -3,6 +3,7 @@ import type { IDiagnosticsService } from "@basalt/core/interfaces/IDiagnosticsSe
 import type {
   EditorNote,
   IEditorPersistenceService,
+  NoteContent,
 } from "@basalt/core/interfaces/IEditorPersistenceService";
 import type { IWorkspaceService } from "@basalt/core/interfaces/IWorkspaceService";
 import type { IFolderService } from "@basalt/core/interfaces/IFolderService";
@@ -36,27 +37,49 @@ export function buildRendererBridge(): RendererServiceBridge {
         ipcRenderer.invoke(CHANNELS.editorPersistence.create, name) as Promise<EditorNote>,
       deleteNote: (id: string) =>
         ipcRenderer.invoke(CHANNELS.editorPersistence.delete, id) as Promise<void>,
-      loadUpdates: async (id: string) => {
-        const rows = (await ipcRenderer.invoke(
-          CHANNELS.editorPersistence.loadUpdates,
+      loadNote: async (id: string): Promise<NoteContent> => {
+        const result = (await ipcRenderer.invoke(
+          CHANNELS.editorPersistence.loadNote,
           id,
-        )) as Uint8Array[];
-        return rows.map((r) => new Uint8Array(r));
+        )) as { snapshot: Uint8Array | null; snapshotId: string | null; operations: Uint8Array[] };
+        return {
+          snapshot: result.snapshot ? new Uint8Array(result.snapshot) : null,
+          snapshotId: result.snapshotId,
+          operations: result.operations.map((op) => new Uint8Array(op)),
+        };
       },
-      appendUpdate: (id: string, update: Uint8Array) =>
+      appendOperation: (id: string, data: Uint8Array) =>
         ipcRenderer.invoke(
-          CHANNELS.editorPersistence.appendUpdate,
+          CHANNELS.editorPersistence.appendOperation,
           id,
-          update,
+          data,
         ) as Promise<void>,
-      compact: (id: string, merged: Uint8Array) =>
+      compact: (id: string, mergedData: Uint8Array, stateVector: Uint8Array) =>
         ipcRenderer.invoke(
           CHANNELS.editorPersistence.compact,
           id,
-          merged,
+          mergedData,
+          stateVector,
         ) as Promise<void>,
       reset: () =>
         ipcRenderer.invoke(CHANNELS.editorPersistence.reset) as Promise<void>,
+      getUnsyncedOperations: async (id: string) => {
+        const rows = (await ipcRenderer.invoke(
+          CHANNELS.editorPersistence.getUnsyncedOperations,
+          id,
+        )) as { id: number; data: Uint8Array }[];
+        return rows.map((r) => ({ id: r.id, data: new Uint8Array(r.data) }));
+      },
+      markOperationsSynced: (id: string, opIds: number[]) =>
+        ipcRenderer.invoke(
+          CHANNELS.editorPersistence.markOperationsSynced,
+          id,
+          opIds,
+        ) as Promise<void>,
+      syncNoteList: () =>
+        ipcRenderer.invoke(
+          CHANNELS.editorPersistence.syncNoteList,
+        ) as Promise<void>,
     },
     workspaces: {
       findAll: (filters?: Filters<Select<"workspaces">>) =>
