@@ -21,6 +21,9 @@ export const createApp = () =>
   new Elysia({ prefix: "/api" })
     .use(cors())
     .use(logger)
+    // TODO: This endpoint has no auth guard and broadcasts events across all
+    // users/workspaces. Add authentication and workspace-scoped filtering
+    // before deploying to a multi-tenant environment.
     .get("/notes/events", ({ request }) => {
       const origin = request.headers.get("Origin") ?? "*";
       let unsub: (() => void) | undefined;

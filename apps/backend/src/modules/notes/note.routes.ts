@@ -46,10 +46,10 @@ export const createNoteRoutes = (
       response: NoteResponse,
     })
     .delete('/:id', async ({ params }) => {
+      const result = await controller.remove(params.id);
       for (const sql of dropNoteTablesSQL(params.id)) {
         await rawDb.exec(sql);
       }
-      const result = await controller.remove(params.id);
       noteEventBus.emit({ type: 'deleted', noteId: params.id });
       return result;
     }, {

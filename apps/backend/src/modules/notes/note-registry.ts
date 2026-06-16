@@ -56,12 +56,17 @@ export function prefixMsg(type: number, data: Uint8Array): Uint8Array {
 export class NoteRegistry {
   private entries = new Map<string, NoteEntry>();
   private loading = new Map<string, Promise<Y.Doc>>();
+  private evictTimer: ReturnType<typeof setInterval>;
 
   constructor(
     private readonly contentService: NoteContentService,
     private readonly pubSub: INotePubSub,
   ) {
-    setInterval(() => this.evictIdle(), EVICT_IDLE_MS);
+    this.evictTimer = setInterval(() => this.evictIdle(), EVICT_IDLE_MS);
+  }
+
+  destroy(): void {
+    clearInterval(this.evictTimer);
   }
 
   async getOrLoad(noteId: string): Promise<Y.Doc> {
@@ -75,38 +80,30 @@ export class NoteRegistry {
     if (inFlight) return inFlight;
 
     const loadPromise = (async () => {
-      const doc = new Y.Doc();
-      const content = await this.contentService.loadNote(noteId);
-      Y.transact(
-        doc,
-        () => {
-          if (content.snapshot) Y.applyUpdate(doc, content.snapshot);
-          for (const op of content.operations) Y.applyUpdate(doc, op);
-        },
-        "load",
-      );
-      this.entries.set(noteId, { doc, opCount: 0, lastActive: Date.now() });
-      this.loading.delete(noteId);
-      return doc;
+      try {
+        const doc = new Y.Doc();
+        const content = await this.contentService.loadNote(noteId);
+        Y.transact(
+          doc,
+          () => {
+            if (content.snapshot) Y.applyUpdate(doc, content.snapshot);
+            for (const op of content.operations) Y.applyUpdate(doc, op);
+          },
+          "load",
+        );
+        this.entries.set(noteId, { doc, opCount: 0, lastActive: Date.now() });
+        return doc;
+      } finally {
+        // Always clean up so a transient DB error doesn't permanently poison the map.
+        this.loading.delete(noteId);
+      }
     })();
 
     this.loading.set(noteId, loadPromise);
     return loadPromise;
   }
 
-  async applyOnly(
-    noteId: string,
-    op: Uint8Array,
-    clientId: string,
-  ): Promise<void> {
-    const doc = await this.getOrLoad(noteId);
-    Y.applyUpdate(doc, op);
-    const entry = this.entries.get(noteId)!;
-    entry.lastActive = Date.now();
-    this.pubSub.publish(noteId, prefixMsg(0x02, op), clientId);
-  }
-
-  async applyAndBroadcast(
+  private async applyAndPersist(
     noteId: string,
     op: Uint8Array,
     clientId: string,
@@ -117,12 +114,35 @@ export class NoteRegistry {
     entry.opCount += 1;
     entry.lastActive = Date.now();
     await this.contentService.appendOperation(noteId, op);
-    // Broadcast as type 0x02 so receivers know it's an incremental update.
     this.pubSub.publish(noteId, prefixMsg(0x02, op), clientId);
     if (entry.opCount >= COMPACT_AFTER_OPS) {
       entry.opCount = 0;
-      this.triggerCompaction(noteId, doc).catch(console.error);
+      this.triggerCompaction(noteId, doc).catch((err) => {
+        console.error(err);
+        // Restore threshold so compaction retriggers after another cycle.
+        const e = this.entries.get(noteId);
+        if (e) e.opCount = COMPACT_AFTER_OPS;
+      });
     }
+  }
+
+  async applyOnly(
+    noteId: string,
+    op: Uint8Array,
+    clientId: string,
+  ): Promise<void> {
+    // Sync step 2: client delta for ops the server was missing. Persist so
+    // server restart doesn't lose state that peers already received.
+    return this.applyAndPersist(noteId, op, clientId);
+  }
+
+  async applyAndBroadcast(
+    noteId: string,
+    op: Uint8Array,
+    clientId: string,
+  ): Promise<void> {
+    // Incremental update from client. Broadcast as type 0x02.
+    return this.applyAndPersist(noteId, op, clientId);
   }
 
   async triggerCompaction(noteId: string, doc: Y.Doc): Promise<void> {

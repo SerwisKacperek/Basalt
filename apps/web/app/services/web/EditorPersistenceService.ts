@@ -246,8 +246,6 @@ export class EditorPersistenceService implements IEditorPersistenceService {
     const compressedData = await compress(mergedData);
     const compressedSv = await compress(stateVector);
 
-    this.currentSnapshotId.set(id, newSnapshotId);
-
     const insertStmt = this.db.insert(snapsTable).values({
       id: newSnapshotId,
       data: compressedData,
@@ -272,6 +270,9 @@ export class EditorPersistenceService implements IEditorPersistenceService {
     } else {
       await this.db.batch([insertStmt, updateStmt]);
     }
+
+    // Update cache only after the batch commits successfully.
+    this.currentSnapshotId.set(id, newSnapshotId);
   }
 
   async getUnsyncedOperations(
