@@ -13,6 +13,7 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@basalt/db": "*",
     "@basalt/domain": "*",
     "@elysiajs/cors": "latest",
     "@sinclair/typebox": "^0.34.49",
@@ -20,7 +21,8 @@
     "drizzle-orm": "^0.45.2",
     "drizzle-typebox": "^0.3.3",
     "elysia": "latest",
-    "pg": "^8.20.0"
+    "pg": "^8.20.0",
+    "yjs": "^13.6.20"
   },
   "devDependencies": {
     "@repo/eslint-config": "*",

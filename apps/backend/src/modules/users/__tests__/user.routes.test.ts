@@ -3,7 +3,7 @@ import { createUserRoutes } from '../user.routes';
 import { ConflictException, NotFoundException } from '@basalt/domain';
 
 const mockUser = {
-  id: 'user-1',
+  id: '44444444-4444-4444-4444-444444444444',
   email: 'test@example.com',
   password: 'hashed_SECRET_must_not_leak',
   createdAt: new Date('2024-01-01'),
@@ -98,7 +98,7 @@ describe('GET /users/:id', () => {
     const res = await makeApp().handle(new Request('http://localhost/users/user-1'));
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body.id).toBe('user-1');
+    expect(body.id).toBe('44444444-4444-4444-4444-444444444444');
     expect(body.email).toBe('test@example.com');
   });
 

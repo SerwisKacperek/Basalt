@@ -1,5 +1,5 @@
 import { config as loadDotenv } from 'dotenv';
-import { app, BrowserWindow, protocol, session } from 'electron';
+import { app, BrowserWindow, nativeImage, protocol, session } from 'electron';
 import path from 'path';
 
 loadDotenv();
@@ -15,10 +15,26 @@ const isDev = !!devServerUrl
 
 protocol.registerSchemesAsPrivileged([appScheme, apiScheme, vaultScheme])
 
+function getWindowIcon(): Electron.NativeImage | string | undefined {
+	if (process.platform === 'darwin') {
+		return undefined;
+	}
+	
+	const assetsPath = app.isPackaged
+	? path.join(process.resourcesPath, 'assets')
+	: path.join(__dirname, '../assets');
+	
+	const iconName = process.platform === 'win32' ? 'icon.ico' : 'icon.png';
+	const iconPath = path.join(assetsPath, iconName);
+	
+	return nativeImage.createFromPath(iconPath);
+}
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 1280,
     height: 800,
+    icon: getWindowIcon(),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,

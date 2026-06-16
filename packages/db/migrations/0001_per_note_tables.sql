@@ -1,0 +1,1 @@
+-- Data migration handled by JS migration migrate_note_updates_to_per_note_tables

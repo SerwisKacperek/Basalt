@@ -21,21 +21,35 @@ export function registerIpc(registry: MainServiceRegistry) {
   ipcMain.handle(CHANNELS.editorPersistence.delete, (_e, id: string) =>
     registry.editorPersistence.deleteNote(id),
   );
-  ipcMain.handle(CHANNELS.editorPersistence.loadUpdates, (_e, id: string) =>
-    registry.editorPersistence.loadUpdates(id),
+  ipcMain.handle(CHANNELS.editorPersistence.loadNote, (_e, id: string) =>
+    registry.editorPersistence.loadNote(id),
   );
   ipcMain.handle(
-    CHANNELS.editorPersistence.appendUpdate,
-    (_e, id: string, update: Uint8Array) =>
-      registry.editorPersistence.appendUpdate(id, update),
+    CHANNELS.editorPersistence.appendOperation,
+    (_e, id: string, data: Uint8Array) =>
+      registry.editorPersistence.appendOperation(id, data),
   );
   ipcMain.handle(
     CHANNELS.editorPersistence.compact,
-    (_e, id: string, merged: Uint8Array) =>
-      registry.editorPersistence.compact(id, merged),
+    (_e, id: string, mergedData: Uint8Array, stateVector: Uint8Array) =>
+      registry.editorPersistence.compact(id, mergedData, stateVector),
   );
   ipcMain.handle(CHANNELS.editorPersistence.reset, () =>
     registry.editorPersistence.reset(),
+  );
+  ipcMain.handle(
+    CHANNELS.editorPersistence.getUnsyncedOperations,
+    (_e, id: string) =>
+      registry.editorPersistence.getUnsyncedOperations(id),
+  );
+  ipcMain.handle(
+    CHANNELS.editorPersistence.markOperationsSynced,
+    (_e, id: string, opIds: number[]) =>
+      registry.editorPersistence.markOperationsSynced(id, opIds),
+  );
+  ipcMain.handle(
+    CHANNELS.editorPersistence.syncNoteList,
+    () => registry.editorPersistence.syncNoteList(),
   );
 
   ipcMain.handle(CHANNELS.preferences.save, (_, data) =>

@@ -56,7 +56,7 @@ export function createMainRegistry(vaultRoot: string): MainServiceRegistry {
   const dbPath = path.join(app.getPath("userData"), "basalt-editor.db");
   const domainDbPath = path.join(app.getPath("userData"), "basalt-domain.db");
 
-  const { db, reset } = openEditorDb(dbPath);
+  const { db, rawSqlite, reset } = openEditorDb(dbPath);
   const { db: domainDb, schema } = openDomainDb(domainDbPath);
 
   const localWorkspaces = new WorkspaceService(new WorkspaceRepository(domainDb, schema));
@@ -73,7 +73,7 @@ export function createMainRegistry(vaultRoot: string): MainServiceRegistry {
 
   return {
     diagnostics: new DiagnosticsService(apiClient),
-    editorPersistence: new EditorPersistenceService(db, reset, compositeNotes),
+    editorPersistence: new EditorPersistenceService(db, rawSqlite, reset, compositeNotes),
     preferences: new StorageService(vaultRoot),
     workspaces: new CompositeWorkspaceService(localWorkspaces, remoteWorkspaces),
     folders: new CompositeFolderService(localFolders, remoteFolders),

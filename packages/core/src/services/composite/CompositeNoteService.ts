@@ -58,7 +58,10 @@ export class CompositeNoteService implements INoteService {
 
     for (const note of localNotes) {
       if (!remoteIds.has(note.id)) {
-        await this.local.delete(note.id);
+        // Push local-only notes to remote (created offline or with failed push).
+        await this.remote.create(note as Insert<"notes">).catch((err) =>
+          console.error("[composite:notes] sync push failed:", err),
+        );
       }
     }
   }

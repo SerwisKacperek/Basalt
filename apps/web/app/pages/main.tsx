@@ -114,9 +114,10 @@ export default function Main() {
       const copy = await editorPersistence.createNote(
         `${original?.name ?? "Untitled"} (copy)`,
       );
-      const updates = await editorPersistence.loadUpdates(id);
+      const { snapshot, operations } = await editorPersistence.loadNote(id);
+      const updates = snapshot ? [snapshot, ...operations] : operations;
       for (const update of updates) {
-        await editorPersistence.appendUpdate(copy.id, update);
+        await editorPersistence.appendOperation(copy.id, update);
       }
       // Place the copy right next to the original, in the same folder.
       await noteService.update(copy.id, {

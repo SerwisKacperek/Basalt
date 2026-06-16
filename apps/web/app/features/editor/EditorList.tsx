@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router";
 import type { EditorNote } from "@basalt/core/interfaces/IEditorPersistenceService";
 import { Button, Input } from "@basalt/ui";
 import { useServices } from "~/services/ServiceContext";
+import { useNoteListSync } from "./useNoteListSync";
 
 export function EditorList() {
   const { editorPersistence } = useServices();
@@ -13,14 +14,17 @@ export function EditorList() {
   const [rebuildOpen, setRebuildOpen] = useState(false);
   const [rebuilding, setRebuilding] = useState(false);
 
-  const refresh = () => {
+  const refresh = useCallback(() => {
     editorPersistence.listNotes().then(setDocs).catch(console.error);
-  };
+  }, [editorPersistence]);
 
   useEffect(() => {
     refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [refresh]);
+
+  useNoteListSync(useCallback(() => {
+    editorPersistence.syncNoteList().then(refresh).catch(console.error);
+  }, [editorPersistence, refresh]));
 
   const openCreate = () => {
     setTitle("Untitled");

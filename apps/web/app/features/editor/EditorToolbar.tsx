@@ -16,6 +16,7 @@ import {
   Undo2,
   Loader2,
   Sparkles,
+  ScanText,
 } from "lucide-react";
 import { Fragment, useState, type ComponentType } from "react";
 import { useServices } from "~/services/ServiceContext";
@@ -114,7 +115,9 @@ const GROUPS: ToolbarButton[][] = [
 
 export function EditorToolbar({ editor }: { editor: Editor }) {
   const { ollama } = useServices();
-  const [isFormatting, setIsFormatting] = useState(false);
+  const [activeAiAction, setActiveAiAction] = useState<
+    "formatting" | "summarizing" | null
+  >(null);
   // Subscribe to selection/content changes so active states stay in sync.
   const editorState = useEditorState({
     editor,
@@ -125,26 +128,42 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
     }),
   });
 
-  const formatNote = async () => {
-    setIsFormatting(true);
+  const runAiAction = async (
+    action: (content: string) => Promise<string>,
+    actionName: "formatting" | "summarizing",
+    fallbackError: string,
+  ) => {
+    setActiveAiAction(actionName);
     const original = editor.getHTML();
     try {
-      const formatted = await ollama.formatNote(original);
+      const result = await action(original);
       if (editor.getHTML() !== original) {
         throw new Error(
-          "The note changed while formatting. The result was not applied.",
+          "The note changed while the AI was working. The result was not applied.",
         );
       }
-      editor.commands.setContent(formatted);
+      editor.commands.setContent(result);
       editor.commands.focus("end");
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Couldn't format the note.",
-      );
+      toast.error(error instanceof Error ? error.message : fallbackError);
     } finally {
-      setIsFormatting(false);
+      setActiveAiAction(null);
     }
   };
+
+  const formatNote = () =>
+    runAiAction(
+      (content) => ollama.formatNote(content),
+      "formatting",
+      "Couldn't format the note.",
+    );
+
+  const summarizeNote = () =>
+    runAiAction(
+      (content) => ollama.summarizeNote(content),
+      "summarizing",
+      "Couldn't summarize the note.",
+    );
 
   return (
     <TooltipProvider delayDuration={300}>
@@ -194,21 +213,47 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
                 variant="ghost"
                 size="sm"
                 aria-label="Clean up & format note with AI"
-                disabled={isFormatting || editor.isEmpty}
+                disabled={activeAiAction !== null || editor.isEmpty}
                 onClick={formatNote}
                 className="h-8 gap-1.5 px-2 text-foreground/80 hover:bg-primary/10 hover:text-primary"
               >
-                {isFormatting ? (
+                {activeAiAction === "formatting" ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <Sparkles className="h-4 w-4" />
                 )}
                 <span className="hidden sm:inline">
-                  {isFormatting ? "Formatting…" : "Format with AI"}
+                  {activeAiAction === "formatting"
+                    ? "Formatting…"
+                    : "Format with AI"}
                 </span>
               </Button>
             </TooltipTrigger>
             <TooltipContent>Clean up &amp; format note with AI</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label="Summarize note with AI"
+                disabled={activeAiAction !== null || editor.isEmpty}
+                onClick={summarizeNote}
+                className="h-8 gap-1.5 px-2 text-foreground/80 hover:bg-primary/10 hover:text-primary"
+              >
+                {activeAiAction === "summarizing" ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <ScanText className="h-4 w-4" />
+                )}
+                <span className="hidden sm:inline">
+                  {activeAiAction === "summarizing"
+                    ? "Summarizing…"
+                    : "Summarize with AI"}
+                </span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Summarize note with AI</TooltipContent>
           </Tooltip>
           <Separator orientation="vertical" className="mx-1 h-5 shrink-0" />
           <Tooltip>

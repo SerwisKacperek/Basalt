@@ -4,15 +4,21 @@ import Collaboration from "@tiptap/extension-collaboration";
 import Placeholder from "@tiptap/extension-placeholder";
 import { Button } from "@basalt/ui";
 import { EditorToolbar } from "./EditorToolbar";
+import { EditorStatusBar } from "./EditorStatusBar";
 import { useNoteDocument } from "./useNoteDocument";
-import { AlertCircle } from "lucide-react";
+import {BotMessageSquare} from "lucide-react";
 
 export function EditorView({ id }: { id: string }) {
-  const { doc, loadError, status, error, retry, reload } = useNoteDocument(id);
+  const {
+    doc, ready, loadError,
+    localSaveStatus, remoteSyncStatus,
+    lastLocalSavedAt, lastSyncedAt,
+    upstreamSynced, hasPendingLocal,
+    saveError, retry, reload,
+  } = useNoteDocument(id);
 
   const editor = useEditor(
     {
-      immediatelyRender: true,
       extensions: [
         StarterKit.configure({
           history: false,
@@ -28,7 +34,7 @@ export function EditorView({ id }: { id: string }) {
       editorProps: {
         attributes: {
           class:
-            "prose prose-sm dark:prose-invert focus:outline-none flex-1 min-h-[60vh] max-w-none px-4 py-3",
+            "prose prose-sm dark:prose-invert focus:outline-none min-h-[60vh] max-w-none px-4 py-3",
         },
       },
     },
@@ -50,12 +56,24 @@ export function EditorView({ id }: { id: string }) {
     );
   }
 
+  if (!ready || !editor) {
+    return <div className="p-4 text-muted-foreground">Loading…</div>;
+  }
+
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto scrollbar-thin">
-        <div className="mx-auto flex w-full max-w-200 flex-1 flex-col">
-          <EditorContent editor={editor} className="flex flex-1 flex-col" />
-        </div>
+      <EditorStatusBar
+        localSaveStatus={localSaveStatus}
+        remoteSyncStatus={remoteSyncStatus}
+        lastLocalSavedAt={lastLocalSavedAt}
+        lastSyncedAt={lastSyncedAt}
+        upstreamSynced={upstreamSynced}
+        hasPendingLocal={hasPendingLocal}
+        saveError={saveError}
+        onRetry={retry}
+      />
+      <div className="flex-1 min-h-0 overflow-auto pb-24 scrollbar-none">
+        <EditorContent editor={editor} className="h-full" />
       </div>
       <div className="relative shrink-0 border-t border-border px-4 h-16 flex items-center">
         {status === "error" && (

@@ -25,6 +25,8 @@ export default defineConfig({
           { text: 'Introduction', link: '/guide/' },
           { text: 'Installation', link: '/guide/installation' },
           { text: 'Architecture', link: '/guide/architecture' },
+          { text: 'Editor', link: '/guide/editor' },
+          { text: 'Sync', link: '/guide/sync' },
           { text: 'Configuration', link: '/guide/configuration' },
         ],
       },
