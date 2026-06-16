@@ -52,11 +52,41 @@ export function registerIpc(registry: MainServiceRegistry) {
     () => registry.editorPersistence.syncNoteList(),
   );
 
-  ipcMain.handle(CHANNELS.preferences.save, (_, data) =>
-    registry.preferences.saveData("app_preferences", data),
+  ipcMain.handle(CHANNELS.preferences.save, (_, key, data) =>
+    registry.preferences.saveData(key, data),
   );
-  ipcMain.handle(CHANNELS.preferences.get, () =>
-    registry.preferences.getData("app_preferences"),
+  ipcMain.handle(CHANNELS.preferences.get, (_, key) =>
+    registry.preferences.getData(key),
+  );
+
+  // AI requests run here in the main process so they bypass the renderer's
+  // CORS/COEP restrictions (e.g. talking to a local LM Studio / Ollama server).
+  // Errors carry user-facing messages, so wrap them in a result envelope to
+  // avoid Electron's "Error invoking remote method" prefix.
+  const aiResult = async <T>(fn: () => Promise<T>) => {
+    try {
+      return { ok: true as const, value: await fn() };
+    } catch (error) {
+      return {
+        ok: false as const,
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
+  };
+  ipcMain.handle(CHANNELS.ai.getConfig, () =>
+    aiResult(() => registry.ai.getConfig()),
+  );
+  ipcMain.handle(CHANNELS.ai.setConfig, (_e, config) =>
+    aiResult(() => registry.ai.setConfig(config)),
+  );
+  ipcMain.handle(CHANNELS.ai.listModels, () =>
+    aiResult(() => registry.ai.listModels()),
+  );
+  ipcMain.handle(CHANNELS.ai.formatNote, (_e, content: string) =>
+    aiResult(() => registry.ai.formatNote(content)),
+  );
+  ipcMain.handle(CHANNELS.ai.summarizeNote, (_e, content: string) =>
+    aiResult(() => registry.ai.summarizeNote(content)),
   );
 
   ipcMain.handle(CHANNELS.workspaces.findAll, (_e, filters?) =>

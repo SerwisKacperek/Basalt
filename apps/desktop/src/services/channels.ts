@@ -19,6 +19,13 @@ export const CHANNELS = {
     save: "svc:preferences:save",
     get: "svc:preferences:get",
   },
+  ai: {
+    getConfig: "svc:ai:getConfig",
+    setConfig: "svc:ai:setConfig",
+    listModels: "svc:ai:listModels",
+    formatNote: "svc:ai:formatNote",
+    summarizeNote: "svc:ai:summarizeNote",
+  },
   workspaces: {
     findAll: "svc:workspaces:findAll",
     findById: "svc:workspaces:findById",

@@ -8,6 +8,7 @@ import type {
 import type { IWorkspaceService } from "@basalt/core/interfaces/IWorkspaceService";
 import type { IFolderService } from "@basalt/core/interfaces/IFolderService";
 import type { INoteService } from "@basalt/core/interfaces/INoteService";
+import type { IAiService, AiConfig } from "@basalt/core/interfaces/IAiService";
 import type { Select, Insert, Filters } from "@basalt/domain";
 import { IStorageService } from "@basalt/core/interfaces/IStorageService";
 import { CHANNELS } from "./channels";
@@ -16,9 +17,18 @@ export interface RendererServiceBridge {
   diagnostics: IDiagnosticsService;
   editorPersistence: IEditorPersistenceService;
   storage: IStorageService<PreferenceSchema>;
+  ai: IAiService;
   workspaces: IWorkspaceService;
   folders: IFolderService;
   notes: INoteService;
+}
+
+type AiResult<T> = { ok: true; value: T } | { ok: false; error: string };
+
+async function unwrapAi<T>(invocation: Promise<AiResult<T>>): Promise<T> {
+  const result = await invocation;
+  if (!result.ok) throw new Error(result.error);
+  return result.value;
 }
 
 export function buildRendererBridge(): RendererServiceBridge {
@@ -27,8 +37,23 @@ export function buildRendererBridge(): RendererServiceBridge {
       healthcheck: () => ipcRenderer.invoke(CHANNELS.diagnostics.healthcheck),
     },
     storage: {
-      saveData: (data) => ipcRenderer.invoke(CHANNELS.preferences.save, data),
-      getData: () => ipcRenderer.invoke(CHANNELS.preferences.get),
+      saveData: (key, data) =>
+        ipcRenderer.invoke(CHANNELS.preferences.save, key, data),
+      getData: (key) => ipcRenderer.invoke(CHANNELS.preferences.get, key),
+    },
+    ai: {
+      getConfig: () =>
+        unwrapAi<AiConfig>(ipcRenderer.invoke(CHANNELS.ai.getConfig)),
+      setConfig: (config) =>
+        unwrapAi<void>(ipcRenderer.invoke(CHANNELS.ai.setConfig, config)),
+      listModels: () =>
+        unwrapAi<string[]>(ipcRenderer.invoke(CHANNELS.ai.listModels)),
+      formatNote: (content: string) =>
+        unwrapAi<string>(ipcRenderer.invoke(CHANNELS.ai.formatNote, content)),
+      summarizeNote: (content: string) =>
+        unwrapAi<string>(
+          ipcRenderer.invoke(CHANNELS.ai.summarizeNote, content),
+        ),
     },
     editorPersistence: {
       listNotes: () =>

@@ -114,7 +114,10 @@ const GROUPS: ToolbarButton[][] = [
 ];
 
 export function EditorToolbar({ editor }: { editor: Editor }) {
-  const { ollama } = useServices();
+  const { ai } = useServices();
+  // AI actions hit a user-configured local provider, which browsers block via
+  // CORS/COEP. The feature is desktop-only.
+  const isDesktop = __TARGET__ === "electron";
   const [activeAiAction, setActiveAiAction] = useState<
     "formatting" | "summarizing" | null
   >(null);
@@ -153,14 +156,14 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
 
   const formatNote = () =>
     runAiAction(
-      (content) => ollama.formatNote(content),
+      (content) => ai.formatNote(content),
       "formatting",
       "Couldn't format the note.",
     );
 
   const summarizeNote = () =>
     runAiAction(
-      (content) => ollama.summarizeNote(content),
+      (content) => ai.summarizeNote(content),
       "summarizing",
       "Couldn't summarize the note.",
     );
@@ -207,6 +210,8 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
         })}
 
         <div className="ml-auto flex shrink-0 items-center gap-0.5 pl-1">
+          {isDesktop && (
+            <>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -256,6 +261,8 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
             <TooltipContent>Summarize note with AI</TooltipContent>
           </Tooltip>
           <Separator orientation="vertical" className="mx-1 h-5 shrink-0" />
+            </>
+          )}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button

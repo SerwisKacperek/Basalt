@@ -53,8 +53,8 @@ export function ThemeProvider({
       if (typeof currentPrefs !== 'object' || currentPrefs === null || Array.isArray(currentPrefs)) {
         currentPrefs = {};
       }
-      const dataToSave = { theme: newTheme };
-      await storage.saveData(newTheme, dataToSave);
+      const dataToSave = { ...currentPrefs, theme: newTheme };
+      await storage.saveData(storageKey, dataToSave);
     },
   };
 

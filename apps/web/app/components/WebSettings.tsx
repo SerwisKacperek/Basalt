@@ -3,7 +3,7 @@ import { useServices } from '~/services/ServiceContext';
 
 
 export function WebSettings() {
-  const { ollama } = useServices();
+  const { ai } = useServices();
 
-  return <SettingsPanel ollama={ollama} />;
+  return <SettingsPanel ai={ai} />;
 }

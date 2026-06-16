@@ -42,7 +42,7 @@ function AccountInfo({ subtitleClassName }: { subtitleClassName: string }) {
 
 /** Footer account menu with the settings dialog. */
 export function SidebarUserMenu() {
-  const { ollama } = useServices();
+  const { ai } = useServices();
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
@@ -85,7 +85,7 @@ export function SidebarUserMenu() {
         </SidebarMenuItem>
       </SidebarMenu>
       <SettingsPanel
-        ollama={ollama}
+        ai={ai}
         open={settingsOpen}
         onOpenChange={setSettingsOpen}
         hideTrigger

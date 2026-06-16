@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
   BarChart3,
   Bot,
+  ChevronsUpDown,
   Loader2,
   LogIn,
   LogOut,
@@ -21,6 +22,12 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
   Input,
   Label,
   Progress,
@@ -32,10 +39,16 @@ import {
   useTheme,
 } from "@basalt/ui";
 
-interface SimpleOllama {
-  getEndpoint: () => Promise<string>;
-  setEndpoint: (endpoint: string) => Promise<void>;
-  testConnection: () => Promise<void>;
+interface AiConfig {
+  endpoint: string;
+  model: string;
+  apiKey: string;
+}
+
+interface SimpleAi {
+  getConfig: () => Promise<AiConfig>;
+  setConfig: (config: Partial<AiConfig>) => Promise<void>;
+  listModels: () => Promise<string[]>;
 }
 
 type ConnectionStatus =
@@ -44,7 +57,7 @@ type ConnectionStatus =
   | null;
 
 export interface SettingsPanelProps {
-  ollama: SimpleOllama;
+  ai: SimpleAi;
   /** Controlled open state. When provided, the dialog is controlled externally. */
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -53,7 +66,7 @@ export interface SettingsPanelProps {
 }
 
 export function SettingsPanel({
-  ollama,
+  ai,
   open,
   onOpenChange,
   hideTrigger = false,
@@ -61,10 +74,22 @@ export function SettingsPanel({
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const { theme, setTheme } = useTheme();
 
-  const [ollamaEndpoint, setOllamaEndpoint] = useState("");
+  // Local AI providers need direct localhost access, which the browser blocks
+  // via CORS/COEP. The feature is therefore desktop-only.
+  const isDesktop = __TARGET__ === "electron";
+
+  const [aiEndpoint, setAiEndpoint] = useState("");
+  const [aiModel, setAiModel] = useState("");
+  const [aiApiKey, setAiApiKey] = useState("");
+  const [availableModels, setAvailableModels] = useState<string[]>([]);
   const [connectionStatus, setConnectionStatus] =
     useState<ConnectionStatus>(null);
   const [isTesting, setIsTesting] = useState<boolean>(false);
+
+  // Always offer the saved model in the picker, even before models are fetched.
+  const modelOptions = Array.from(
+    new Set([...availableModels, aiModel].filter(Boolean)),
+  );
 
   const stats = { notesCount: 142, usedSpace: 4.2, maxSpace: 50 };
   const progressPercent = Math.min(
@@ -74,33 +99,54 @@ export function SettingsPanel({
 
   useEffect(() => {
     const loadSettings = async () => {
-      const endpoint = await ollama.getEndpoint();
-      setOllamaEndpoint(endpoint);
+      const config = await ai.getConfig();
+      setAiEndpoint(config.endpoint);
+      setAiModel(config.model);
+      setAiApiKey(config.apiKey);
     };
 
     loadSettings().catch(() => {
-      setOllamaEndpoint("");
+      setAiEndpoint("");
+      setAiModel("");
+      setAiApiKey("");
     });
-  }, [ollama]);
+  }, [ai]);
 
-  const saveOllamaEndpoint = async () => {
-    const endpoint = ollamaEndpoint.trim();
-    await ollama.setEndpoint(endpoint);
+  const persistAiConfig = () =>
+    ai.setConfig({
+      endpoint: aiEndpoint.trim(),
+      model: aiModel.trim(),
+      apiKey: aiApiKey.trim(),
+    });
+
+  const saveAiConfig = async () => {
+    await persistAiConfig();
     setConnectionStatus({
       kind: "success",
-      message: "Ollama endpoint saved.",
+      message: "AI settings saved.",
     });
   };
 
-  const testOllamaConnection = async () => {
+  const testAiConnection = async () => {
     setIsTesting(true);
     setConnectionStatus(null);
     try {
-      await ollama.setEndpoint(ollamaEndpoint.trim());
-      await ollama.testConnection();
+      await persistAiConfig();
+      const models = await ai.listModels();
+      setAvailableModels(models);
+      // Auto-select a model if none is set or the saved one is unavailable.
+      if (!aiModel || !models.includes(aiModel)) {
+        const firstModel = models[0];
+        if (firstModel) {
+          setAiModel(firstModel);
+          await ai.setConfig({ model: firstModel });
+        }
+      }
       setConnectionStatus({
         kind: "success",
-        message: "Connection to Ollama is working.",
+        message: `Connected. ${models.length} model${
+          models.length === 1 ? "" : "s"
+        } available.`,
       });
     } catch (error) {
       setConnectionStatus({
@@ -108,7 +154,7 @@ export function SettingsPanel({
         message:
           error instanceof Error
             ? error.message
-            : "Couldn't test the connection to Ollama.",
+            : "Couldn't reach the AI endpoint.",
       });
     } finally {
       setIsTesting(false);
@@ -152,12 +198,14 @@ export function SettingsPanel({
             >
               <Sun className="h-4 w-4" /> <span>Appearance</span>
             </TabsTrigger>
-            <TabsTrigger
-              value="ai"
-              className="w-full justify-start gap-2 px-3 data-[state=active]:bg-secondary"
-            >
-              <Bot className="h-4 w-4" /> <span>AI</span>
-            </TabsTrigger>
+            {isDesktop && (
+              <TabsTrigger
+                value="ai"
+                className="w-full justify-start gap-2 px-3 data-[state=active]:bg-secondary"
+              >
+                <Bot className="h-4 w-4" /> <span>AI</span>
+              </TabsTrigger>
+            )}
             <TabsTrigger
               value="stats"
               className="w-full justify-start gap-2 px-3 data-[state=active]:bg-secondary"
@@ -263,32 +311,100 @@ export function SettingsPanel({
               </div>
             </TabsContent>
 
-            {/* Tab: AI */}
-            <TabsContent value="ai" className="mt-0">
+            {/* Tab: AI (desktop only — browsers block localhost providers) */}
+            {isDesktop && (
+              <TabsContent value="ai" className="mt-0">
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-sm font-medium">Local Ollama</h3>
+                  <h3 className="text-sm font-medium">AI provider</h3>
                   <p className="text-xs text-muted-foreground">
-                    Basalt connects directly to the Ollama API from the
-                    frontend.
+                    Connect any OpenAI-compatible chat completions endpoint
+                    (OpenAI, OpenRouter, a local server, etc.).
                   </p>
                 </div>
                 <Separator />
                 <div className="space-y-2">
-                  <Label htmlFor="ollama-endpoint">Ollama endpoint</Label>
+                  <Label htmlFor="ai-endpoint">Endpoint URL</Label>
                   <Input
-                    id="ollama-endpoint"
+                    id="ai-endpoint"
                     type="url"
-                    value={ollamaEndpoint}
+                    placeholder="https://api.openai.com/v1/chat/completions"
+                    value={aiEndpoint}
                     onChange={(event) => {
-                      setOllamaEndpoint(event.target.value);
+                      setAiEndpoint(event.target.value);
                       setConnectionStatus(null);
                     }}
                     disabled={isTesting}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Default model: llama3.2:latest. A direct fetch may require
-                    the correct OLLAMA_ORIGINS.
+                    Must point at the full /v1/chat/completions path.
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="ai-model">Model</Label>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        id="ai-model"
+                        variant="outline"
+                        disabled={isTesting}
+                        className="w-full justify-between font-normal"
+                      >
+                        <span
+                          className={aiModel ? "" : "text-muted-foreground"}
+                        >
+                          {aiModel || "Select a model"}
+                        </span>
+                        <ChevronsUpDown className="h-4 w-4 opacity-50" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="start"
+                      className="max-h-64 w-[var(--radix-dropdown-menu-trigger-width)] overflow-y-auto"
+                    >
+                      {modelOptions.length === 0 ? (
+                        <DropdownMenuItem disabled>
+                          Test the connection to load models
+                        </DropdownMenuItem>
+                      ) : (
+                        <DropdownMenuRadioGroup
+                          value={aiModel}
+                          onValueChange={(value) => {
+                            setAiModel(value);
+                            setConnectionStatus(null);
+                          }}
+                        >
+                          {modelOptions.map((model) => (
+                            <DropdownMenuRadioItem key={model} value={model}>
+                              {model}
+                            </DropdownMenuRadioItem>
+                          ))}
+                        </DropdownMenuRadioGroup>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <p className="text-xs text-muted-foreground">
+                    Test the connection to load the models your endpoint
+                    offers.
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="ai-api-key">API key</Label>
+                  <Input
+                    id="ai-api-key"
+                    type="password"
+                    autoComplete="off"
+                    placeholder="sk-…"
+                    value={aiApiKey}
+                    onChange={(event) => {
+                      setAiApiKey(event.target.value);
+                      setConnectionStatus(null);
+                    }}
+                    disabled={isTesting}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Sent as a Bearer token. Leave empty for servers that
+                    don&apos;t require authentication.
                   </p>
                 </div>
 
@@ -310,18 +426,19 @@ export function SettingsPanel({
                 <div className="flex justify-end gap-2">
                   <Button
                     variant="outline"
-                    onClick={testOllamaConnection}
+                    onClick={testAiConnection}
                     disabled={isTesting}
                   >
                     {isTesting && <Loader2 className="h-4 w-4 animate-spin" />}
                     {isTesting ? "Testing…" : "Test connection"}
                   </Button>
-                  <Button onClick={saveOllamaEndpoint} disabled={isTesting}>
+                  <Button onClick={saveAiConfig} disabled={isTesting}>
                     Save
                   </Button>
                 </div>
               </div>
-            </TabsContent>
+              </TabsContent>
+            )}
 
             {/* Tab: Stats */}
             <TabsContent value="stats" className="mt-0">
