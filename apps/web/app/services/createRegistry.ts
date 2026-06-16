@@ -4,7 +4,6 @@ import { EditorPersistenceService } from "./web/EditorPersistenceService";
 import { StorageService } from "./web/StorageService";
 import { SyncService } from "./web/SyncService";
 import { createDomainDb } from "./web/DomainDbService";
-import { local as apiClient } from "../api-client/eden";
 import { clientFactory } from "@basalt/api";
 
 import {
@@ -37,15 +36,19 @@ export function createRegistry(): ServiceRegistry {
     new WorkspaceRepository(db, schema),
   );
 
-  const remoteNotes = new RemoteNoteService(apiClient);
-  const remoteFolders = new RemoteFolderService(apiClient);
+  const remoteNoteFactory = (url: string) =>
+    new RemoteNoteService(clientFactory(url));
+  const remoteFolderFactory = (url: string) =>
+    new RemoteFolderService(clientFactory(url));
 
-  const compositeNotes = new CompositeNoteService(localNotes, remoteNotes);
+  const compositeFolders = new CompositeFolderService(localFolders, remoteFolderFactory, localWorkspaces);
+  const compositeNotes = new CompositeNoteService(localNotes, remoteNoteFactory, localWorkspaces, localFolders);
 
   if (!injected) {
-    compositeNotes
+    compositeFolders
       .sync()
-      .catch((err: unknown) => console.error("[sync] notes:", err));
+      .then(() => compositeNotes.sync())
+      .catch((err: unknown) => console.error("[sync] startup:", err));
   }
 
   return {
@@ -56,7 +59,7 @@ export function createRegistry(): ServiceRegistry {
       localWorkspaces,
       (url) => new RemoteWorkspaceService(clientFactory(url)),
     ),
-    folders: injected?.folders ?? new CompositeFolderService(localFolders, remoteFolders),
+    folders: injected?.folders ?? compositeFolders,
     notes: injected?.notes ?? compositeNotes,
     ai: injected?.ai ?? new AiService(storage),
     syncService: new SyncService(),

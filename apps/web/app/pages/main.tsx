@@ -97,19 +97,37 @@ export default function Main() {
     init().catch(console.error);
   }, [workspaces]);
 
-  // Poll remote workspaces every 30 s and also on window focus.
+  const syncRemote = useCallback(async () => {
+    await workspaces.sync?.();
+    await refreshWorkspaces();
+    if (folderService.sync) {
+      await folderService
+        .sync()
+        .catch((err) => console.error("[sync] folders:", err));
+    }
+    await editorPersistence
+      .syncNoteList()
+      .catch((err) => console.error("[sync] notes:", err));
+    await refresh();
+  }, [workspaces, refreshWorkspaces, editorPersistence, folderService, refresh]);
+  const syncRemoteRef = useRef(syncRemote);
   useEffect(() => {
-    const sync = async () => {
-      await workspaces.sync?.();
-      await refreshWorkspaces();
+    syncRemoteRef.current = syncRemote;
+  }, [syncRemote]);
+
+  // Sync once on mount, then poll every 30 s and on window focus.
+  useEffect(() => {
+    const tick = () => {
+      void syncRemoteRef.current();
     };
-    const id = setInterval(sync, 30_000);
-    window.addEventListener("focus", sync);
+    tick();
+    const id = setInterval(tick, 30_000);
+    window.addEventListener("focus", tick);
     return () => {
       clearInterval(id);
-      window.removeEventListener("focus", sync);
+      window.removeEventListener("focus", tick);
     };
-  }, [workspaces, refreshWorkspaces]);
+  }, []);
 
   const handleCreate = useCallback(
     async (folderId: string | null = null) => {
@@ -188,9 +206,10 @@ export default function Main() {
   const handleJoinWorkspace = useCallback(
     async (ws: { id: string; name: string; url: string }) => {
       await workspaces.join?.({ id: ws.id, name: ws.name, type: "remote", url: ws.url });
-      setWorkspaceList(await workspaces.findAll());
+      await syncRemote();
+      setWorkspaceId(ws.id);
     },
-    [workspaces],
+    [workspaces, syncRemote],
   );
 
   const handleDeleteWorkspace = useCallback(

@@ -67,24 +67,30 @@ export function createMainRegistry(vaultRoot: string): MainServiceRegistry {
   const localNotes = new NoteService(new NoteRepository(domainDb, schema));
 
   const apiClient = createApiClient();
-  const remoteFolders = apiClient ? new RemoteFolderService(apiClient) : null;
-  const remoteNotes = apiClient ? new RemoteNoteService(apiClient) : null;
+  const remoteNoteFactory = (url: string) =>
+    new RemoteNoteService(clientFactory(url));
+  const remoteFolderFactory = (url: string) =>
+    new RemoteFolderService(clientFactory(url));
 
-  const compositeNotes = new CompositeNoteService(localNotes, remoteNotes);
-  compositeNotes.sync().catch((err) => console.error("[sync] notes:", err));
+  const compositeFolders = new CompositeFolderService(localFolders, remoteFolderFactory, localWorkspaces);
+  const compositeNotes = new CompositeNoteService(localNotes, remoteNoteFactory, localWorkspaces, localFolders);
+  compositeFolders
+    .sync()
+    .then(() => compositeNotes.sync())
+    .catch((err) => console.error("[sync] startup:", err));
 
   const preferences = new StorageService(vaultRoot);
 
   return {
     diagnostics: new DiagnosticsService(apiClient),
-    editorPersistence: new EditorPersistenceService(db, rawSqlite, reset, compositeNotes),
+    editorPersistence: new EditorPersistenceService(db, rawSqlite, reset, compositeNotes, compositeFolders),
     preferences,
     ai: new AiService(preferences),
     workspaces: new CompositeWorkspaceService(
       localWorkspaces,
       (url) => new RemoteWorkspaceService(clientFactory(url)),
     ),
-    folders: new CompositeFolderService(localFolders, remoteFolders),
+    folders: compositeFolders,
     notes: compositeNotes,
   };
 }

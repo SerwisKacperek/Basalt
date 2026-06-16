@@ -22,13 +22,28 @@ export function useRemoteSync(
   doc: Y.Doc,
   ready: boolean,
 ): RemoteSyncState {
-  const { syncService } = useServices();
+  const { syncService, notes, workspaces } = useServices();
   const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null);
   const [connStatus, setConnStatus] = useState<ConnectionStatus>("idle");
   const [upstreamSynced, setUpstreamSynced] = useState(syncService.upstreamSynced);
   const [hasPendingLocal, setHasPendingLocal] = useState(syncService.hasPendingLocal);
 
-  const isConfigured = syncService.isBackendConfigured();
+  const [enabled, setEnabled] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const note = await notes.findById(noteId).catch(() => null);
+      const ws = note?.workspace_id
+        ? await workspaces.findById(note.workspace_id).catch(() => null)
+        : null;
+      if (!cancelled) setEnabled(ws?.type === "remote" && !!ws.url);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [noteId, notes, workspaces]);
+
+  const isConfigured = syncService.isBackendConfigured() && enabled;
 
   useEffect(() => {
     if (!ready || !isConfigured) return;

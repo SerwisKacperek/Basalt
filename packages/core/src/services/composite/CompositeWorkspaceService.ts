@@ -35,7 +35,14 @@ export class CompositeWorkspaceService implements IWorkspaceService {
     const result = await this.local.create(fullDto);
     if (fullDto.type === "remote" && fullDto.url) {
       const remote = this.remoteFactory(fullDto.url);
-      this.gateFor(fullDto.url).run(() => remote.create(fullDto));
+      await remote
+        .create(fullDto)
+        .catch((err) =>
+          console.error(
+            `[composite:workspaces:${fullDto.url}] create push failed:`,
+            err,
+          ),
+        );
     }
     return result;
   }
@@ -97,7 +104,12 @@ export class CompositeWorkspaceService implements IWorkspaceService {
 
           for (const lw of localAll) {
             if (lw.type === "remote" && lw.url === url && !remoteIds.has(lw.id)) {
-              await this.local.delete(lw.id);
+              await remote.create(lw as Insert<"workspaces">).catch((err) =>
+                console.error(
+                  `[composite:workspaces:${url}] sync re-push failed:`,
+                  err,
+                ),
+              );
             }
           }
         } catch {
