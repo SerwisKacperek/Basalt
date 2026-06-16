@@ -13,6 +13,7 @@ export function EditorView({ id }: { id: string }) {
     doc, ready, loadError,
     localSaveStatus, remoteSyncStatus,
     lastLocalSavedAt, lastSyncedAt,
+    upstreamSynced, hasPendingLocal,
     saveError, retry, reload,
   } = useNoteDocument(id);
 
@@ -66,6 +67,8 @@ export function EditorView({ id }: { id: string }) {
         remoteSyncStatus={remoteSyncStatus}
         lastLocalSavedAt={lastLocalSavedAt}
         lastSyncedAt={lastSyncedAt}
+        upstreamSynced={upstreamSynced}
+        hasPendingLocal={hasPendingLocal}
         saveError={saveError}
         onRetry={retry}
       />

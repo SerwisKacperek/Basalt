@@ -36,9 +36,13 @@ export class SyncService {
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private syncedListeners: Set<() => void> = new Set();
   private statusListeners: Set<StatusListener> = new Set();
+  private upstreamSyncedListeners: Set<(synced: boolean) => void> = new Set();
+  private pendingLocalListeners: Set<(pending: boolean) => void> = new Set();
 
   connectionStatus: ConnectionStatus = "idle";
   lastError: SyncError | null = null;
+  upstreamSynced = false;
+  hasPendingLocal = false;
 
   isBackendConfigured(): boolean {
     return getWsBase() !== null;
@@ -54,6 +58,16 @@ export class SyncService {
     return () => this.statusListeners.delete(cb);
   }
 
+  addUpstreamSyncedListener(cb: (synced: boolean) => void): () => void {
+    this.upstreamSyncedListeners.add(cb);
+    return () => this.upstreamSyncedListeners.delete(cb);
+  }
+
+  addPendingLocalListener(cb: (pending: boolean) => void): () => void {
+    this.pendingLocalListeners.add(cb);
+    return () => this.pendingLocalListeners.delete(cb);
+  }
+
   private _notifySynced(): void {
     for (const cb of this.syncedListeners) cb();
   }
@@ -61,7 +75,23 @@ export class SyncService {
   private _setStatus(status: ConnectionStatus, error: SyncError | null = null): void {
     this.connectionStatus = status;
     this.lastError = error;
+    // Reset upstream sync on every (re)connect attempt so tooltip shows accurate state
+    if (status === "connecting" || status === "idle") {
+      this._setUpstreamSynced(false);
+    }
     for (const cb of this.statusListeners) cb(status, error);
+  }
+
+  private _setUpstreamSynced(value: boolean): void {
+    if (this.upstreamSynced === value) return;
+    this.upstreamSynced = value;
+    for (const cb of this.upstreamSyncedListeners) cb(value);
+  }
+
+  private _setPendingLocal(value: boolean): void {
+    if (this.hasPendingLocal === value) return;
+    this.hasPendingLocal = value;
+    for (const cb of this.pendingLocalListeners) cb(value);
   }
 
   connect(noteId: string, doc: Y.Doc): void {
@@ -73,6 +103,7 @@ export class SyncService {
     this.doc = doc;
     this.reconnectDelay = BASE_DELAY;
     this.generation++;
+    this.hasPendingLocal = false;
     this._setStatus("connecting");
     this._open(this.generation);
   }
@@ -116,6 +147,7 @@ export class SyncService {
       const onUpdate = (update: Uint8Array, origin: unknown) => {
         if (origin === "load" || origin === "remote") return;
         if (gen !== this.generation || ws.readyState !== WebSocket.OPEN) return;
+        this._setPendingLocal(true);
         ws.send(prefixMsg(0x02, update));
       };
       this.doc!.on("update", onUpdate);
@@ -138,11 +170,18 @@ export class SyncService {
         // Server state vector → send delta server is missing
         const delta = Y.encodeStateAsUpdate(this.doc!, payload);
         ws.send(prefixMsg(0x01, delta));
-      } else if (type === 0x01 || type === 0x02) {
-        // Delta (step 2) or incremental update from server/peers
+        // YJS encodes an empty update as 2 bytes; anything larger means we have data for server
+        if (delta.length > 2) this._setPendingLocal(true);
+      } else if (type === 0x01) {
+        // Server's full-state delta (sync step 2) — upstream is now caught up
+        Y.applyUpdate(this.doc!, payload, "remote");
+        this._setUpstreamSynced(true);
+      } else if (type === 0x02) {
+        // Incremental update from server/peers
         Y.applyUpdate(this.doc!, payload, "remote");
       } else if (type === 0x03) {
-        // Server ACK: update persisted on backend
+        // Server ACK: our changes persisted on backend
+        this._setPendingLocal(false);
         this._notifySynced();
       }
     };

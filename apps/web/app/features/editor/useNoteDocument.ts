@@ -14,6 +14,8 @@ export interface NoteDocument {
   remoteSyncStatus: RemoteSyncStatus;
   lastLocalSavedAt: number | null;
   lastSyncedAt: number | null;
+  upstreamSynced: boolean;
+  hasPendingLocal: boolean;
   saveError: Error | null;
   retry: () => void;
   reload: () => void;
@@ -27,7 +29,7 @@ export function useNoteDocument(id: string): NoteDocument {
   const [loadAttempt, setLoadAttempt] = useState(0);
 
   const { localSaveStatus, localSaveError, lastLocalSavedAt, retry } = useLocalSave(id, doc);
-  const { remoteSyncStatus, lastSyncedAt } = useRemoteSync(id, doc, ready);
+  const { remoteSyncStatus, lastSyncedAt, upstreamSynced, hasPendingLocal } = useRemoteSync(id, doc, ready);
 
   const reload = useCallback(() => setLoadAttempt((n) => n + 1), []);
 
@@ -66,6 +68,8 @@ export function useNoteDocument(id: string): NoteDocument {
     remoteSyncStatus,
     lastLocalSavedAt,
     lastSyncedAt,
+    upstreamSynced,
+    hasPendingLocal,
     saveError: localSaveError,
     retry,
     reload,

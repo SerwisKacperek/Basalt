@@ -13,6 +13,8 @@ export type RemoteSyncStatus =
 export interface RemoteSyncState {
   remoteSyncStatus: RemoteSyncStatus;
   lastSyncedAt: number | null;
+  upstreamSynced: boolean;
+  hasPendingLocal: boolean;
 }
 
 export function useRemoteSync(
@@ -23,6 +25,8 @@ export function useRemoteSync(
   const { syncService } = useServices();
   const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null);
   const [connStatus, setConnStatus] = useState<ConnectionStatus>("idle");
+  const [upstreamSynced, setUpstreamSynced] = useState(syncService.upstreamSynced);
+  const [hasPendingLocal, setHasPendingLocal] = useState(syncService.hasPendingLocal);
 
   const isConfigured = syncService.isBackendConfigured();
 
@@ -35,11 +39,17 @@ export function useRemoteSync(
     const unsubStatus = syncService.addStatusListener((status) => {
       setConnStatus(status);
     });
-    // Capture initial status (may have already changed synchronously in connect())
+    const unsubUpstream = syncService.addUpstreamSyncedListener(setUpstreamSynced);
+    const unsubPending = syncService.addPendingLocalListener(setHasPendingLocal);
+    // Capture initial state (connect() may have already changed it synchronously)
     setConnStatus(syncService.connectionStatus);
+    setUpstreamSynced(syncService.upstreamSynced);
+    setHasPendingLocal(syncService.hasPendingLocal);
     return () => {
       unsubSynced();
       unsubStatus();
+      unsubUpstream();
+      unsubPending();
       syncService.disconnect();
     };
   }, [noteId, doc, ready, syncService, isConfigured]);
@@ -57,5 +67,5 @@ export function useRemoteSync(
     remoteSyncStatus = "pending";
   }
 
-  return { remoteSyncStatus, lastSyncedAt };
+  return { remoteSyncStatus, lastSyncedAt, upstreamSynced, hasPendingLocal };
 }
