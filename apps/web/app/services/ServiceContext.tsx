@@ -6,7 +6,7 @@ import type { PreferenceSchema } from "@basalt/domain/schema/storage";
 import type { IWorkspaceService } from "@basalt/core/interfaces/IWorkspaceService";
 import type { IFolderService } from "@basalt/core/interfaces/IFolderService";
 import type { INoteService } from "@basalt/core/interfaces/INoteService";
-import type { IOllamaService } from "./web/OllamaService";
+import type { IAiService } from "@basalt/core/interfaces/IAiService";
 import type { SyncService } from "./web/SyncService";
 
 export interface ServiceRegistry {
@@ -16,7 +16,7 @@ export interface ServiceRegistry {
   workspaces: IWorkspaceService;
   folders: IFolderService;
   notes: INoteService;
-  ollama: IOllamaService;
+  ai: IAiService;
   syncService: SyncService;
 }
 

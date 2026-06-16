@@ -6,6 +6,7 @@ import { openDomainDb } from "../db/domain-connection";
 
 import type { IDiagnosticsService } from "@basalt/core/interfaces/IDiagnosticsService";
 import type { IEditorPersistenceService } from "@basalt/core/interfaces/IEditorPersistenceService";
+import type { IAiService } from "@basalt/core/interfaces/IAiService";
 
 import { DiagnosticsService } from "./DiagnosticsService";
 import { StorageService } from "./StorageService";
@@ -26,6 +27,7 @@ import {
   CompositeWorkspaceService,
   CompositeFolderService,
   CompositeNoteService,
+  AiService,
 } from "@basalt/core/services";
 import { clientFactory } from "@basalt/api";
 import { PreferenceSchema } from "@basalt/domain/schema/storage";
@@ -34,6 +36,7 @@ export interface MainServiceRegistry {
   diagnostics: IDiagnosticsService;
   editorPersistence: IEditorPersistenceService;
   preferences: IStorageService<PreferenceSchema>;
+  ai: IAiService;
   workspaces: IWorkspaceService;
   folders: IFolderService;
   notes: INoteService;
@@ -71,10 +74,13 @@ export function createMainRegistry(vaultRoot: string): MainServiceRegistry {
   const compositeNotes = new CompositeNoteService(localNotes, remoteNotes);
   compositeNotes.sync().catch((err) => console.error("[sync] notes:", err));
 
+  const preferences = new StorageService(vaultRoot);
+
   return {
     diagnostics: new DiagnosticsService(apiClient),
     editorPersistence: new EditorPersistenceService(db, rawSqlite, reset, compositeNotes),
-    preferences: new StorageService(vaultRoot),
+    preferences,
+    ai: new AiService(preferences),
     workspaces: new CompositeWorkspaceService(localWorkspaces, remoteWorkspaces),
     folders: new CompositeFolderService(localFolders, remoteFolders),
     notes: compositeNotes,
