@@ -16,6 +16,15 @@ function prefixMsg(type: number, data: Uint8Array): Uint8Array {
 const BASE_DELAY = 1_000;
 const MAX_DELAY = 30_000;
 
+export type ConnectionStatus = "idle" | "connecting" | "connected" | "error";
+
+export interface SyncError {
+  code: number;
+  reason: string;
+}
+
+type StatusListener = (status: ConnectionStatus, error: SyncError | null) => void;
+
 export class SyncService {
   private noteId: string | null = null;
   private doc: Y.Doc | null = null;
@@ -25,6 +34,35 @@ export class SyncService {
   private generation = 0;
   private reconnectDelay = BASE_DELAY;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private syncedListeners: Set<() => void> = new Set();
+  private statusListeners: Set<StatusListener> = new Set();
+
+  connectionStatus: ConnectionStatus = "idle";
+  lastError: SyncError | null = null;
+
+  isBackendConfigured(): boolean {
+    return getWsBase() !== null;
+  }
+
+  addSyncedListener(cb: () => void): () => void {
+    this.syncedListeners.add(cb);
+    return () => this.syncedListeners.delete(cb);
+  }
+
+  addStatusListener(cb: StatusListener): () => void {
+    this.statusListeners.add(cb);
+    return () => this.statusListeners.delete(cb);
+  }
+
+  private _notifySynced(): void {
+    for (const cb of this.syncedListeners) cb();
+  }
+
+  private _setStatus(status: ConnectionStatus, error: SyncError | null = null): void {
+    this.connectionStatus = status;
+    this.lastError = error;
+    for (const cb of this.statusListeners) cb(status, error);
+  }
 
   connect(noteId: string, doc: Y.Doc): void {
     this.disconnect();
@@ -35,6 +73,7 @@ export class SyncService {
     this.doc = doc;
     this.reconnectDelay = BASE_DELAY;
     this.generation++;
+    this._setStatus("connecting");
     this._open(this.generation);
   }
 
@@ -52,6 +91,7 @@ export class SyncService {
     }
     this.noteId = null;
     this.doc = null;
+    this._setStatus("idle");
   }
 
   private _open(gen: number): void {
@@ -69,6 +109,7 @@ export class SyncService {
         return;
       }
       this.reconnectDelay = BASE_DELAY;
+      this._setStatus("connected");
       // Send sync step 1: our state vector
       ws.send(prefixMsg(0x00, Y.encodeStateVector(this.doc!)));
       // Forward local edits to server as type 0x02 (incremental update)
@@ -100,6 +141,9 @@ export class SyncService {
       } else if (type === 0x01 || type === 0x02) {
         // Delta (step 2) or incremental update from server/peers
         Y.applyUpdate(this.doc!, payload, "remote");
+      } else if (type === 0x03) {
+        // Server ACK: update persisted on backend
+        this._notifySynced();
       }
     };
 
@@ -107,13 +151,19 @@ export class SyncService {
       // onclose fires after onerror; handle reconnect there
     };
 
-    ws.onclose = () => {
+    ws.onclose = (ev) => {
       if (gen !== this.generation) return;
       this._clearUpdateSub();
       if (this.active) {
+        const error: SyncError = {
+          code: ev.code,
+          reason: ev.reason || `Connection closed (code ${ev.code})`,
+        };
+        this._setStatus("error", error);
         this.reconnectTimer = setTimeout(() => {
           this.reconnectTimer = null;
           this.reconnectDelay = Math.min(this.reconnectDelay * 2, MAX_DELAY);
+          this._setStatus("connecting");
           this._open(gen);
         }, this.reconnectDelay);
       }

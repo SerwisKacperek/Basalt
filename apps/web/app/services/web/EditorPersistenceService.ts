@@ -304,5 +304,21 @@ export class EditorPersistenceService implements IEditorPersistenceService {
     if (typeof svc.sync === "function") {
       await svc.sync();
     }
+    // Mirror any newly-synced notes into the editor DB so per-note tables and
+    // the editorNotes entry exist before the user navigates to them.
+    const notes = await this.noteService.findAll();
+    const existing = await this.db.select({ id: editorNotes.id }).from(editorNotes);
+    const existingIds = new Set(existing.map((r) => r.id));
+    for (const note of notes) {
+      if (!existingIds.has(note.id)) {
+        await this.db.insert(editorNotes).values({
+          id: note.id,
+          name: note.name,
+          createdAt: note.createdAt.getTime(),
+          updatedAt: note.updatedAt.getTime(),
+        });
+        await this.client.send({ kind: "create-note-tables", noteId: note.id });
+      }
+    }
   }
 }

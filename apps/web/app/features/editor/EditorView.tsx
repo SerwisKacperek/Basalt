@@ -9,8 +9,12 @@ import { useNoteDocument } from "./useNoteDocument";
 import {BotMessageSquare} from "lucide-react";
 
 export function EditorView({ id }: { id: string }) {
-  const { doc, ready, loadError, status, error, retry, reload } =
-    useNoteDocument(id);
+  const {
+    doc, ready, loadError,
+    localSaveStatus, remoteSyncStatus,
+    lastLocalSavedAt, lastSyncedAt,
+    saveError, retry, reload,
+  } = useNoteDocument(id);
 
   const editor = useEditor(
     {
@@ -57,7 +61,14 @@ export function EditorView({ id }: { id: string }) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <EditorStatusBar status={status} error={error} onRetry={retry} />
+      <EditorStatusBar
+        localSaveStatus={localSaveStatus}
+        remoteSyncStatus={remoteSyncStatus}
+        lastLocalSavedAt={lastLocalSavedAt}
+        lastSyncedAt={lastSyncedAt}
+        saveError={saveError}
+        onRetry={retry}
+      />
       <div className="flex-1 min-h-0 overflow-auto pb-24 scrollbar-none">
         <EditorContent editor={editor} className="h-full" />
       </div>

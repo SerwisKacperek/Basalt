@@ -4,11 +4,13 @@ import type { RawDb } from "../../shared/factories/db.factory";
 import { getDialect } from "../../shared/factories/db.factory";
 import { NoteContentService } from "./note-content.service";
 import { NoteRegistry, InMemoryPubSub, prefixMsg } from "./note-registry";
+import { BunWsChannel, type IClientChannel } from "./client-channel";
 
 type WsConnData = {
   clientId: string;
   noteId: string;
   unsub: (() => void) | null;
+  channel: IClientChannel;
 };
 
 function bufToUint8Array(buf: unknown): Uint8Array {
@@ -111,15 +113,16 @@ export function createNoteContentRoutes(rawDb: RawDb) {
         const raw = ws.raw as object;
         const noteId = ws.data.params.id;
         const clientId = crypto.randomUUID();
-        const meta: WsConnData = { clientId, noteId, unsub: null };
+        const channel = new BunWsChannel(ws.raw);
+        const meta: WsConnData = { clientId, noteId, unsub: null, channel };
         wsConnData.set(raw, meta);
         meta.unsub = pubSub.subscribe(noteId, clientId, (msg) => {
-          ws.send(msg);
+          channel.send(msg);
         });
         // Load doc and send sync step 1: server state vector
         const doc = await registry.getOrLoad(noteId);
         const sv = Y.encodeStateVector(doc);
-        ws.send(prefixMsg(0x00, sv));
+        channel.send(prefixMsg(0x00, sv));
       },
       message(ws, message: unknown) {
         const meta = wsConnData.get(ws.raw as object);
@@ -139,7 +142,7 @@ export function createNoteContentRoutes(rawDb: RawDb) {
           // Client state vector → send delta they're missing
           registry
             .getDeltaForClient(meta.noteId, payload)
-            .then((delta) => ws.send(prefixMsg(0x01, delta)))
+            .then((delta) => meta.channel.send(prefixMsg(0x01, delta)))
             .catch(console.error);
         } else if (type === 0x01) {
           // Client's delta for server → apply + broadcast, no persist (sender owns durability)
@@ -147,9 +150,10 @@ export function createNoteContentRoutes(rawDb: RawDb) {
             .applyOnly(meta.noteId, payload, meta.clientId)
             .catch(console.error);
         } else if (type === 0x02) {
-          // Incremental update → apply + persist + broadcast
+          // Incremental update → apply + persist + broadcast, then ACK sender
           registry
             .applyAndBroadcast(meta.noteId, payload, meta.clientId)
+            .then(() => meta.channel.send(new Uint8Array([0x03])))
             .catch(console.error);
         }
       },
