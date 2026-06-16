@@ -1,5 +1,6 @@
 import type { DbDialect, RawDb } from "../../shared/factories/db.factory";
 import { compress, decompress } from "../../utils/compression";
+import { createNoteTablesSQL } from "@basalt/db/schema";
 
 export interface NoteContent {
   snapshot: Uint8Array | null;
@@ -38,7 +39,14 @@ export class NoteContentService {
     return this.rawDb.exec(finalSql, params);
   }
 
+  private async ensureNoteTables(noteId: string): Promise<void> {
+    for (const sql of createNoteTablesSQL(noteId, this.dialect)) {
+      await this.exec(sql);
+    }
+  }
+
   async loadNote(noteId: string): Promise<NoteContent> {
+    await this.ensureNoteTables(noteId);
     const safe = noteId.replace(/-/g, "_");
 
     const snapRows = await this.query(
@@ -68,6 +76,7 @@ export class NoteContentService {
   }
 
   async appendOperation(noteId: string, data: Uint8Array): Promise<number> {
+    await this.ensureNoteTables(noteId);
     const safe = noteId.replace(/-/g, "_");
 
     const snapRows = await this.query(
@@ -90,6 +99,7 @@ export class NoteContentService {
     mergedData: Uint8Array,
     stateVector: Uint8Array,
   ): Promise<string> {
+    await this.ensureNoteTables(noteId);
     const safe = noteId.replace(/-/g, "_");
 
     const snapRows = await this.query(

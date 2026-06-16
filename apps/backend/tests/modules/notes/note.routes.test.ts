@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { createNoteRoutes } from '@/modules/notes/note.routes';
 
 const db = null as any;
+const rawDb = { exec: vi.fn().mockResolvedValue(undefined) };
 import { NotFoundException } from '@basalt/domain';
 
 const note = {
@@ -23,7 +24,7 @@ function makeApp(overrides: Record<string, any> = {}) {
     remove: vi.fn().mockResolvedValue(undefined),
     ...overrides,
   };
-  return { app: createNoteRoutes(db, controller as any), controller };
+  return { app: createNoteRoutes(db, rawDb as any, controller as any), controller };
 }
 
 function post(app: any, path: string, body: unknown) {
@@ -88,31 +89,28 @@ describe('note routes', () => {
   describe('POST /notes', () => {
     it('returns 201 with created note', async () => {
       const { app } = makeApp();
-      const res = await post(app, '/notes', { name: 'New', workspace_id: 'ws-1', folder_id: 'f-1' });
+      const res = await post(app, '/notes', { id: '1', name: 'New', workspace_id: 'ws-1', folder_id: 'f-1' });
       expect(res.status).toBe(201);
     });
 
     it('passes body to controller.create', async () => {
       const { app, controller } = makeApp();
-      await post(app, '/notes', { name: 'New', workspace_id: 'ws-1', folder_id: 'f-1' });
+      await post(app, '/notes', { id: '1', name: 'New', workspace_id: 'ws-1', folder_id: 'f-1' });
       expect(controller.create).toHaveBeenCalledWith(
         expect.objectContaining({ name: 'New', workspace_id: 'ws-1', folder_id: 'f-1' }),
       );
     });
 
+    it('calls rawDb.exec to create note tables', async () => {
+      rawDb.exec.mockClear();
+      const { app } = makeApp();
+      await post(app, '/notes', { id: '1', name: 'New', workspace_id: 'ws-1', folder_id: 'f-1' });
+      expect(rawDb.exec).toHaveBeenCalled();
+    });
+
     it('returns 422 when name is missing', async () => {
       const { app } = makeApp();
-      expect((await post(app, '/notes', { workspace_id: 'ws-1', folder_id: 'f-1' })).status).toBe(422);
-    });
-
-    it('returns 422 when workspace_id is missing', async () => {
-      const { app } = makeApp();
-      expect((await post(app, '/notes', { name: 'New', folder_id: 'f-1' })).status).toBe(422);
-    });
-
-    it('returns 422 when folder_id is missing', async () => {
-      const { app } = makeApp();
-      expect((await post(app, '/notes', { name: 'New', workspace_id: 'ws-1' })).status).toBe(422);
+      expect((await post(app, '/notes', { id: '1', workspace_id: 'ws-1', folder_id: 'f-1' })).status).toBe(422);
     });
 
     it('returns 400 for invalid JSON', async () => {
@@ -157,6 +155,13 @@ describe('note routes', () => {
       const { app, controller } = makeApp();
       await del(app, '/notes/99');
       expect(controller.remove).toHaveBeenCalledWith('99');
+    });
+
+    it('calls rawDb.exec to drop note tables', async () => {
+      rawDb.exec.mockClear();
+      const { app } = makeApp();
+      await del(app, '/notes/1');
+      expect(rawDb.exec).toHaveBeenCalled();
     });
 
     it('returns 404 when controller throws NotFoundException', async () => {

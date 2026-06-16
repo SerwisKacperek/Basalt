@@ -72,7 +72,14 @@ export class EditorPersistenceService implements IEditorPersistenceService {
     await this.noteService.delete(id);
   }
 
+  private ensureNoteTables(id: string): void {
+    for (const sql of createNoteTablesSQL(id)) {
+      this.rawSqlite.exec(sql);
+    }
+  }
+
   async loadNote(id: string): Promise<NoteContent> {
+    this.ensureNoteTables(id);
     const snapsTable = noteSnapshotsTable(id);
     const opsTable = noteOperationsTable(id);
 
@@ -106,6 +113,7 @@ export class EditorPersistenceService implements IEditorPersistenceService {
   }
 
   async appendOperation(id: string, data: Uint8Array): Promise<void> {
+    this.ensureNoteTables(id);
     const safe = id.replace(/-/g, "_");
     const row = this.rawSqlite
       .prepare(
@@ -132,6 +140,7 @@ export class EditorPersistenceService implements IEditorPersistenceService {
     mergedData: Uint8Array,
     stateVector: Uint8Array,
   ): Promise<void> {
+    this.ensureNoteTables(id);
     const safe = id.replace(/-/g, "_");
     const latestSnap = this.rawSqlite
       .prepare(
