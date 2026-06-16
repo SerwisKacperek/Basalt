@@ -19,14 +19,14 @@ function getWindowIcon(): Electron.NativeImage | string | undefined {
 	if (process.platform === 'darwin') {
 		return undefined;
 	}
-	
+
 	const assetsPath = app.isPackaged
 	? path.join(process.resourcesPath, 'assets')
 	: path.join(__dirname, '../assets');
-	
+
 	const iconName = process.platform === 'win32' ? 'icon.ico' : 'icon.png';
 	const iconPath = path.join(assetsPath, iconName);
-	
+
 	return nativeImage.createFromPath(iconPath);
 }
 
@@ -76,5 +76,5 @@ app.whenReady().then(async () => {
 })
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit()
+  app.quit()
 })
