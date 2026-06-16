@@ -5,8 +5,8 @@ import { NotFoundException } from '@basalt/domain';
 const db = null as any;
 
 const folder = {
-  id: '1',
-  workspace_id: 'ws-1',
+  id: '22222222-2222-2222-2222-222222222222',
+  workspace_id: '11111111-1111-1111-1111-111111111111',
   name: 'Test Folder',
   createdAt: new Date(),
   updatedAt: new Date(),
@@ -66,7 +66,7 @@ describe('folder routes', () => {
       const { app } = makeApp();
       const res = await app.handle(new Request('http://localhost/folders/1'));
       expect(res.status).toBe(200);
-      expect((await res.json()).id).toBe('1');
+      expect((await res.json()).id).toBe('22222222-2222-2222-2222-222222222222');
     });
 
     it('passes id to controller.getById', async () => {
@@ -87,21 +87,21 @@ describe('folder routes', () => {
   describe('POST /folders', () => {
     it('returns 201 with created folder', async () => {
       const { app } = makeApp();
-      const res = await post(app, '/folders', { name: 'New Folder', workspace_id: 'ws-1' });
+      const res = await post(app, '/folders', { name: 'New Folder', workspace_id: '11111111-1111-1111-1111-111111111111' });
       expect(res.status).toBe(201);
     });
 
     it('passes body to controller.create', async () => {
       const { app, controller } = makeApp();
-      await post(app, '/folders', { name: 'New Folder', workspace_id: 'ws-1' });
+      await post(app, '/folders', { name: 'New Folder', workspace_id: '11111111-1111-1111-1111-111111111111' });
       expect(controller.create).toHaveBeenCalledWith(
-        expect.objectContaining({ name: 'New Folder', workspace_id: 'ws-1' }),
+        expect.objectContaining({ name: 'New Folder', workspace_id: '11111111-1111-1111-1111-111111111111' }),
       );
     });
 
     it('returns 422 when name is missing', async () => {
       const { app } = makeApp();
-      expect((await post(app, '/folders', { workspace_id: 'ws-1' })).status).toBe(422);
+      expect((await post(app, '/folders', { workspace_id: '11111111-1111-1111-1111-111111111111' })).status).toBe(422);
     });
 
     it('returns 422 when workspace_id is missing', async () => {
@@ -123,13 +123,13 @@ describe('folder routes', () => {
   describe('PATCH /folders/:id', () => {
     it('returns 200 with updated folder', async () => {
       const { app } = makeApp();
-      const res = await patch(app, '/folders/1', { name: 'Updated', workspace_id: 'ws-1' });
+      const res = await patch(app, '/folders/1', { name: 'Updated', workspace_id: '11111111-1111-1111-1111-111111111111' });
       expect(res.status).toBe(200);
     });
 
     it('passes id and body to controller.update', async () => {
       const { app, controller } = makeApp();
-      await patch(app, '/folders/42', { name: 'Updated', workspace_id: 'ws-1' });
+      await patch(app, '/folders/42', { name: 'Updated', workspace_id: '11111111-1111-1111-1111-111111111111' });
       expect(controller.update).toHaveBeenCalledWith('42', expect.objectContaining({ name: 'Updated' }));
     });
 
@@ -137,7 +137,7 @@ describe('folder routes', () => {
       const { app } = makeApp({
         update: vi.fn().mockRejectedValue(new NotFoundException('Folder', 'x')),
       });
-      expect((await patch(app, '/folders/x', { name: 'Y', workspace_id: 'ws-1' })).status).toBe(404);
+      expect((await patch(app, '/folders/x', { name: 'Y', workspace_id: '11111111-1111-1111-1111-111111111111' })).status).toBe(404);
     });
   });
 

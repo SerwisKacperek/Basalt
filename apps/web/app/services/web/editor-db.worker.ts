@@ -2,6 +2,7 @@
 import sqlite3InitModule, { type Database } from "@sqlite.org/sqlite-wasm";
 import { splitSqlStatements } from "@basalt/db/migrate";
 import { migrations } from "@basalt/db/migrations-bundle";
+import { createNoteTablesSQL, dropNoteTablesSQL } from "@basalt/db/schema";
 
 type SqlMethod = "all" | "get" | "values" | "run";
 
@@ -21,6 +22,16 @@ type Req =
   | {
       reqId: number;
       kind: "reset";
+    }
+  | {
+      reqId: number;
+      kind: "create-note-tables";
+      noteId: string;
+    }
+  | {
+      reqId: number;
+      kind: "drop-note-tables";
+      noteId: string;
     };
 
 type QueryResult = { rows: unknown[] | unknown[][] };
@@ -61,9 +72,10 @@ async function openDb(): Promise<Database> {
   throw lastError instanceof Error ? lastError : new Error(String(lastError));
 }
 
-// Applies pending drizzle-kit migrations, tracking what has run in a
-// __drizzle_migrations table. Replaces hand-written bootstrap DDL so the
-// Drizzle schema in @basalt/db stays the single source of truth.
+// Applies pending drizzle-kit SQL migrations then runs the JS data migration
+// that moves any existing note_updates rows into per-note tables.
+// JS migration runs AFTER SQL migrations so note_updates still exists (0001 is
+// a comment-only placeholder). The JS migration itself drops note_updates.
 function runMigrations(db: Database): void {
   db.exec(`
     CREATE TABLE IF NOT EXISTS __drizzle_migrations (
@@ -93,6 +105,80 @@ function runMigrations(db: Database): void {
       db.exec("ROLLBACK");
       throw e;
     }
+  }
+
+  // JS migration: move note_updates data into per-note tables then drop it.
+  // Runs after SQL migrations so note_updates still exists if upgrading.
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS __js_migrations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      tag TEXT NOT NULL UNIQUE,
+      created_at INTEGER NOT NULL
+    );
+  `);
+
+  const jsMigTag = "migrate_note_updates_to_per_note_tables";
+  const alreadyRun: unknown[][] = [];
+  db.exec({
+    sql: "SELECT 1 FROM __js_migrations WHERE tag = ?",
+    bind: [jsMigTag],
+    rowMode: "array",
+    resultRows: alreadyRun as unknown as never[],
+  });
+
+  if (alreadyRun.length === 0) {
+    const tableExists: unknown[][] = [];
+    db.exec({
+      sql: "SELECT 1 FROM sqlite_master WHERE type='table' AND name='note_updates'",
+      rowMode: "array",
+      resultRows: tableExists as unknown as never[],
+    });
+
+    if (tableExists.length > 0) {
+      const noteRows: unknown[][] = [];
+      db.exec({
+        sql: "SELECT id FROM notes",
+        rowMode: "array",
+        resultRows: noteRows as unknown as never[],
+      });
+
+      for (const [noteId] of noteRows) {
+        const id = noteId as string;
+        for (const sql of createNoteTablesSQL(id)) db.exec(sql);
+
+        const updateRows: unknown[][] = [];
+        db.exec({
+          sql: "SELECT update_blob FROM note_updates WHERE note_id = ? ORDER BY id ASC",
+          bind: [id],
+          rowMode: "array",
+          resultRows: updateRows as unknown as never[],
+        });
+
+        if (updateRows.length > 0) {
+          const safe = id.replace(/-/g, "_");
+          const snapshotId = crypto.randomUUID();
+          const now = Date.now();
+          // First update becomes snapshot, rest become operations.
+          // Uncompressed data — defensive decompress handles this on read.
+          db.exec({
+            sql: `INSERT INTO "note_${safe}_snapshots" (id, data, created_at) VALUES (?, ?, ?)`,
+            bind: [snapshotId, updateRows[0]![0] as Uint8Array, now],
+          });
+          for (let i = 1; i < updateRows.length; i++) {
+            db.exec({
+              sql: `INSERT INTO "note_${safe}_operations" (snapshot_id, data, created_at) VALUES (?, ?, ?)`,
+              bind: [snapshotId, updateRows[i]![0] as Uint8Array, now],
+            });
+          }
+        }
+      }
+      db.exec("DROP TABLE IF EXISTS note_updates");
+    }
+
+    db.exec({
+      sql: "INSERT INTO __js_migrations (tag, created_at) VALUES (?, ?)",
+      bind: [jsMigTag, Date.now()],
+    });
   }
 }
 
@@ -158,6 +244,14 @@ async function handle(req: Req): Promise<QueryResult | QueryResult[]> {
   const db = await getDb();
   if (req.kind === "reset") {
     resetDb(db);
+    return { rows: [] };
+  }
+  if (req.kind === "create-note-tables") {
+    for (const sql of createNoteTablesSQL(req.noteId)) db.exec(sql);
+    return { rows: [] };
+  }
+  if (req.kind === "drop-note-tables") {
+    for (const sql of dropNoteTablesSQL(req.noteId)) db.exec(sql);
     return { rows: [] };
   }
   if (req.kind === "query") {

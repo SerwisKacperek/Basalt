@@ -3,6 +3,7 @@ import { DiagnosticsService } from "./web/DiagnosticsService";
 import { EditorPersistenceService } from "./web/EditorPersistenceService";
 import { StorageService } from "./web/StorageService";
 import { OllamaService } from "./web/OllamaService";
+import { SyncService } from "./web/SyncService";
 import { createDomainDb } from "./web/DomainDbService";
 import { local as apiClient } from "../api-client/eden";
 
@@ -55,5 +56,6 @@ export function createRegistry(): ServiceRegistry {
     folders: injected?.folders ?? new CompositeFolderService(localFolders, remoteFolders),
     notes: injected?.notes ?? compositeNotes,
     ollama: injected?.ollama ?? new OllamaService(storage),
+    syncService: new SyncService(),
   };
 }

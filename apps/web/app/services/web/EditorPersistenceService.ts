@@ -1,12 +1,18 @@
-import { asc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, lte, max } from "drizzle-orm";
 import { drizzle, type SqliteRemoteDatabase } from "drizzle-orm/sqlite-proxy";
 import type {
   EditorNote,
   IEditorPersistenceService,
+  NoteContent,
 } from "@basalt/core/interfaces/IEditorPersistenceService";
 import type { INoteService } from "@basalt/core/interfaces/INoteService";
 import type { Select } from "@basalt/domain";
-import { noteUpdates, notes as editorNotes } from "@basalt/db/schema";
+import {
+  noteOperationsTable,
+  noteSnapshotsTable,
+  notes as editorNotes,
+} from "@basalt/db/schema";
+import { compress, decompress } from "./compression";
 
 type SqlMethod = "all" | "get" | "values" | "run";
 
@@ -28,6 +34,16 @@ type WorkerReq =
   | {
       reqId: number;
       kind: "reset";
+    }
+  | {
+      reqId: number;
+      kind: "create-note-tables";
+      noteId: string;
+    }
+  | {
+      reqId: number;
+      kind: "drop-note-tables";
+      noteId: string;
     };
 
 type WorkerRes =
@@ -111,6 +127,8 @@ function toEditorNote(note: Select<"notes">): EditorNote {
 export class EditorPersistenceService implements IEditorPersistenceService {
   private db: SqliteRemoteDatabase;
   private client: WorkerClient;
+  // Maps noteId → latest snapshotId (null = no snapshot, undefined = not cached)
+  private currentSnapshotId = new Map<string, string | null>();
 
   constructor(private noteService: INoteService) {
     this.client = new WorkerClient();
@@ -118,6 +136,7 @@ export class EditorPersistenceService implements IEditorPersistenceService {
   }
 
   async reset(): Promise<void> {
+    this.currentSnapshotId.clear();
     await this.client.send({ kind: "reset" });
   }
 
@@ -135,41 +154,171 @@ export class EditorPersistenceService implements IEditorPersistenceService {
       createdAt: now,
       updatedAt: now,
     });
+    await this.client.send({ kind: "create-note-tables", noteId: domainNote.id });
     return toEditorNote(domainNote);
   }
 
   async deleteNote(id: string): Promise<void> {
+    await this.client.send({ kind: "drop-note-tables", noteId: id });
     await this.db.delete(editorNotes).where(eq(editorNotes.id, id));
     await this.noteService.delete(id);
+    this.currentSnapshotId.delete(id);
   }
 
-  async loadUpdates(id: string): Promise<Uint8Array[]> {
+  async loadNote(id: string): Promise<NoteContent> {
+    // Ensure per-note tables exist for notes learned from the API but not
+    // created locally. CREATE TABLE IF NOT EXISTS makes this idempotent.
+    await this.client.send({ kind: "create-note-tables", noteId: id });
+    const snapsTable = noteSnapshotsTable(id);
+    const opsTable = noteOperationsTable(id);
+
+    const snapshots = await this.db
+      .select()
+      .from(snapsTable)
+      .orderBy(desc(snapsTable.createdAt))
+      .limit(1);
+
+    const latestSnap = snapshots[0] ?? null;
+    this.currentSnapshotId.set(id, latestSnap?.id ?? null);
+
+    if (!latestSnap) {
+      return { snapshot: null, snapshotId: null, operations: [] };
+    }
+
+    const ops = await this.db
+      .select({ id: opsTable.id, data: opsTable.data })
+      .from(opsTable)
+      .where(eq(opsTable.snapshotId, latestSnap.id))
+      .orderBy(asc(opsTable.id));
+
+    return {
+      snapshot: await decompress(latestSnap.data),
+      snapshotId: latestSnap.id,
+      operations: await Promise.all(ops.map((o) => decompress(o.data))),
+    };
+  }
+
+  async appendOperation(id: string, data: Uint8Array): Promise<void> {
+    let snapshotId = this.currentSnapshotId.get(id);
+    if (snapshotId === undefined) {
+      const content = await this.loadNote(id);
+      snapshotId = content.snapshotId;
+    }
+    const opsTable = noteOperationsTable(id);
+    const now = Date.now();
+    const compressed = await compress(data);
+    await this.db.batch([
+      this.db
+        .insert(opsTable)
+        .values({ snapshotId: snapshotId ?? null, data: compressed, createdAt: now }),
+      this.db
+        .update(editorNotes)
+        .set({ updatedAt: now })
+        .where(eq(editorNotes.id, id)),
+    ]);
+  }
+
+  async compact(
+    id: string,
+    mergedData: Uint8Array,
+    stateVector: Uint8Array,
+  ): Promise<void> {
+    const snapsTable = noteSnapshotsTable(id);
+    const opsTable = noteOperationsTable(id);
+
+    let currentSnapId = this.currentSnapshotId.get(id);
+    if (currentSnapId === undefined) {
+      const content = await this.loadNote(id);
+      currentSnapId = content.snapshotId;
+    }
+
+    let highwater = 0;
+    if (currentSnapId !== null) {
+      const hw = await this.db
+        .select({ maxId: max(opsTable.id) })
+        .from(opsTable)
+        .where(eq(opsTable.snapshotId, currentSnapId));
+      highwater = hw[0]?.maxId ?? 0;
+    }
+
+    const newSnapshotId = crypto.randomUUID();
+    const now = Date.now();
+    const compressedData = await compress(mergedData);
+    const compressedSv = await compress(stateVector);
+
+    const insertStmt = this.db.insert(snapsTable).values({
+      id: newSnapshotId,
+      data: compressedData,
+      stateVector: compressedSv,
+      createdAt: now,
+    });
+    const updateStmt = this.db
+      .update(editorNotes)
+      .set({ updatedAt: now })
+      .where(eq(editorNotes.id, id));
+
+    if (highwater > 0 && currentSnapId) {
+      const deleteStmt = this.db
+        .delete(opsTable)
+        .where(
+          and(
+            eq(opsTable.snapshotId, currentSnapId),
+            lte(opsTable.id, highwater),
+          ),
+        );
+      await this.db.batch([insertStmt, deleteStmt, updateStmt]);
+    } else {
+      await this.db.batch([insertStmt, updateStmt]);
+    }
+
+    // Update cache only after the batch commits successfully.
+    this.currentSnapshotId.set(id, newSnapshotId);
+  }
+
+  async getUnsyncedOperations(
+    id: string,
+  ): Promise<{ id: number; data: Uint8Array }[]> {
+    const opsTable = noteOperationsTable(id);
     const rows = await this.db
-      .select({ updateBlob: noteUpdates.updateBlob })
-      .from(noteUpdates)
-      .where(eq(noteUpdates.noteId, id))
-      .orderBy(asc(noteUpdates.id));
-    return rows.map((r) => r.updateBlob);
+      .select({ id: opsTable.id, data: opsTable.data })
+      .from(opsTable)
+      .where(isNull(opsTable.syncedAt))
+      .orderBy(asc(opsTable.id));
+    return Promise.all(
+      rows.map(async (r) => ({ id: r.id, data: await decompress(r.data) })),
+    );
   }
 
-  async appendUpdate(id: string, update: Uint8Array): Promise<void> {
+  async markOperationsSynced(id: string, opIds: number[]): Promise<void> {
+    if (opIds.length === 0) return;
+    const opsTable = noteOperationsTable(id);
     const now = Date.now();
-    await this.db.batch([
-      this.db
-        .insert(noteUpdates)
-        .values({ noteId: id, updateBlob: update, createdAt: now }),
-      this.db.update(editorNotes).set({ updatedAt: now }).where(eq(editorNotes.id, id)),
-    ]);
+    await this.db
+      .update(opsTable)
+      .set({ syncedAt: now })
+      .where(inArray(opsTable.id, opIds));
   }
 
-  async compact(id: string, mergedUpdate: Uint8Array): Promise<void> {
-    const now = Date.now();
-    await this.db.batch([
-      this.db.delete(noteUpdates).where(eq(noteUpdates.noteId, id)),
-      this.db
-        .insert(noteUpdates)
-        .values({ noteId: id, updateBlob: mergedUpdate, createdAt: now }),
-      this.db.update(editorNotes).set({ updatedAt: now }).where(eq(editorNotes.id, id)),
-    ]);
+  async syncNoteList(): Promise<void> {
+    const svc = this.noteService as unknown as { sync?: () => Promise<void> };
+    if (typeof svc.sync === "function") {
+      await svc.sync();
+    }
+    // Mirror any newly-synced notes into the editor DB so per-note tables and
+    // the editorNotes entry exist before the user navigates to them.
+    const notes = await this.noteService.findAll();
+    const existing = await this.db.select({ id: editorNotes.id }).from(editorNotes);
+    const existingIds = new Set(existing.map((r) => r.id));
+    for (const note of notes) {
+      if (!existingIds.has(note.id)) {
+        await this.db.insert(editorNotes).values({
+          id: note.id,
+          name: note.name,
+          createdAt: note.createdAt.getTime(),
+          updatedAt: note.updatedAt.getTime(),
+        });
+        await this.client.send({ kind: "create-note-tables", noteId: note.id });
+      }
+    }
   }
 }
