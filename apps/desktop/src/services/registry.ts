@@ -67,7 +67,6 @@ export function createMainRegistry(vaultRoot: string): MainServiceRegistry {
   const localNotes = new NoteService(new NoteRepository(domainDb, schema));
 
   const apiClient = createApiClient();
-  const remoteWorkspaces = apiClient ? new RemoteWorkspaceService(apiClient) : null;
   const remoteFolders = apiClient ? new RemoteFolderService(apiClient) : null;
   const remoteNotes = apiClient ? new RemoteNoteService(apiClient) : null;
 
@@ -81,7 +80,10 @@ export function createMainRegistry(vaultRoot: string): MainServiceRegistry {
     editorPersistence: new EditorPersistenceService(db, rawSqlite, reset, compositeNotes),
     preferences,
     ai: new AiService(preferences),
-    workspaces: new CompositeWorkspaceService(localWorkspaces, remoteWorkspaces),
+    workspaces: new CompositeWorkspaceService(
+      localWorkspaces,
+      (url) => new RemoteWorkspaceService(clientFactory(url)),
+    ),
     folders: new CompositeFolderService(localFolders, remoteFolders),
     notes: compositeNotes,
   };

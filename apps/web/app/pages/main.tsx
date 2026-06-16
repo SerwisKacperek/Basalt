@@ -7,6 +7,7 @@ import type { Select } from "@basalt/domain";
 import { BookLock, Plus, PanelLeftOpen } from "lucide-react";
 
 export type Folder = Select<"folders">;
+export type Workspace = Select<"workspaces">;
 import {
   Button,
   SidebarInset,
@@ -36,6 +37,7 @@ export default function Main() {
   const [notes, setNotes] = useState<EditorNote[] | null>(null);
   const [folders, setFolders] = useState<Folder[]>([]);
   const [workspaceId, setWorkspaceId] = useState<string | null>(null);
+  const [workspaceList, setWorkspaceList] = useState<Workspace[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
@@ -47,12 +49,27 @@ export default function Main() {
   const refresh = useCallback(async () => {
     const [list, folderList] = await Promise.all([
       editorPersistence.listNotes(),
-      folderService.findAll(),
+      workspaceId
+        ? folderService.findAll({ workspace_id: workspaceId })
+        : folderService.findAll(),
     ]);
-    setNotes(list);
+
+    // Filter notes to current workspace. Notes with workspaceId === null were
+    // created before workspace assignment and are treated as local workspace notes.
+    const isLocalWorkspace =
+      workspaceList.find((w) => w.id === workspaceId)?.type === "local";
+    const workspaceNotes = workspaceId
+      ? list.filter(
+          (n) =>
+            n.workspaceId === workspaceId ||
+            (isLocalWorkspace && n.workspaceId === null),
+        )
+      : list;
+
+    setNotes(workspaceNotes);
     setFolders([...folderList].sort((a, b) => a.position - b.position));
-    return list;
-  }, [editorPersistence, folderService]);
+    return workspaceNotes;
+  }, [editorPersistence, folderService, workspaceId, workspaceList]);
 
   useEffect(() => {
     refresh()
@@ -60,16 +77,39 @@ export default function Main() {
       .catch(console.error);
   }, [refresh]);
 
-  // Folders require a workspace (NOT NULL FK); ensure a default one exists.
-  useEffect(() => {
-    workspaces
-      .findAll()
-      .then(async (all) => {
-        const ws = all[0] ?? (await workspaces.create({ name: "Local workspace" }));
-        setWorkspaceId(ws.id);
-      })
-      .catch(console.error);
+  const refreshWorkspaces = useCallback(async () => {
+    const all = await workspaces.findAll();
+    setWorkspaceList(all);
+    return all;
   }, [workspaces]);
+
+  // Ensure a local workspace exists, then start polling remote workspaces.
+  useEffect(() => {
+    const init = async () => {
+      const all = await workspaces.findAll();
+      let local = all.find((w) => w.type === "local");
+      if (!local) {
+        local = await workspaces.create({ name: "Local workspace", type: "local" });
+      }
+      setWorkspaceId(local.id);
+      setWorkspaceList(await workspaces.findAll());
+    };
+    init().catch(console.error);
+  }, [workspaces]);
+
+  // Poll remote workspaces every 30 s and also on window focus.
+  useEffect(() => {
+    const sync = async () => {
+      await workspaces.sync?.();
+      await refreshWorkspaces();
+    };
+    const id = setInterval(sync, 30_000);
+    window.addEventListener("focus", sync);
+    return () => {
+      clearInterval(id);
+      window.removeEventListener("focus", sync);
+    };
+  }, [workspaces, refreshWorkspaces]);
 
   const handleCreate = useCallback(
     async (folderId: string | null = null) => {
@@ -82,13 +122,14 @@ export default function Main() {
       );
       await noteService.update(note.id, {
         folder_id: folderId,
+        workspace_id: workspaceId,
         position: maxPos + 1,
       });
       await refresh();
       setActiveId(note.id);
       setEditingId(note.id);
     },
-    [editorPersistence, noteService, refresh, notes],
+    [editorPersistence, noteService, refresh, notes, workspaceId],
   );
 
   const handleRename = useCallback(
@@ -128,6 +169,49 @@ export default function Main() {
       setActiveId(copy.id);
     },
     [editorPersistence, noteService, refresh, notes],
+  );
+
+  const handleWorkspaceSelect = useCallback((id: string) => {
+    setWorkspaceId(id);
+    setActiveId(null);
+  }, []);
+
+  const handleCreateWorkspace = useCallback(
+    async (name: string, type: "local" | "remote", url?: string) => {
+      await workspaces.create({ name, type, url: url ?? null });
+      await workspaces.sync?.();
+      setWorkspaceList(await workspaces.findAll());
+    },
+    [workspaces],
+  );
+
+  const handleJoinWorkspace = useCallback(
+    async (ws: { id: string; name: string; url: string }) => {
+      await workspaces.join?.({ id: ws.id, name: ws.name, type: "remote", url: ws.url });
+      setWorkspaceList(await workspaces.findAll());
+    },
+    [workspaces],
+  );
+
+  const handleDeleteWorkspace = useCallback(
+    async (id: string) => {
+      await workspaces.delete(id);
+      const remaining = await workspaces.findAll();
+      setWorkspaceList(remaining);
+      setWorkspaceId((cur) => {
+        if (cur !== id) return cur;
+        return remaining.find((w) => w.type === "local")?.id ?? remaining[0]?.id ?? null;
+      });
+    },
+    [workspaces],
+  );
+
+  const handleUpdateWorkspaceUrl = useCallback(
+    async (id: string, url: string) => {
+      await workspaces.update(id, { url });
+      setWorkspaceList(await workspaces.findAll());
+    },
+    [workspaces],
   );
 
   const handleCreateFolder = useCallback(async () => {
@@ -244,6 +328,8 @@ export default function Main() {
       <AppSidebar
         notes={notes ?? []}
         folders={folders}
+        workspaces={workspaceList}
+        activeWorkspaceId={workspaceId}
         activeId={activeId}
         editingId={editingId}
         editingFolderId={editingFolderId}
@@ -262,6 +348,11 @@ export default function Main() {
         onMoveNote={handleMoveNote}
         onReorderFolders={handleReorderFolders}
         onResizeStart={initResize}
+        onWorkspaceSelect={handleWorkspaceSelect}
+        onCreateWorkspace={handleCreateWorkspace}
+        onJoinWorkspace={handleJoinWorkspace}
+        onDeleteWorkspace={handleDeleteWorkspace}
+        onUpdateWorkspaceUrl={handleUpdateWorkspaceUrl}
       />
       <SidebarInset className="min-h-0 overflow-hidden">
         <header className="flex h-16 items-center justify-between gap-4 border-b border-border p-4">

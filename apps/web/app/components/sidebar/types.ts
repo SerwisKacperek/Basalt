@@ -1,6 +1,6 @@
 import type React from "react";
 import type { EditorNote } from "@basalt/core/interfaces/IEditorPersistenceService";
-import type { Folder } from "~/pages/main";
+import type { Folder, Workspace } from "~/pages/main";
 
 /** Special container id for notes that don't belong to any folder. */
 export const ROOT = "__root__";
@@ -23,6 +23,8 @@ export type Items = Record<string, string[]>;
 export interface AppSidebarProps {
   notes: EditorNote[];
   folders: Folder[];
+  workspaces: Workspace[];
+  activeWorkspaceId: string | null;
   activeId: string | null;
   editingId: string | null;
   editingFolderId: string | null;
@@ -41,6 +43,11 @@ export interface AppSidebarProps {
   onMoveNote: (noteId: string, targetFolderId: FolderTarget, index: number) => void;
   onReorderFolders: (orderedIds: string[]) => void;
   onResizeStart: (e: React.MouseEvent) => void;
+  onWorkspaceSelect: (id: string) => void;
+  onCreateWorkspace: (name: string, type: "local" | "remote", url?: string) => Promise<void>;
+  onJoinWorkspace: (ws: { id: string; name: string; url: string }) => Promise<void>;
+  onDeleteWorkspace: (id: string) => Promise<void>;
+  onUpdateWorkspaceUrl: (id: string, url: string) => Promise<void>;
 }
 
 /** Shared note-row callbacks, bundled to avoid prop drilling. */

@@ -5,6 +5,7 @@ import { StorageService } from "./web/StorageService";
 import { SyncService } from "./web/SyncService";
 import { createDomainDb } from "./web/DomainDbService";
 import { local as apiClient } from "../api-client/eden";
+import { clientFactory } from "@basalt/api";
 
 import {
   NoteRepository,
@@ -38,7 +39,6 @@ export function createRegistry(): ServiceRegistry {
 
   const remoteNotes = new RemoteNoteService(apiClient);
   const remoteFolders = new RemoteFolderService(apiClient);
-  const remoteWorkspaces = new RemoteWorkspaceService(apiClient);
 
   const compositeNotes = new CompositeNoteService(localNotes, remoteNotes);
 
@@ -52,7 +52,10 @@ export function createRegistry(): ServiceRegistry {
     diagnostics: injected?.diagnostics ?? new DiagnosticsService(),
     editorPersistence: injected?.editorPersistence ?? new EditorPersistenceService(compositeNotes),
     storage: storage,
-    workspaces: injected?.workspaces ?? new CompositeWorkspaceService(localWorkspaces, remoteWorkspaces),
+    workspaces: injected?.workspaces ?? new CompositeWorkspaceService(
+      localWorkspaces,
+      (url) => new RemoteWorkspaceService(clientFactory(url)),
+    ),
     folders: injected?.folders ?? new CompositeFolderService(localFolders, remoteFolders),
     notes: injected?.notes ?? compositeNotes,
     ai: injected?.ai ?? new AiService(storage),

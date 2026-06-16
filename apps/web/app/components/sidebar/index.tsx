@@ -179,7 +179,15 @@ export function AppSidebar(props: AppSidebarProps) {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarUserMenu />
+      <SidebarUserMenu
+        workspaces={props.workspaces}
+        activeWorkspaceId={props.activeWorkspaceId}
+        onWorkspaceSelect={props.onWorkspaceSelect}
+        onCreateWorkspace={props.onCreateWorkspace}
+        onJoinWorkspace={props.onJoinWorkspace}
+        onDeleteWorkspace={props.onDeleteWorkspace}
+        onUpdateWorkspaceUrl={props.onUpdateWorkspaceUrl}
+      />
 
       {state === "expanded" && (
         <div

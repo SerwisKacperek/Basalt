@@ -16,11 +16,13 @@
     "@basalt/db": "*",
     "@basalt/domain": "*",
     "@elysiajs/cors": "latest",
+    "@elysiajs/jwt": "^1.4.2",
     "@sinclair/typebox": "^0.34.49",
     "better-sqlite3": "^12.10.0",
     "drizzle-orm": "^0.45.2",
     "drizzle-typebox": "^0.3.3",
     "elysia": "latest",
+    "jose": "^6.2.3",
     "pg": "^8.20.0",
     "yjs": "^13.6.20"
   },

@@ -17,10 +17,16 @@ export function handleApiProtocol(backendBaseUrl: string) {
 
     const target = new URL(`${cleanPath}${urlObj.search}`, backendBaseUrl)
  
+    // Strip the Cookie header from the renderer request — it belongs to the
+    // api:// origin and would override Electron's session cookie jar for the
+    // backend's HTTP origin. net.fetch injects the stored cookies automatically.
+    const headers = new Headers(request.headers);
+    headers.delete('cookie');
+
     try {
       return net.fetch(target.toString(), {
         method: request.method,
-        headers: request.headers,
+        headers,
         body: request.method === 'GET' || request.method === 'HEAD' ? null : request.body,
         duplex: 'half',
       } as RequestInit)

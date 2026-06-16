@@ -10,7 +10,8 @@ import {
   createNoteRoutes,
   createNoteContentRoutes,
   createUserRoutes,
-  createFolderRoutes
+  createFolderRoutes,
+  createAuthRoutes,
 } from "./modules";
 
 const db = createDb();
@@ -19,7 +20,11 @@ const encoder = new TextEncoder();
 
 export const createApp = () =>
   new Elysia({ prefix: "/api" })
-    .use(cors())
+    .use(cors({
+      origin: true,
+      credentials: true,
+      allowedHeaders: ['Content-Type', 'Authorization'],
+    }))
     .use(logger)
     // TODO: This endpoint has no auth guard and broadcasts events across all
     // users/workspaces. Add authentication and workspace-scoped filtering
@@ -55,7 +60,8 @@ export const createApp = () =>
     .use(createNoteRoutes(db, rawDb))
     .use(createNoteContentRoutes(rawDb))
     .use(createUserRoutes(db))
-    .use(createFolderRoutes(db));
+    .use(createFolderRoutes(db))
+    .use(createAuthRoutes(db));
 
 export type App = ReturnType<typeof createApp>;
 
