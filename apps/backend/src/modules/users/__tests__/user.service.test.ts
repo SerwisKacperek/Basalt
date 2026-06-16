@@ -2,17 +2,29 @@ import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
 import { UserService } from '../user.service';
 import { NotFoundException, ConflictException } from '@basalt/domain';
 
+let _originalBun: any;
+
 beforeAll(() => {
-  vi.stubGlobal('Bun', {
-    password: {
-      hash: vi.fn().mockImplementation((pw: string) => Promise.resolve(`hashed:${pw}`)),
-      verify: vi.fn().mockImplementation((pw: string, hash: string) => Promise.resolve(hash === `hashed:${pw}`)),
-    },
-  });
+  _originalBun = (globalThis as any).Bun;
+  try {
+    (globalThis as any).Bun = {
+      ...(_originalBun ?? {}),
+      password: {
+        hash: vi.fn().mockImplementation((pw: string) => Promise.resolve(`hashed:${pw}`)),
+        verify: vi.fn().mockImplementation((pw: string, hash: string) => Promise.resolve(hash === `hashed:${pw}`)),
+      },
+    };
+  } catch {
+    // Bun is readonly in bun runtime — real Bun.password used
+  }
 });
 
 afterAll(() => {
-  vi.unstubAllGlobals();
+  try {
+    (globalThis as any).Bun = _originalBun;
+  } catch {
+    // readonly, nothing to restore
+  }
 });
 
 const mockUser = {

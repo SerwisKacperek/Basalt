@@ -6,10 +6,10 @@ const rawDb = { exec: vi.fn().mockResolvedValue(undefined) };
 import { NotFoundException } from '@basalt/domain';
 
 const note = {
-  id: '1',
+  id: '33333333-3333-3333-3333-333333333333',
   name: 'Test Note',
-  workspace_id: 'ws-1',
-  folder_id: 'f-1',
+  workspace_id: '11111111-1111-1111-1111-111111111111',
+  folder_id: '22222222-2222-2222-2222-222222222222',
   createdAt: new Date(),
   updatedAt: new Date(),
   deletedAt: null,
@@ -68,7 +68,7 @@ describe('note routes', () => {
       const { app } = makeApp();
       const res = await app.handle(new Request('http://localhost/notes/1'));
       expect(res.status).toBe(200);
-      expect((await res.json()).id).toBe('1');
+      expect((await res.json()).id).toBe('33333333-3333-3333-3333-333333333333');
     });
 
     it('passes id to controller.getById', async () => {
@@ -89,22 +89,22 @@ describe('note routes', () => {
   describe('POST /notes', () => {
     it('returns 201 with created note', async () => {
       const { app } = makeApp();
-      const res = await post(app, '/notes', { id: '1', name: 'New', workspace_id: 'ws-1', folder_id: 'f-1' });
+      const res = await post(app, '/notes', { id: '33333333-3333-3333-3333-333333333333', name: 'New', workspace_id: '11111111-1111-1111-1111-111111111111', folder_id: '22222222-2222-2222-2222-222222222222' });
       expect(res.status).toBe(201);
     });
 
     it('passes body to controller.create', async () => {
       const { app, controller } = makeApp();
-      await post(app, '/notes', { id: '1', name: 'New', workspace_id: 'ws-1', folder_id: 'f-1' });
+      await post(app, '/notes', { id: '33333333-3333-3333-3333-333333333333', name: 'New', workspace_id: '11111111-1111-1111-1111-111111111111', folder_id: '22222222-2222-2222-2222-222222222222' });
       expect(controller.create).toHaveBeenCalledWith(
-        expect.objectContaining({ name: 'New', workspace_id: 'ws-1', folder_id: 'f-1' }),
+        expect.objectContaining({ name: 'New', workspace_id: '11111111-1111-1111-1111-111111111111', folder_id: '22222222-2222-2222-2222-222222222222' }),
       );
     });
 
     it('calls rawDb.exec to create note tables', async () => {
       rawDb.exec.mockClear();
       const { app } = makeApp();
-      await post(app, '/notes', { id: '1', name: 'New', workspace_id: 'ws-1', folder_id: 'f-1' });
+      await post(app, '/notes', { id: '33333333-3333-3333-3333-333333333333', name: 'New', workspace_id: '11111111-1111-1111-1111-111111111111', folder_id: '22222222-2222-2222-2222-222222222222' });
       expect(rawDb.exec).toHaveBeenCalled();
     });
 

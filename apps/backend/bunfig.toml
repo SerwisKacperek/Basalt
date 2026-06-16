@@ -1,0 +1,5 @@
+[env]
+DB_DIALECT = "sqlite"
+
+[test]
+preload = ["./tests/setup.ts"]
