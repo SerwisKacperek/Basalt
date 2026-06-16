@@ -29,9 +29,15 @@ function toEditorNote(note: Select<"notes">): EditorNote {
     name: note.name,
     folderId: note.folder_id ?? null,
     workspaceId: note.workspace_id ?? null,
+    position: note.position ?? 0,
     createdAt: note.createdAt.getTime(),
     updatedAt: note.updatedAt.getTime(),
   };
+}
+
+/** Order notes by their manual position, falling back to creation time. */
+function byPosition(a: EditorNote, b: EditorNote): number {
+  return a.position - b.position || a.createdAt - b.createdAt;
 }
 
 export class EditorPersistenceService implements IEditorPersistenceService {
@@ -48,7 +54,7 @@ export class EditorPersistenceService implements IEditorPersistenceService {
 
   async listNotes(): Promise<EditorNote[]> {
     const notes = await this.noteService.findAll();
-    return notes.map(toEditorNote);
+    return notes.map(toEditorNote).sort(byPosition);
   }
 
   async createNote(name: string): Promise<EditorNote> {
@@ -61,6 +67,16 @@ export class EditorPersistenceService implements IEditorPersistenceService {
     for (const sql of createNoteTablesSQL(domainNote.id)) {
       this.rawSqlite.exec(sql);
     }
+    return toEditorNote(domainNote);
+  }
+
+  async renameNote(id: string, name: string): Promise<EditorNote> {
+    const domainNote = await this.noteService.update(id, { name });
+    this.db
+      .update(editorNotes)
+      .set({ name, updatedAt: Date.now() })
+      .where(eq(editorNotes.id, id))
+      .run();
     return toEditorNote(domainNote);
   }
 

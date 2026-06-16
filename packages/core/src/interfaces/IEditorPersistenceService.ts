@@ -3,6 +3,7 @@ export interface EditorNote {
   name: string;
   folderId: string | null;
   workspaceId: string | null;
+  position: number;
   createdAt: number;
   updatedAt: number;
 }
@@ -16,6 +17,7 @@ export interface NoteContent {
 export interface IEditorPersistenceService {
   listNotes(): Promise<EditorNote[]>;
   createNote(name: string): Promise<EditorNote>;
+  renameNote(id: string, name: string): Promise<EditorNote>;
   deleteNote(id: string): Promise<void>;
   loadNote(id: string): Promise<NoteContent>;
   appendOperation(id: string, data: Uint8Array): Promise<void>;

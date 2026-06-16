@@ -5,6 +5,7 @@ export const CHANNELS = {
   editorPersistence: {
     list: "svc:editor:list",
     create: "svc:editor:create",
+    rename: "svc:editor:rename",
     delete: "svc:editor:delete",
     loadNote: "svc:editor:loadNote",
     appendOperation: "svc:editor:appendOperation",

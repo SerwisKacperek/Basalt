@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { IDiagnosticsService } from "@basalt/core/interfaces/IDiagnosticsService";
 import { Link } from "react-router";
-import { TestComponent } from "@basalt/ui";
+import { Card, CardHeader, CardTitle, CardDescription } from "@basalt/ui";
 import { useServices } from "~/services/ServiceContext";
 
 type HealthData = Awaited<ReturnType<IDiagnosticsService["healthcheck"]>>;
@@ -21,7 +21,12 @@ export function Test() {
       <p className="mb-4">
         Page used for testing the routing <Link to="/debug">Back to debug</Link>
       </p>
-      <TestComponent title="Test Card" description="Sample component from @basalt/ui" />
+      <Card>
+        <CardHeader>
+          <CardTitle>Test Card</CardTitle>
+          <CardDescription>Sample component from @basalt/ui</CardDescription>
+        </CardHeader>
+      </Card>
       {health && (
         <pre className="mt-4 overflow-x-auto rounded-md bg-slate-950/5 p-3 text-sm">
           {JSON.stringify(health, null, 2)}

@@ -1,4 +1,3 @@
-export { TestComponent, SettingsPanel } from "./TestComponent";
 export { Button, buttonVariants } from "./ui/button";
 export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "./ui/card";
 export { Input } from "./ui/input";
@@ -7,3 +6,18 @@ export { Badge, badgeVariants } from "./ui/badge";
 export { Separator } from "./ui/separator";
 export { ThemeProvider, useTheme, type Theme } from "./theme-provider";
 export { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
+
+export * from "./ui/tooltip";
+export * from "./ui/dropdown-menu";
+export * from "./ui/context-menu";
+export * from "./ui/collapsible";
+export * from "./ui/scroll-area";
+export * from "./ui/tabs";
+export * from "./ui/progress";
+export * from "./ui/avatar";
+export * from "./ui/toggle";
+export * from "./ui/toggle-group";
+export * from "./ui/sheet";
+export * from "./ui/skeleton";
+export * from "./ui/sidebar";
+export * from "./ui/sonner";

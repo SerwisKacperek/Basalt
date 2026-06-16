@@ -75,9 +75,28 @@ export function EditorView({ id }: { id: string }) {
       <div className="flex-1 min-h-0 overflow-auto pb-24 scrollbar-none">
         <EditorContent editor={editor} className="h-full" />
       </div>
-      <div className="flex flex-row gap-4 items-center p-4">
-        <EditorToolbar editor={editor}/>
-        <BotMessageSquare size={50} className=" mr-8 border border-border rounded-full p-2"/>
+      <div className="relative shrink-0 border-t border-border px-4 h-16 flex items-center">
+        {status === "error" && (
+          <div className="absolute bottom-full left-1/2 z-20 mb-3 -translate-x-1/2">
+            <div className="flex items-center gap-2 rounded-lg border border-destructive/50 bg-background px-3 py-2 text-sm text-destructive shadow-lg">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span className="max-w-80 truncate">
+                {error?.message ?? "Failed to save"}
+              </span>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={retry}
+                className="h-6 px-2"
+              >
+                Retry
+              </Button>
+            </div>
+          </div>
+        )}
+        <div className="mx-auto w-full max-w-200">
+          {editor && <EditorToolbar editor={editor} />}
+        </div>
       </div>
     </div>
   );

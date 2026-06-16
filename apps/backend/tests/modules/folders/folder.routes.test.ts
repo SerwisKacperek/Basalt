@@ -8,6 +8,7 @@ const folder = {
   id: '22222222-2222-2222-2222-222222222222',
   workspace_id: '11111111-1111-1111-1111-111111111111',
   name: 'Test Folder',
+  position: 0,
   createdAt: new Date(),
   updatedAt: new Date(),
   deletedAt: null,

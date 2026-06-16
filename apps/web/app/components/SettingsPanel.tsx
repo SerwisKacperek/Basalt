@@ -10,19 +10,27 @@ import {
   User,
 } from "lucide-react";
 import {
+  Avatar,
+  AvatarFallback,
+  Badge,
+  Button,
+  Card,
+  CardContent,
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "../ui/dialog";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
-import { Button } from "../ui/button";
-import { Card, CardContent } from "../ui/card";
-import { Separator } from "../ui/separator";
-import { Badge } from "../ui/badge";
-import { useTheme } from "../theme-provider";
+  Input,
+  Label,
+  Progress,
+  Separator,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  useTheme,
+} from "@basalt/ui";
 
 interface SimpleOllama {
   getEndpoint: () => Promise<string>;
@@ -37,13 +45,19 @@ type ConnectionStatus =
 
 export interface SettingsPanelProps {
   ollama: SimpleOllama;
+  /** Controlled open state. When provided, the dialog is controlled externally. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  /** Hide the built-in settings icon trigger (e.g. when opened from a menu). */
+  hideTrigger?: boolean;
 }
 
 export function SettingsPanel({
   ollama,
+  open,
+  onOpenChange,
+  hideTrigger = false,
 }: SettingsPanelProps) {
-
-  const [activeTab, setActiveTab] = useState<'account' | 'appearance' | 'stats' | 'ai'>('account');
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const { theme, setTheme } = useTheme();
 
@@ -74,7 +88,7 @@ export function SettingsPanel({
     await ollama.setEndpoint(endpoint);
     setConnectionStatus({
       kind: "success",
-      message: "Endpoint Ollamy został zapisany.",
+      message: "Ollama endpoint saved.",
     });
   };
 
@@ -86,7 +100,7 @@ export function SettingsPanel({
       await ollama.testConnection();
       setConnectionStatus({
         kind: "success",
-        message: "Połączenie z Ollamą działa poprawnie.",
+        message: "Connection to Ollama is working.",
       });
     } catch (error) {
       setConnectionStatus({
@@ -94,7 +108,7 @@ export function SettingsPanel({
         message:
           error instanceof Error
             ? error.message
-            : "Nie udało się przetestować połączenia z Ollamą.",
+            : "Couldn't test the connection to Ollama.",
       });
     } finally {
       setIsTesting(false);
@@ -102,85 +116,85 @@ export function SettingsPanel({
   };
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="icon" aria-label="Ustawienia">
-          <Settings className="h-4 w-4" />
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      {!hideTrigger && (
+        <DialogTrigger asChild>
+          <Button variant="outline" size="icon" aria-label="Settings">
+            <Settings className="h-4 w-4" />
+          </Button>
+        </DialogTrigger>
+      )}
 
-      <DialogContent 
-        aria-describedby={undefined} 
-        className="sm:max-w-150 h-112.5 flex flex-col p-0 gap-0 overflow-hidden"
+      <DialogContent
+        aria-describedby={undefined}
+        className="sm:max-w-150 h-112.5 flex flex-col p-0 gap-0 overflow-hidden border-border"
       >
         <DialogHeader className="p-6 pb-2">
-          <DialogTitle className="text-xl font-semibold">
-            Ustawienia
-          </DialogTitle>
+          <DialogTitle className="text-xl font-semibold">Settings</DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 flex flex-col sm:flex-row h-full overflow-hidden border-t">
-          {/* Menu boczne */}
-          <div className="flex sm:flex-col justify-start bg-muted/40 p-2 sm:w-40 space-y-0 sm:space-y-1 space-x-1 sm:space-x-0 border-r">
-            <Button 
-              variant={activeTab === 'account' ? 'secondary' : 'ghost'} 
-              className="w-full justify-start gap-2 px-3 h-9 text-sm"
-              onClick={() => setActiveTab('account')}
+        <Tabs
+          defaultValue="account"
+          orientation="vertical"
+          className="flex flex-1 flex-col gap-0 overflow-hidden border-t border-border sm:flex-row"
+        >
+          {/* Side menu */}
+          <TabsList className="flex h-auto justify-start gap-1 rounded-none border-b border-border bg-muted/40 p-2 sm:w-40 sm:flex-col sm:border-b-0 sm:border-r">
+            <TabsTrigger
+              value="account"
+              className="w-full justify-start gap-2 px-3 data-[state=active]:bg-secondary"
             >
-              <User className="h-4 w-4" /> <span>Konto</span>
-            </Button>
-            <Button 
-              variant={activeTab === 'appearance' ? 'secondary' : 'ghost'} 
-              className="w-full justify-start gap-2 px-3 h-9 text-sm"
-              onClick={() => setActiveTab('appearance')}
+              <User className="h-4 w-4" /> <span>Account</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="appearance"
+              className="w-full justify-start gap-2 px-3 data-[state=active]:bg-secondary"
             >
-              <Sun className="h-4 w-4" /> <span>Wygląd</span>
-            </Button>
-            <Button
-              variant={activeTab === 'ai' ? 'secondary' : 'ghost'}
-              className="w-full justify-start gap-2 px-3 h-9 text-sm"
-              onClick={() => setActiveTab('ai')}
+              <Sun className="h-4 w-4" /> <span>Appearance</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="ai"
+              className="w-full justify-start gap-2 px-3 data-[state=active]:bg-secondary"
             >
               <Bot className="h-4 w-4" /> <span>AI</span>
-            </Button>
-            <Button 
-              variant={activeTab === 'stats' ? 'secondary' : 'ghost'} 
-              className="w-full justify-start gap-2 px-3 h-9 text-sm"
-              onClick={() => setActiveTab('stats')}
+            </TabsTrigger>
+            <TabsTrigger
+              value="stats"
+              className="w-full justify-start gap-2 px-3 data-[state=active]:bg-secondary"
             >
-              <BarChart3 className="h-4 w-4" /> <span>Statystyki</span>
-            </Button>
-          </div>
+              <BarChart3 className="h-4 w-4" /> <span>Stats</span>
+            </TabsTrigger>
+          </TabsList>
 
-          <div className="flex-1 p-6 overflow-y-auto">
-            {/* Zakładka: Konto */}
-            {activeTab === 'account' && (
+          <div className="flex-1 overflow-y-auto p-6">
+            {/* Tab: Account */}
+            <TabsContent value="account" className="mt-0">
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-sm font-medium">
-                    Profil i synchronizacja
-                  </h3>
+                  <h3 className="text-sm font-medium">Profile & sync</h3>
                   <p className="text-xs text-muted-foreground">
-                    Opcje logowania (na przyszłość).
+                    Sign-in options (coming soon).
                   </p>
                 </div>
                 <Separator />
 
                 {isLoggedIn ? (
                   <div className="space-y-4">
-                    <div className="flex items-center gap-3 p-2 bg-muted/30 rounded-lg border">
-                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-sm text-primary">
-                        U
-                      </div>
+                    <div className="flex items-center gap-3 p-2 bg-muted/30 rounded-lg border border-border">
+                      <Avatar className="h-10 w-10 border border-primary/40">
+                        <AvatarFallback className="bg-primary/10 text-sm font-bold text-primary">
+                          U
+                        </AvatarFallback>
+                      </Avatar>
                       <div className="flex-1">
                         <p className="text-sm font-medium leading-none">
-                          Zalogowany użytkownik
+                          Signed-in user
                         </p>
                         <p className="text-xs text-muted-foreground mt-1">
                           user@example.com
                         </p>
                       </div>
-                      <Badge variant="outline">Aktywny</Badge>
+                      <Badge variant="outline">Active</Badge>
                     </div>
                     <Button
                       variant="destructive"
@@ -188,7 +202,7 @@ export function SettingsPanel({
                       className="w-full gap-2"
                       onClick={() => setIsLoggedIn(false)}
                     >
-                      <LogOut className="h-4 w-4" /> Wyloguj się
+                      <LogOut className="h-4 w-4" /> Log out
                     </Button>
                   </div>
                 ) : (
@@ -201,63 +215,67 @@ export function SettingsPanel({
                       className="w-full gap-2"
                       onClick={() => setIsLoggedIn(true)}
                     >
-                      <LogIn className="h-4 w-4" /> Zaloguj się (Mock)
+                      <LogIn className="h-4 w-4" /> Log in (mock)
                     </Button>
                   </div>
                 )}
               </div>
-            )}
+            </TabsContent>
 
-            {/* Zakładka: Wygląd */}
-            {activeTab === 'appearance' && (
+            {/* Tab: Appearance */}
+            <TabsContent value="appearance" className="mt-0">
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-sm font-medium">Motyw aplikacji</h3>
-                  <p className="text-xs text-muted-foreground">Wybierz kolor przewodni dla swojego interfejsu.</p>
+                  <h3 className="text-sm font-medium">App theme</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Pick the accent color for your interface.
+                  </p>
                 </div>
                 <Separator />
                 <div className="grid grid-cols-3 gap-2">
-                  <Button 
-                    variant={theme === "theme-green" ? "default" : "outline"} 
-                    className="flex flex-col gap-1.5 h-16 pt-2" 
+                  <Button
+                    variant={theme === "theme-green" ? "default" : "outline"}
+                    className="flex flex-col gap-1.5 h-16 pt-2"
                     onClick={() => setTheme("theme-green")}
                   >
-                    <div className="h-4 w-4 rounded-full bg-[#889E81]" /> 
-                    <span className="text-[11px]">Zielony</span>
+                    <div className="h-4 w-4 rounded-full bg-[#889E81]" />
+                    <span className="text-[11px]">Green</span>
                   </Button>
-                  
-                  <Button 
-                    variant={theme === "theme-blue" ? "default" : "outline"} 
-                    className="flex flex-col gap-1.5 h-16 pt-2" 
+
+                  <Button
+                    variant={theme === "theme-blue" ? "default" : "outline"}
+                    className="flex flex-col gap-1.5 h-16 pt-2"
                     onClick={() => setTheme("theme-blue")}
                   >
-                    <div className="h-4 w-4 rounded-full bg-[#5DADE2]" /> 
-                    <span className="text-[11px]">Niebieski</span>
+                    <div className="h-4 w-4 rounded-full bg-[#5DADE2]" />
+                    <span className="text-[11px]">Blue</span>
                   </Button>
-                  
-                  <Button 
-                    variant={theme === "theme-purple" ? "default" : "outline"} 
-                    className="flex flex-col gap-1.5 h-16 pt-2" 
+
+                  <Button
+                    variant={theme === "theme-purple" ? "default" : "outline"}
+                    className="flex flex-col gap-1.5 h-16 pt-2"
                     onClick={() => setTheme("theme-purple")}
                   >
-                    <div className="h-4 w-4 rounded-full bg-[#9B59B6]" /> 
-                    <span className="text-[11px]">Fioletowy</span>
+                    <div className="h-4 w-4 rounded-full bg-[#9B59B6]" />
+                    <span className="text-[11px]">Purple</span>
                   </Button>
                 </div>
               </div>
-            )}
-            {activeTab === "ai" && (
+            </TabsContent>
+
+            {/* Tab: AI */}
+            <TabsContent value="ai" className="mt-0">
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-sm font-medium">Lokalna Ollama</h3>
+                  <h3 className="text-sm font-medium">Local Ollama</h3>
                   <p className="text-xs text-muted-foreground">
-                    Basalt łączy się bezpośrednio z API Ollamy z poziomu
-                    frontendu.
+                    Basalt connects directly to the Ollama API from the
+                    frontend.
                   </p>
                 </div>
                 <Separator />
                 <div className="space-y-2">
-                  <Label htmlFor="ollama-endpoint">Endpoint Ollamy</Label>
+                  <Label htmlFor="ollama-endpoint">Ollama endpoint</Label>
                   <Input
                     id="ollama-endpoint"
                     type="url"
@@ -269,8 +287,8 @@ export function SettingsPanel({
                     disabled={isTesting}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Domyślny model: llama3.2:latest. Bezpośredni fetch może
-                    wymagać poprawnego OLLAMA_ORIGINS.
+                    Default model: llama3.2:latest. A direct fetch may require
+                    the correct OLLAMA_ORIGINS.
                   </p>
                 </div>
 
@@ -296,24 +314,24 @@ export function SettingsPanel({
                     disabled={isTesting}
                   >
                     {isTesting && <Loader2 className="h-4 w-4 animate-spin" />}
-                    {isTesting ? "Testowanie..." : "Testuj połączenie"}
+                    {isTesting ? "Testing…" : "Test connection"}
                   </Button>
                   <Button onClick={saveOllamaEndpoint} disabled={isTesting}>
-                    Zapisz
+                    Save
                   </Button>
                 </div>
               </div>
-            )}
+            </TabsContent>
 
-            {/* Zakładka: Statystyki */}
-            {activeTab === 'stats' && (
+            {/* Tab: Stats */}
+            <TabsContent value="stats" className="mt-0">
               <div className="space-y-4">
-                <h3 className="text-sm font-medium">Twoje zasoby</h3>
+                <h3 className="text-sm font-medium">Your usage</h3>
                 <Separator />
                 <Card>
                   <CardContent className="p-3 flex justify-between items-center">
                     <span className="text-xs font-medium text-muted-foreground">
-                      Łącznie notatek
+                      Total notes
                     </span>
                     <Badge variant="secondary" className="font-bold">
                       {stats.notesCount}
@@ -322,24 +340,17 @@ export function SettingsPanel({
                 </Card>
                 <div className="space-y-1.5">
                   <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">
-                      Zajęte miejsce
-                    </span>
+                    <span className="text-muted-foreground">Used space</span>
                     <span className="font-medium">
                       {stats.usedSpace} MB / {stats.maxSpace} MB
                     </span>
                   </div>
-                  <div className="w-full bg-secondary h-1.5 rounded-full overflow-hidden">
-                    <div
-                      className="bg-primary h-full transition-all duration-300"
-                      style={{ width: `${progressPercent}%` }}
-                    />
-                  </div>
+                  <Progress value={progressPercent} className="h-1.5" />
                 </div>
               </div>
-            )}
+            </TabsContent>
           </div>
-        </div>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );

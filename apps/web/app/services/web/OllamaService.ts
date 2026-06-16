@@ -58,7 +58,7 @@ export class OllamaService implements IOllamaService {
         : settings.ollamaEndpoint.trim();
 
     if (!endpoint) {
-      throw new OllamaError("Endpoint Ollamy nie może być pusty.");
+      throw new OllamaError("The Ollama endpoint can't be empty.");
     }
 
     try {
@@ -69,7 +69,7 @@ export class OllamaService implements IOllamaService {
       return url.toString();
     } catch {
       throw new OllamaError(
-        "Endpoint Ollamy musi być poprawnym adresem HTTP lub HTTPS.",
+        "The Ollama endpoint must be a valid HTTP or HTTPS address.",
       );
     }
   }
@@ -101,7 +101,7 @@ export class OllamaService implements IOllamaService {
 
   async formatNote(content: string): Promise<string> {
     if (!content.trim()) {
-      throw new OllamaError("Notatka jest pusta.");
+      throw new OllamaError("The note is empty.");
     }
 
     const formatted = await this.complete([
@@ -174,13 +174,13 @@ export class OllamaService implements IOllamaService {
       });
     } catch {
       throw new OllamaError(
-        "Nie udało się połączyć z Ollamą. Sprawdź, czy usługa działa i zezwala na połączenia z aplikacji.",
+        "Couldn't connect to Ollama. Check that it's running and allows connections from this app.",
       );
     }
 
     if (!response.ok) {
       throw new OllamaError(
-        `Ollama zwróciła błąd HTTP ${response.status}. Sprawdź endpoint i dostępność modelu ${DEFAULT_OLLAMA_MODEL}.`,
+        `Ollama returned HTTP error ${response.status}. Check the endpoint and that the ${DEFAULT_OLLAMA_MODEL} model is available.`,
       );
     }
 
@@ -189,13 +189,13 @@ export class OllamaService implements IOllamaService {
       data = (await response.json()) as OllamaChatCompletionResponse;
     } catch {
       throw new OllamaError(
-        "Ollama zwróciła odpowiedź w nieprawidłowym formacie.",
+        "Ollama returned a response in an invalid format.",
       );
     }
 
     const content = data.choices?.[0]?.message?.content;
     if (typeof content !== "string" || !content.trim()) {
-      throw new OllamaError("Odpowiedź Ollamy nie zawiera oczekiwanej treści.");
+      throw new OllamaError("Ollama's response is missing the expected content.");
     }
 
     return content;

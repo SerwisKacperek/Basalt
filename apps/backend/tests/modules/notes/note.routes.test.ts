@@ -8,8 +8,9 @@ import { NotFoundException } from '@basalt/domain';
 const note = {
   id: '33333333-3333-3333-3333-333333333333',
   name: 'Test Note',
-  workspace_id: '11111111-1111-1111-1111-111111111111',
-  folder_id: '22222222-2222-2222-2222-222222222222',
+  workspace_id: 'ws-1',
+  folder_id: 'f-1',
+  position: 0,
   createdAt: new Date(),
   updatedAt: new Date(),
   deletedAt: null,
@@ -110,7 +111,17 @@ describe('note routes', () => {
 
     it('returns 422 when name is missing', async () => {
       const { app } = makeApp();
-      expect((await post(app, '/notes', { id: '1', workspace_id: 'ws-1', folder_id: 'f-1' })).status).toBe(422);
+      expect((await post(app, '/notes', { workspace_id: 'ws-1', folder_id: 'f-1' })).status).toBe(422);
+    });
+
+    it('allows creating a note without a workspace_id', async () => {
+      const { app } = makeApp();
+      expect((await post(app, '/notes', { name: 'New', folder_id: 'f-1' })).status).toBe(201);
+    });
+
+    it('allows creating a root note without a folder_id', async () => {
+      const { app } = makeApp();
+      expect((await post(app, '/notes', { name: 'New', workspace_id: 'ws-1' })).status).toBe(201);
     });
 
     it('returns 400 for invalid JSON', async () => {
