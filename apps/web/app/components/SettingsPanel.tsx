@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import {
+  AlertCircle,
   BarChart3,
   Bot,
   ChevronsUpDown,
@@ -38,6 +39,7 @@ import {
   TabsTrigger,
   useTheme,
 } from "@basalt/ui";
+import { useAuth, type AuthUser } from "~/hooks/useAuth";
 
 interface AiConfig {
   endpoint: string;
@@ -56,6 +58,14 @@ type ConnectionStatus =
   | { kind: "error"; message: string }
   | null;
 
+export interface AuthState {
+  user: AuthUser | null;
+  loading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+}
+
 export interface SettingsPanelProps {
   ai: SimpleAi;
   /** Controlled open state. When provided, the dialog is controlled externally. */
@@ -63,6 +73,8 @@ export interface SettingsPanelProps {
   onOpenChange?: (open: boolean) => void;
   /** Hide the built-in settings icon trigger (e.g. when opened from a menu). */
   hideTrigger?: boolean;
+  /** Auth state from parent. If omitted, the panel manages its own auth state. */
+  auth?: AuthState;
 }
 
 export function SettingsPanel({
@@ -70,8 +82,10 @@ export function SettingsPanel({
   open,
   onOpenChange,
   hideTrigger = false,
+  auth: authProp,
 }: SettingsPanelProps) {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const internalAuth = useAuth();
+  const auth = authProp ?? internalAuth;
   const { theme, setTheme } = useTheme();
 
   // Local AI providers need direct localhost access, which the browser blocks
@@ -82,6 +96,45 @@ export function SettingsPanel({
   const [aiModel, setAiModel] = useState("");
   const [aiApiKey, setAiApiKey] = useState("");
   const [availableModels, setAvailableModels] = useState<string[]>([]);
+
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authConfirm, setAuthConfirm] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [authSubmitting, setAuthSubmitting] = useState(false);
+
+  function switchAuthMode(mode: 'login' | 'register') {
+    setAuthMode(mode);
+    setAuthEmail('');
+    setAuthPassword('');
+    setAuthConfirm('');
+    setAuthError('');
+  }
+
+  const handleAuthSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError('');
+    if (authMode === 'register' && authPassword !== authConfirm) {
+      setAuthError('Passwords do not match');
+      return;
+    }
+    setAuthSubmitting(true);
+    try {
+      if (authMode === 'login') {
+        await auth.login(authEmail, authPassword);
+      } else {
+        await auth.register(authEmail, authPassword);
+      }
+      setAuthEmail('');
+      setAuthPassword('');
+      setAuthConfirm('');
+    } catch (err) {
+      setAuthError(err instanceof Error ? err.message : authMode === 'login' ? 'Login failed' : 'Registration failed');
+    } finally {
+      setAuthSubmitting(false);
+    }
+  };
   const [connectionStatus, setConnectionStatus] =
     useState<ConnectionStatus>(null);
   const [isTesting, setIsTesting] = useState<boolean>(false);
@@ -221,25 +274,26 @@ export function SettingsPanel({
                 <div>
                   <h3 className="text-sm font-medium">Profile & sync</h3>
                   <p className="text-xs text-muted-foreground">
-                    Sign-in options (coming soon).
+                    Sign in to sync your notes across devices.
                   </p>
                 </div>
                 <Separator />
 
-                {isLoggedIn ? (
+                {auth.loading ? (
+                  <div className="flex items-center justify-center py-6">
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : auth.user ? (
                   <div className="space-y-4">
                     <div className="flex items-center gap-3 p-2 bg-muted/30 rounded-lg border border-border">
                       <Avatar className="h-10 w-10 border border-primary/40">
                         <AvatarFallback className="bg-primary/10 text-sm font-bold text-primary">
-                          U
+                          {auth.user.email.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium leading-none">
-                          Signed-in user
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          user@example.com
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium leading-none truncate">
+                          {auth.user.email}
                         </p>
                       </div>
                       <Badge variant="outline">Active</Badge>
@@ -248,23 +302,85 @@ export function SettingsPanel({
                       variant="destructive"
                       size="sm"
                       className="w-full gap-2"
-                      onClick={() => setIsLoggedIn(false)}
+                      onClick={() => auth.logout()}
                     >
                       <LogOut className="h-4 w-4" /> Log out
                     </Button>
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center py-4 text-center space-y-3">
-                    <div className="p-2.5 bg-muted rounded-full">
-                      <User className="h-5 w-5 text-muted-foreground" />
+                  <div className="space-y-3">
+                    <div className="flex rounded-lg border border-border p-0.5 bg-muted/40">
+                      <button
+                        type="button"
+                        onClick={() => switchAuthMode('login')}
+                        className={`flex-1 rounded-md py-1 text-xs font-medium transition-colors ${authMode === 'login' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                      >
+                        Log in
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => switchAuthMode('register')}
+                        className={`flex-1 rounded-md py-1 text-xs font-medium transition-colors ${authMode === 'register' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                      >
+                        Register
+                      </button>
                     </div>
-                    <Button
-                      size="sm"
-                      className="w-full gap-2"
-                      onClick={() => setIsLoggedIn(true)}
-                    >
-                      <LogIn className="h-4 w-4" /> Log in (mock)
-                    </Button>
+                    <form onSubmit={handleAuthSubmit} className="space-y-3">
+                      <div className="grid gap-1.5">
+                        <Label htmlFor="auth-email">Email</Label>
+                        <Input
+                          id="auth-email"
+                          type="email"
+                          placeholder="you@example.com"
+                          value={authEmail}
+                          onChange={(e) => setAuthEmail(e.target.value)}
+                          autoComplete="email"
+                          required
+                        />
+                      </div>
+                      <div className="grid gap-1.5">
+                        <Label htmlFor="auth-password">Password</Label>
+                        <Input
+                          id="auth-password"
+                          type="password"
+                          placeholder="••••••••"
+                          value={authPassword}
+                          onChange={(e) => setAuthPassword(e.target.value)}
+                          autoComplete={authMode === 'login' ? 'current-password' : 'new-password'}
+                          required
+                        />
+                      </div>
+                      {authMode === 'register' && (
+                        <div className="grid gap-1.5">
+                          <Label htmlFor="auth-confirm">Confirm password</Label>
+                          <Input
+                            id="auth-confirm"
+                            type="password"
+                            placeholder="••••••••"
+                            value={authConfirm}
+                            onChange={(e) => setAuthConfirm(e.target.value)}
+                            autoComplete="new-password"
+                            required
+                          />
+                        </div>
+                      )}
+                      {authError && (
+                        <p className="flex items-center gap-1 text-xs text-destructive">
+                          <AlertCircle className="h-3 w-3" /> {authError}
+                        </p>
+                      )}
+                      <Button
+                        type="submit"
+                        size="sm"
+                        className="w-full gap-2"
+                        disabled={authSubmitting}
+                      >
+                        {authSubmitting
+                          ? <Loader2 className="h-4 w-4 animate-spin" />
+                          : <LogIn className="h-4 w-4" />}
+                        {authMode === 'login' ? 'Log in' : 'Create account'}
+                      </Button>
+                    </form>
                   </div>
                 )}
               </div>

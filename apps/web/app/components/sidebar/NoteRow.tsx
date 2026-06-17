@@ -54,7 +54,7 @@ export const NoteRow = React.memo(function NoteRow({
   style?: React.CSSProperties;
   dragProps?: React.HTMLAttributes<HTMLElement>;
 }) {
-  const { activeNoteId, editingId, onSelect, onDelete, onDuplicate, onEditStart, onEditEnd, onRename } =
+  const { activeNoteId, editingId, onSelect, onDelete, onDuplicate, onEditStart, onEditEnd, onRename, onRenameValueChange } =
     handlers;
 
   if (note.id === editingId) {
@@ -65,7 +65,12 @@ export const NoteRow = React.memo(function NoteRow({
     };
     return (
       <SidebarMenuSubItem ref={setNodeRef} style={style}>
-        <RenameInput initial={note.name} onSubmit={submitRename} onCancel={onEditEnd} />
+        <RenameInput
+          initial={note.name}
+          onSubmit={submitRename}
+          onCancel={onEditEnd}
+          onValueChange={onRenameValueChange}
+        />
       </SidebarMenuSubItem>
     );
   }

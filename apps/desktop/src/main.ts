@@ -7,13 +7,14 @@ loadDotenv();
 import { appScheme, handleAppProtocol } from './protocols/app-protocol';
 import { apiScheme, handleApiProtocol } from './protocols/api-protocol';
 import { vaultScheme, handleVaultProtocol } from './protocols/vault-protocol';
+import { basaltFileScheme, handleBasaltFileProtocol } from './protocols/basalt-file.protocol';
 import { createMainRegistry } from './services/registry';
 import { registerIpc } from './services/ipc-main';
 
 const devServerUrl = process.env.VITE_DEV_SERVER_URL
 const isDev = !!devServerUrl
 
-protocol.registerSchemesAsPrivileged([appScheme, apiScheme, vaultScheme])
+protocol.registerSchemesAsPrivileged([appScheme, apiScheme, vaultScheme, basaltFileScheme])
 
 function getWindowIcon(): Electron.NativeImage | string | undefined {
 	if (process.platform === 'darwin') {
@@ -68,6 +69,7 @@ app.whenReady().then(async () => {
   handleAppProtocol(webRoot)
   handleApiProtocol(apiBase)
   handleVaultProtocol(vaultRoot)
+  handleBasaltFileProtocol()
 
 
   registerIpc(createMainRegistry(vaultRoot))

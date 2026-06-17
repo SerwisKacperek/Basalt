@@ -66,6 +66,7 @@ export function AppSidebar(props: AppSidebarProps) {
       onEditStart: props.onEditStart,
       onEditEnd: props.onEditEnd,
       onRename: props.onRename,
+      onRenameValueChange: props.onRenameValueChange,
     }),
     [
       props.activeId,
@@ -76,6 +77,7 @@ export function AppSidebar(props: AppSidebarProps) {
       props.onEditStart,
       props.onEditEnd,
       props.onRename,
+      props.onRenameValueChange,
     ],
   );
 
@@ -179,7 +181,15 @@ export function AppSidebar(props: AppSidebarProps) {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarUserMenu />
+      <SidebarUserMenu
+        workspaces={props.workspaces}
+        activeWorkspaceId={props.activeWorkspaceId}
+        onWorkspaceSelect={props.onWorkspaceSelect}
+        onCreateWorkspace={props.onCreateWorkspace}
+        onJoinWorkspace={props.onJoinWorkspace}
+        onDeleteWorkspace={props.onDeleteWorkspace}
+        onUpdateWorkspaceUrl={props.onUpdateWorkspaceUrl}
+      />
 
       {state === "expanded" && (
         <div

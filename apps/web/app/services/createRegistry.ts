@@ -3,8 +3,9 @@ import { DiagnosticsService } from "./web/DiagnosticsService";
 import { EditorPersistenceService } from "./web/EditorPersistenceService";
 import { StorageService } from "./web/StorageService";
 import { SyncService } from "./web/SyncService";
+import { LocalWebFileService } from "./web/FileService";
 import { createDomainDb } from "./web/DomainDbService";
-import { local as apiClient } from "../api-client/eden";
+import { clientFactory } from "@basalt/api";
 
 import {
   NoteRepository,
@@ -36,26 +37,33 @@ export function createRegistry(): ServiceRegistry {
     new WorkspaceRepository(db, schema),
   );
 
-  const remoteNotes = new RemoteNoteService(apiClient);
-  const remoteFolders = new RemoteFolderService(apiClient);
-  const remoteWorkspaces = new RemoteWorkspaceService(apiClient);
+  const remoteNoteFactory = (url: string) =>
+    new RemoteNoteService(clientFactory(url));
+  const remoteFolderFactory = (url: string) =>
+    new RemoteFolderService(clientFactory(url));
 
-  const compositeNotes = new CompositeNoteService(localNotes, remoteNotes);
+  const compositeFolders = new CompositeFolderService(localFolders, remoteFolderFactory, localWorkspaces);
+  const compositeNotes = new CompositeNoteService(localNotes, remoteNoteFactory, localWorkspaces, localFolders);
 
   if (!injected) {
-    compositeNotes
+    compositeFolders
       .sync()
-      .catch((err: unknown) => console.error("[sync] notes:", err));
+      .then(() => compositeNotes.sync())
+      .catch((err: unknown) => console.error("[sync] startup:", err));
   }
 
   return {
     diagnostics: injected?.diagnostics ?? new DiagnosticsService(),
     editorPersistence: injected?.editorPersistence ?? new EditorPersistenceService(compositeNotes),
     storage: storage,
-    workspaces: injected?.workspaces ?? new CompositeWorkspaceService(localWorkspaces, remoteWorkspaces),
-    folders: injected?.folders ?? new CompositeFolderService(localFolders, remoteFolders),
+    workspaces: injected?.workspaces ?? new CompositeWorkspaceService(
+      localWorkspaces,
+      (url) => new RemoteWorkspaceService(clientFactory(url)),
+    ),
+    folders: injected?.folders ?? compositeFolders,
     notes: injected?.notes ?? compositeNotes,
     ai: injected?.ai ?? new AiService(storage),
     syncService: new SyncService(),
+    localFileService: injected?.localFileService ?? new LocalWebFileService(),
   };
 }

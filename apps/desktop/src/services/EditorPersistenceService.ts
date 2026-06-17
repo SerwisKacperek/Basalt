@@ -5,6 +5,7 @@ import type {
   NoteContent,
 } from "@basalt/core/interfaces/IEditorPersistenceService";
 import type { INoteService } from "@basalt/core/interfaces/INoteService";
+import type { IFolderService } from "@basalt/core/interfaces/IFolderService";
 import type { Select } from "@basalt/domain";
 import {
   createNoteTablesSQL,
@@ -46,6 +47,7 @@ export class EditorPersistenceService implements IEditorPersistenceService {
     private readonly rawSqlite: RawSqlite,
     private readonly resetDb: () => void,
     private readonly noteService: INoteService,
+    private readonly folderService?: IFolderService,
   ) {}
 
   async reset(): Promise<void> {
@@ -238,6 +240,10 @@ export class EditorPersistenceService implements IEditorPersistenceService {
   }
 
   async syncNoteList(): Promise<void> {
+    // Folders first so notes can resolve their folder_id foreign key.
+    if (typeof this.folderService?.sync === "function") {
+      await this.folderService.sync();
+    }
     const svc = this.noteService as unknown as { sync?: () => Promise<void> };
     if (typeof svc.sync === "function") {
       await svc.sync();

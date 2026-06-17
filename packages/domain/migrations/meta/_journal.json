@@ -15,6 +15,20 @@
       "when": 1749423600001,
       "tag": "0001_add_position",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1750032000000,
+      "tag": "0002_workspace_type",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1750118400000,
+      "tag": "0003_workspace_url",
+      "breakpoints": true
     }
   ]
 }

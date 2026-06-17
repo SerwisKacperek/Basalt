@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import * as Y from "yjs";
+import { Awareness } from "y-protocols/awareness";
 import { useServices } from "~/services/ServiceContext";
 import type { ConnectionStatus } from "~/services/web/SyncService";
 
@@ -20,19 +21,35 @@ export interface RemoteSyncState {
 export function useRemoteSync(
   noteId: string,
   doc: Y.Doc,
+  awareness: Awareness,
   ready: boolean,
 ): RemoteSyncState {
-  const { syncService } = useServices();
+  const { syncService, notes, workspaces } = useServices();
   const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null);
   const [connStatus, setConnStatus] = useState<ConnectionStatus>("idle");
   const [upstreamSynced, setUpstreamSynced] = useState(syncService.upstreamSynced);
   const [hasPendingLocal, setHasPendingLocal] = useState(syncService.hasPendingLocal);
 
-  const isConfigured = syncService.isBackendConfigured();
+  const [enabled, setEnabled] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const note = await notes.findById(noteId).catch(() => null);
+      const ws = note?.workspace_id
+        ? await workspaces.findById(note.workspace_id).catch(() => null)
+        : null;
+      if (!cancelled) setEnabled(ws?.type === "remote" && !!ws.url);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [noteId, notes, workspaces]);
+
+  const isConfigured = syncService.isBackendConfigured() && enabled;
 
   useEffect(() => {
     if (!ready || !isConfigured) return;
-    syncService.connect(noteId, doc);
+    syncService.connect(noteId, doc, awareness);
     const unsubSynced = syncService.addSyncedListener(() => {
       setLastSyncedAt(Date.now());
     });
@@ -52,7 +69,7 @@ export function useRemoteSync(
       unsubPending();
       syncService.disconnect();
     };
-  }, [noteId, doc, ready, syncService, isConfigured]);
+  }, [noteId, doc, awareness, ready, syncService, isConfigured]);
 
   let remoteSyncStatus: RemoteSyncStatus;
   if (!isConfigured) {

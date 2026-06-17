@@ -7,6 +7,7 @@ import type { IWorkspaceService } from "@basalt/core/interfaces/IWorkspaceServic
 import type { IFolderService } from "@basalt/core/interfaces/IFolderService";
 import type { INoteService } from "@basalt/core/interfaces/INoteService";
 import type { IAiService } from "@basalt/core/interfaces/IAiService";
+import type { IFileService } from "@basalt/core/interfaces/IFileService";
 import type { SyncService } from "./web/SyncService";
 
 export interface ServiceRegistry {
@@ -18,6 +19,7 @@ export interface ServiceRegistry {
   notes: INoteService;
   ai: IAiService;
   syncService: SyncService;
+  localFileService: IFileService;
 }
 
 const ServiceContext = createContext<ServiceRegistry | null>(null);

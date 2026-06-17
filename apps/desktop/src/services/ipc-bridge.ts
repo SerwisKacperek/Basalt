@@ -9,6 +9,7 @@ import type { IWorkspaceService } from "@basalt/core/interfaces/IWorkspaceServic
 import type { IFolderService } from "@basalt/core/interfaces/IFolderService";
 import type { INoteService } from "@basalt/core/interfaces/INoteService";
 import type { IAiService, AiConfig } from "@basalt/core/interfaces/IAiService";
+import type { IFileService } from "@basalt/core/interfaces/IFileService";
 import type { Select, Insert, Filters } from "@basalt/domain";
 import { IStorageService } from "@basalt/core/interfaces/IStorageService";
 import { CHANNELS } from "./channels";
@@ -21,6 +22,7 @@ export interface RendererServiceBridge {
   workspaces: IWorkspaceService;
   folders: IFolderService;
   notes: INoteService;
+  localFileService: IFileService;
 }
 
 type AiResult<T> = { ok: true; value: T } | { ok: false; error: string };
@@ -108,6 +110,11 @@ export function buildRendererBridge(): RendererServiceBridge {
           CHANNELS.editorPersistence.syncNoteList,
         ) as Promise<void>,
     },
+    localFileService: {
+      storeFile: (data: ArrayBuffer, mimeType: string, filename: string) =>
+        ipcRenderer.invoke(CHANNELS.files.store, data, mimeType, filename) as Promise<string>,
+      resolveUrl: async (url: string) => url,
+    },
     workspaces: {
       findAll: (filters?: Filters<Select<"workspaces">>) =>
         ipcRenderer.invoke(CHANNELS.workspaces.findAll, filters) as Promise<Select<"workspaces">[]>,
@@ -119,6 +126,10 @@ export function buildRendererBridge(): RendererServiceBridge {
         ipcRenderer.invoke(CHANNELS.workspaces.update, id, dto) as Promise<Select<"workspaces">>,
       delete: (id: string) =>
         ipcRenderer.invoke(CHANNELS.workspaces.delete, id) as Promise<void>,
+      join: (dto: Insert<"workspaces">) =>
+        ipcRenderer.invoke(CHANNELS.workspaces.join, dto) as Promise<Select<"workspaces">>,
+      sync: () =>
+        ipcRenderer.invoke(CHANNELS.workspaces.sync) as Promise<void>,
     },
     folders: {
       findAll: (filters?: Filters<Select<"folders">>) =>

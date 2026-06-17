@@ -6,10 +6,14 @@ export function RenameInput({
   initial,
   onSubmit,
   onCancel,
+  onValueChange,
+  className,
 }: {
   initial: string;
   onSubmit: (value: string) => void;
   onCancel: () => void;
+  onValueChange?: (value: string) => void;
+  className?: string;
 }) {
   const [value, setValue] = useState(initial);
   // Guard so Enter (which blurs) doesn't also fire the blur handler.
@@ -26,7 +30,10 @@ export function RenameInput({
     <Input
       autoFocus
       value={value}
-      onChange={(e) => setValue(e.target.value)}
+      onChange={(e) => {
+        setValue(e.target.value);
+        onValueChange?.(e.target.value);
+      }}
       onFocus={(e) => e.currentTarget.select()}
       onBlur={() => finish(true)}
       onKeyDown={(e) => {
@@ -38,7 +45,7 @@ export function RenameInput({
           finish(false);
         }
       }}
-      className="h-7 px-2 text-sm"
+      className={className ?? "h-7 px-2 text-sm"}
     />
   );
 }
