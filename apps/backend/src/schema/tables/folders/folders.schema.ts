@@ -16,9 +16,9 @@ const folders = schema.folders;
 export const FolderResponse = createFolderSelectSchema(folders);
 export const FolderBody = t.Pick(
   createFolderInsertSchema(folders),
-  ['id', 'workspace_id', 'name'],
+  ['id', 'workspace_id', 'name', 'position'],
 );
 export const FolderUpdateBody = t.Pick(
   createFolderUpdateSchema(folders),
-  ['folder_id', 'workspace_id', 'name'],
+  ['name', 'workspace_id', 'position'],
 )

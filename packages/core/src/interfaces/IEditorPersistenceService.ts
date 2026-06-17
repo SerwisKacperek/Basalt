@@ -3,17 +3,27 @@ export interface EditorNote {
   name: string;
   folderId: string | null;
   workspaceId: string | null;
+  position: number;
   createdAt: number;
   updatedAt: number;
+}
+
+export interface NoteContent {
+  snapshot: Uint8Array | null;
+  snapshotId: string | null;
+  operations: Uint8Array[];
 }
 
 export interface IEditorPersistenceService {
   listNotes(): Promise<EditorNote[]>;
   createNote(name: string): Promise<EditorNote>;
+  renameNote(id: string, name: string): Promise<EditorNote>;
   deleteNote(id: string): Promise<void>;
-  loadUpdates(id: string): Promise<Uint8Array[]>;
-  appendUpdate(id: string, update: Uint8Array): Promise<void>;
-  compact(id: string, mergedUpdate: Uint8Array): Promise<void>;
-  /** Wipe and recreate the local database. Destroys all notes. */
+  loadNote(id: string): Promise<NoteContent>;
+  appendOperation(id: string, data: Uint8Array): Promise<void>;
+  compact(id: string, mergedData: Uint8Array, stateVector: Uint8Array): Promise<void>;
   reset(): Promise<void>;
+  getUnsyncedOperations(id: string): Promise<{ id: number; data: Uint8Array }[]>;
+  markOperationsSynced(id: string, opIds: number[]): Promise<void>;
+  syncNoteList(): Promise<void>;
 }

@@ -7,4 +7,5 @@ export interface IFolderService {
   create(dto: Insert<'folders'>): Promise<Select<'folders'>>;
   update(id: string, dto: Partial<Insert<'folders'>>): Promise<Select<'folders'>>;
   delete(id: string): Promise<void>;
+  sync?(): Promise<void>;
 }

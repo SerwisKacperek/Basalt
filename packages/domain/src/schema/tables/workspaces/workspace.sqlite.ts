@@ -7,6 +7,8 @@ export const workspaces = sqliteTable(
   {
     id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
     name: text('name').notNull(),
+    type: text('type', { enum: ['local', 'remote'] }).notNull().default('local'),
+    url: text('url'),
     ...timestamps,
   }
 );

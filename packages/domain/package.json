@@ -12,7 +12,8 @@
     "./schema/sqlite": "./src/schema/adapters/sqlite.ts",
     "./migrate": "./src/migrate.ts",
     "./migrations-bundle": "./src/migrations-bundle.ts",
-    "./migrations/*": "./migrations/*"
+    "./migrations/*": "./migrations/*",
+    "./schema/storage": "./src/schema/storage/index.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2"

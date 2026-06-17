@@ -5,15 +5,26 @@ export const CHANNELS = {
   editorPersistence: {
     list: "svc:editor:list",
     create: "svc:editor:create",
+    rename: "svc:editor:rename",
     delete: "svc:editor:delete",
-    loadUpdates: "svc:editor:loadUpdates",
-    appendUpdate: "svc:editor:appendUpdate",
+    loadNote: "svc:editor:loadNote",
+    appendOperation: "svc:editor:appendOperation",
     compact: "svc:editor:compact",
     reset: "svc:editor:reset",
+    getUnsyncedOperations: "svc:editor:getUnsyncedOperations",
+    markOperationsSynced: "svc:editor:markOperationsSynced",
+    syncNoteList: "svc:editor:syncNoteList",
   },
   preferences: {
     save: "svc:preferences:save",
     get: "svc:preferences:get",
+  },
+  ai: {
+    getConfig: "svc:ai:getConfig",
+    setConfig: "svc:ai:setConfig",
+    listModels: "svc:ai:listModels",
+    formatNote: "svc:ai:formatNote",
+    summarizeNote: "svc:ai:summarizeNote",
   },
   workspaces: {
     findAll: "svc:workspaces:findAll",
@@ -21,6 +32,8 @@ export const CHANNELS = {
     create: "svc:workspaces:create",
     update: "svc:workspaces:update",
     delete: "svc:workspaces:delete",
+    join: "svc:workspaces:join",
+    sync: "svc:workspaces:sync",
   },
   folders: {
     findAll: "svc:folders:findAll",
@@ -35,5 +48,8 @@ export const CHANNELS = {
     create: "svc:notes:create",
     update: "svc:notes:update",
     delete: "svc:notes:delete",
+  },
+  files: {
+    store: "svc:files:store",
   },
 } as const;

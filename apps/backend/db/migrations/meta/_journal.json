@@ -22,6 +22,27 @@
       "when": 1781035340207,
       "tag": "0002_fuzzy_shadowcat",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1781453987867,
+      "tag": "0003_tranquil_lady_ursula",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1781644639525,
+      "tag": "0004_dark_rockslide",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1781647869401,
+      "tag": "0005_remarkable_iron_fist",
+      "breakpoints": true
     }
   ]
 }

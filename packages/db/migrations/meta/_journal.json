@@ -8,6 +8,13 @@
       "when": 1780772536205,
       "tag": "0000_sudden_invaders",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1749546000000,
+      "tag": "0001_per_note_tables",
+      "breakpoints": true
     }
   ]
 }

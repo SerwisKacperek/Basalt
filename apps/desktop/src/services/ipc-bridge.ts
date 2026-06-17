@@ -3,21 +3,34 @@ import type { IDiagnosticsService } from "@basalt/core/interfaces/IDiagnosticsSe
 import type {
   EditorNote,
   IEditorPersistenceService,
+  NoteContent,
 } from "@basalt/core/interfaces/IEditorPersistenceService";
 import type { IWorkspaceService } from "@basalt/core/interfaces/IWorkspaceService";
 import type { IFolderService } from "@basalt/core/interfaces/IFolderService";
 import type { INoteService } from "@basalt/core/interfaces/INoteService";
+import type { IAiService, AiConfig } from "@basalt/core/interfaces/IAiService";
+import type { IFileService } from "@basalt/core/interfaces/IFileService";
 import type { Select, Insert, Filters } from "@basalt/domain";
-import { IPreferencesService } from "./PreferencesService";
+import { IStorageService } from "@basalt/core/interfaces/IStorageService";
 import { CHANNELS } from "./channels";
-
+import type { PreferenceSchema } from "@basalt/domain/schema/storage";
 export interface RendererServiceBridge {
   diagnostics: IDiagnosticsService;
   editorPersistence: IEditorPersistenceService;
-  preferences: IPreferencesService;
+  storage: IStorageService<PreferenceSchema>;
+  ai: IAiService;
   workspaces: IWorkspaceService;
   folders: IFolderService;
   notes: INoteService;
+  localFileService: IFileService;
+}
+
+type AiResult<T> = { ok: true; value: T } | { ok: false; error: string };
+
+async function unwrapAi<T>(invocation: Promise<AiResult<T>>): Promise<T> {
+  const result = await invocation;
+  if (!result.ok) throw new Error(result.error);
+  return result.value;
 }
 
 export function buildRendererBridge(): RendererServiceBridge {
@@ -25,38 +38,82 @@ export function buildRendererBridge(): RendererServiceBridge {
     diagnostics: {
       healthcheck: () => ipcRenderer.invoke(CHANNELS.diagnostics.healthcheck),
     },
-    preferences: {
-      save: (data) => ipcRenderer.invoke(CHANNELS.preferences.save, data),
-      get: () => ipcRenderer.invoke(CHANNELS.preferences.get),
+    storage: {
+      saveData: (key, data) =>
+        ipcRenderer.invoke(CHANNELS.preferences.save, key, data),
+      getData: (key) => ipcRenderer.invoke(CHANNELS.preferences.get, key),
+    },
+    ai: {
+      getConfig: () =>
+        unwrapAi<AiConfig>(ipcRenderer.invoke(CHANNELS.ai.getConfig)),
+      setConfig: (config) =>
+        unwrapAi<void>(ipcRenderer.invoke(CHANNELS.ai.setConfig, config)),
+      listModels: () =>
+        unwrapAi<string[]>(ipcRenderer.invoke(CHANNELS.ai.listModels)),
+      formatNote: (content: string) =>
+        unwrapAi<string>(ipcRenderer.invoke(CHANNELS.ai.formatNote, content)),
+      summarizeNote: (content: string) =>
+        unwrapAi<string>(
+          ipcRenderer.invoke(CHANNELS.ai.summarizeNote, content),
+        ),
     },
     editorPersistence: {
       listNotes: () =>
         ipcRenderer.invoke(CHANNELS.editorPersistence.list) as Promise<EditorNote[]>,
       createNote: (name: string) =>
         ipcRenderer.invoke(CHANNELS.editorPersistence.create, name) as Promise<EditorNote>,
+      renameNote: (id: string, name: string) =>
+        ipcRenderer.invoke(CHANNELS.editorPersistence.rename, id, name) as Promise<EditorNote>,
       deleteNote: (id: string) =>
         ipcRenderer.invoke(CHANNELS.editorPersistence.delete, id) as Promise<void>,
-      loadUpdates: async (id: string) => {
-        const rows = (await ipcRenderer.invoke(
-          CHANNELS.editorPersistence.loadUpdates,
+      loadNote: async (id: string): Promise<NoteContent> => {
+        const result = (await ipcRenderer.invoke(
+          CHANNELS.editorPersistence.loadNote,
           id,
-        )) as Uint8Array[];
-        return rows.map((r) => new Uint8Array(r));
+        )) as { snapshot: Uint8Array | null; snapshotId: string | null; operations: Uint8Array[] };
+        return {
+          snapshot: result.snapshot ? new Uint8Array(result.snapshot) : null,
+          snapshotId: result.snapshotId,
+          operations: result.operations.map((op) => new Uint8Array(op)),
+        };
       },
-      appendUpdate: (id: string, update: Uint8Array) =>
+      appendOperation: (id: string, data: Uint8Array) =>
         ipcRenderer.invoke(
-          CHANNELS.editorPersistence.appendUpdate,
+          CHANNELS.editorPersistence.appendOperation,
           id,
-          update,
+          data,
         ) as Promise<void>,
-      compact: (id: string, merged: Uint8Array) =>
+      compact: (id: string, mergedData: Uint8Array, stateVector: Uint8Array) =>
         ipcRenderer.invoke(
           CHANNELS.editorPersistence.compact,
           id,
-          merged,
+          mergedData,
+          stateVector,
         ) as Promise<void>,
       reset: () =>
         ipcRenderer.invoke(CHANNELS.editorPersistence.reset) as Promise<void>,
+      getUnsyncedOperations: async (id: string) => {
+        const rows = (await ipcRenderer.invoke(
+          CHANNELS.editorPersistence.getUnsyncedOperations,
+          id,
+        )) as { id: number; data: Uint8Array }[];
+        return rows.map((r) => ({ id: r.id, data: new Uint8Array(r.data) }));
+      },
+      markOperationsSynced: (id: string, opIds: number[]) =>
+        ipcRenderer.invoke(
+          CHANNELS.editorPersistence.markOperationsSynced,
+          id,
+          opIds,
+        ) as Promise<void>,
+      syncNoteList: () =>
+        ipcRenderer.invoke(
+          CHANNELS.editorPersistence.syncNoteList,
+        ) as Promise<void>,
+    },
+    localFileService: {
+      storeFile: (data: ArrayBuffer, mimeType: string, filename: string) =>
+        ipcRenderer.invoke(CHANNELS.files.store, data, mimeType, filename) as Promise<string>,
+      resolveUrl: async (url: string) => url,
     },
     workspaces: {
       findAll: (filters?: Filters<Select<"workspaces">>) =>
@@ -69,6 +126,10 @@ export function buildRendererBridge(): RendererServiceBridge {
         ipcRenderer.invoke(CHANNELS.workspaces.update, id, dto) as Promise<Select<"workspaces">>,
       delete: (id: string) =>
         ipcRenderer.invoke(CHANNELS.workspaces.delete, id) as Promise<void>,
+      join: (dto: Insert<"workspaces">) =>
+        ipcRenderer.invoke(CHANNELS.workspaces.join, dto) as Promise<Select<"workspaces">>,
+      sync: () =>
+        ipcRenderer.invoke(CHANNELS.workspaces.sync) as Promise<void>,
     },
     folders: {
       findAll: (filters?: Filters<Select<"folders">>) =>

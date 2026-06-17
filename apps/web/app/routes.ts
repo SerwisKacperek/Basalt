@@ -1,10 +1,11 @@
 import type { RouteObject } from "react-router";
 import Root, { ErrorBoundary } from "~/root";
-import Home from "~/routes/home";
 import Test from "~/routes/test";
 import Example from "~/routes/example";
 import EditorList from "~/routes/editor-list";
 import Editor from "~/routes/editor";
+import Main from "~/routes/main";
+
 
 export const routes: RouteObject[] = [
   {
@@ -14,7 +15,7 @@ export const routes: RouteObject[] = [
     children: [
       {
         index: true,
-        Component: Home,
+        Component: Main,
       },
       {
         path: "test",

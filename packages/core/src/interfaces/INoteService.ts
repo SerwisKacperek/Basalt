@@ -7,4 +7,5 @@ export interface INoteService {
   create(dto: Insert<'notes'>): Promise<Select<'notes'>>;
   update(id: string, dto: Partial<Insert<'notes'>>): Promise<Select<'notes'>>;
   delete(id: string): Promise<void>;
+  sync?(): Promise<void>;
 }

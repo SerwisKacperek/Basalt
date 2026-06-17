@@ -1,4 +1,4 @@
-import { sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 import { timestamps } from "../../base/timestamps/timestamps.sqlite";
 import { folders } from "../folders/folders.sqlite";
@@ -11,6 +11,7 @@ export const notes = sqliteTable(
     folder_id: text('folder_id').references(() => folders.id),
     workspace_id: text('workspace_id').references(() => workspaces.id),
     name: text('name').notNull(),
+    position: integer('position').notNull().default(0),
     ...timestamps,
   }
 );

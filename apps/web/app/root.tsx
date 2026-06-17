@@ -1,11 +1,21 @@
 import { Outlet, isRouteErrorResponse, useRouteError } from "react-router";
-import { ThemeProvider } from "@basalt/ui";
+import { ThemeProvider, Toaster } from "@basalt/ui";
+import { DebugPanel } from "~/components/DebugPanel";
+import { useServices } from "~/services/ServiceContext"; 
 import "./app.css";
 
 export default function Root() {
+  const { storage } = useServices();
+
   return (
-    <ThemeProvider defaultTheme="system" storageKey="basalt-ui-theme">
-      <Outlet />
+    <ThemeProvider defaultTheme="theme-green" storageKey="app_preferences" storage={storage}>
+      <div className="flex h-screen flex-col overflow-hidden bg-background text-slate-950 dark:text-white">
+        <main className="min-h-0 flex-1 overflow-auto">
+          <Outlet />
+        </main>
+        <DebugPanel />
+        <Toaster position="bottom-right" />
+      </div>
     </ThemeProvider>
   );
 }
