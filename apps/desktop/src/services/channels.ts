@@ -49,4 +49,7 @@ export const CHANNELS = {
     update: "svc:notes:update",
     delete: "svc:notes:delete",
   },
+  files: {
+    store: "svc:files:store",
+  },
 } as const;

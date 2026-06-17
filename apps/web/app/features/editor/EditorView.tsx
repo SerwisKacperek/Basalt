@@ -1,29 +1,29 @@
-import { useLayoutEffect } from "react";
-import { EditorContent, useEditor } from "@tiptap/react";
+import { useEffect, useLayoutEffect, useRef } from "react";
+import { EditorContent, ReactNodeViewRenderer, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Collaboration from "@tiptap/extension-collaboration";
 import CollaborationCursor from "@tiptap/extension-collaboration-cursor";
 import Placeholder from "@tiptap/extension-placeholder";
+import TiptapImage from "@tiptap/extension-image";
 import { Button } from "@basalt/ui";
 import { useAuth } from "~/hooks/useAuth";
 import { EditorToolbar } from "./EditorToolbar";
 import { EditorStatusBar } from "./EditorStatusBar";
 import { useNoteDocument } from "./useNoteDocument";
-import {BotMessageSquare} from "lucide-react";
+import { useFileService } from "./useFileService";
+import { ImageNodeView } from "./ImageNodeView";
+import type { IFileService } from "@basalt/core/interfaces/IFileService";
 
-// Theme-compatible saturated colors — readable as chip backgrounds with white text
-// in both light and dark modes.
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
+const SUPPORTED_IMAGE_TYPES = new Set([
+  "image/png", "image/jpeg", "image/gif", "image/webp",
+  "image/svg+xml", "image/bmp", "image/avif",
+]);
+
 const CURSOR_COLORS = [
-  '#e11d48', // rose
-  '#ea580c', // orange
-  '#16a34a', // green
-  '#0891b2', // cyan
-  '#2563eb', // blue
-  '#7c3aed', // violet
-  '#c026d3', // fuchsia
-  '#0d9488', // teal
-  '#b45309', // amber
-  '#dc2626', // red
+  '#e11d48', '#ea580c', '#16a34a', '#0891b2',
+  '#2563eb', '#7c3aed', '#c026d3', '#0d9488',
+  '#b45309', '#dc2626',
 ];
 
 function emailToName(email: string): string {
@@ -38,6 +38,33 @@ function hashColor(str: string): string {
   return CURSOR_COLORS[hash % CURSOR_COLORS.length]!;
 }
 
+async function uploadImageFiles(
+  files: File[],
+  fileService: IFileService,
+  insertFn: (url: string) => void,
+): Promise<void> {
+  for (const file of files) {
+    if (!SUPPORTED_IMAGE_TYPES.has(file.type)) continue;
+    if (file.size > MAX_IMAGE_SIZE) {
+      alert(`Image "${file.name}" exceeds 10 MB limit.`);
+      continue;
+    }
+    try {
+      const buffer = await file.arrayBuffer();
+      const url = await fileService.storeFile(buffer, file.type, file.name);
+      insertFn(url);
+    } catch (err) {
+      console.error("Image upload failed", err);
+    }
+  }
+}
+
+const ImageExtension = TiptapImage.extend({
+  addNodeView() {
+    return ReactNodeViewRenderer(ImageNodeView);
+  },
+}).configure({ allowBase64: false, inline: true });
+
 export function EditorView({ id }: { id: string }) {
   const { user } = useAuth();
   const {
@@ -48,12 +75,13 @@ export function EditorView({ id }: { id: string }) {
     saveError, retry, reload,
   } = useNoteDocument(id);
 
+  const fileService = useFileService(id);
+  const fileServiceRef = useRef<IFileService>(fileService);
+  useEffect(() => { fileServiceRef.current = fileService; }, [fileService]);
+
   const displayName = user?.email ? emailToName(user.email) : 'Guest';
   const displayColor = hashColor(user?.email ?? `${awareness.clientID}`);
 
-  // Override TipTap's null user (set during plugin init) with real identity.
-  // useLayoutEffect runs after render but before paint, so it always wins over
-  // TipTap's setLocalStateField call in addProseMirrorPlugins.
   useLayoutEffect(() => {
     awareness.setLocalStateField('user', { name: displayName, color: displayColor });
   }, [awareness, displayName, displayColor]);
@@ -74,12 +102,10 @@ export function EditorView({ id }: { id: string }) {
             const caret = document.createElement("span");
             caret.classList.add("collab-cursor-caret");
             caret.style.borderColor = user.color ?? CURSOR_COLORS[0]!;
-
             const label = document.createElement("span");
             label.classList.add("collab-cursor-label");
             label.style.backgroundColor = user.color ?? CURSOR_COLORS[0]!;
             label.textContent = user.name || "…";
-
             caret.appendChild(label);
             return caret;
           },
@@ -88,11 +114,43 @@ export function EditorView({ id }: { id: string }) {
           placeholder:
             "Start writing… use Markdown: # heading, - bullet, 1. list, ``` code, **bold**, *italic*",
         }),
+        ImageExtension,
       ],
       editorProps: {
         attributes: {
           class:
             "prose prose-sm dark:prose-invert focus:outline-none min-h-[60vh] max-w-none px-4 py-3",
+        },
+        handlePaste(view, event) {
+          const items = Array.from(event.clipboardData?.items ?? []);
+          const imageFiles = items
+            .filter((i) => i.kind === "file" && i.type.startsWith("image/"))
+            .map((i) => i.getAsFile())
+            .filter((f): f is File => f !== null);
+          if (imageFiles.length === 0) return false;
+          event.preventDefault();
+          void uploadImageFiles(imageFiles, fileServiceRef.current, (url) => {
+            const imageNode = view.state.schema.nodes.image?.create({ src: url });
+            if (imageNode) {
+              view.dispatch(view.state.tr.replaceSelectionWith(imageNode));
+            }
+          });
+          return true;
+        },
+        handleDrop(view, event) {
+          const files = Array.from(event.dataTransfer?.files ?? []);
+          const imageFiles = files.filter((f) => f.type.startsWith("image/"));
+          if (imageFiles.length === 0) return false;
+          event.preventDefault();
+          const dropPos = view.posAtCoords({ left: event.clientX, top: event.clientY });
+          void uploadImageFiles(imageFiles, fileServiceRef.current, (url) => {
+            const imageNode = view.state.schema.nodes.image?.create({ src: url });
+            if (imageNode) {
+              const insertAt = dropPos?.pos ?? view.state.selection.from;
+              view.dispatch(view.state.tr.insert(insertAt, imageNode));
+            }
+          });
+          return true;
         },
       },
     },
@@ -134,11 +192,11 @@ export function EditorView({ id }: { id: string }) {
         <EditorContent editor={editor} className="h-full" />
       </div>
       <div className="relative shrink-0 border-t border-border px-4 h-16 flex items-center">
-        {status === "error" && (
+        {saveError && (
           <div className="absolute bottom-full left-1/2 z-20 mb-3 -translate-x-1/2">
             <div className="flex items-center gap-2 rounded-lg border border-destructive/50 bg-background px-3 py-2 text-sm text-destructive shadow-lg">
               <span className="max-w-80 truncate">
-                {saveError?.message ?? "Failed to save"}
+                {saveError.message ?? "Failed to save"}
               </span>
               <Button
                 size="sm"

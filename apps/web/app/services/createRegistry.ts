@@ -3,6 +3,7 @@ import { DiagnosticsService } from "./web/DiagnosticsService";
 import { EditorPersistenceService } from "./web/EditorPersistenceService";
 import { StorageService } from "./web/StorageService";
 import { SyncService } from "./web/SyncService";
+import { LocalWebFileService } from "./web/FileService";
 import { createDomainDb } from "./web/DomainDbService";
 import { clientFactory } from "@basalt/api";
 
@@ -63,5 +64,6 @@ export function createRegistry(): ServiceRegistry {
     notes: injected?.notes ?? compositeNotes,
     ai: injected?.ai ?? new AiService(storage),
     syncService: new SyncService(),
+    localFileService: injected?.localFileService ?? new LocalWebFileService(),
   };
 }

@@ -7,10 +7,12 @@ import { openDomainDb } from "../db/domain-connection";
 import type { IDiagnosticsService } from "@basalt/core/interfaces/IDiagnosticsService";
 import type { IEditorPersistenceService } from "@basalt/core/interfaces/IEditorPersistenceService";
 import type { IAiService } from "@basalt/core/interfaces/IAiService";
+import type { IFileService } from "@basalt/core/interfaces/IFileService";
 
 import { DiagnosticsService } from "./DiagnosticsService";
 import { StorageService } from "./StorageService";
 import { EditorPersistenceService } from "./EditorPersistenceService";
+import { LocalFileService } from "./LocalFileService";
 import type { IStorageService } from "@basalt/core/interfaces/IStorageService";
 import type { IWorkspaceService } from "@basalt/core/interfaces/IWorkspaceService";
 import type { IFolderService } from "@basalt/core/interfaces/IFolderService";
@@ -40,6 +42,7 @@ export interface MainServiceRegistry {
   workspaces: IWorkspaceService;
   folders: IFolderService;
   notes: INoteService;
+  localFileService: IFileService;
 }
 
 function resolveApiUrl(): string | null {
@@ -92,5 +95,6 @@ export function createMainRegistry(vaultRoot: string): MainServiceRegistry {
     ),
     folders: compositeFolders,
     notes: compositeNotes,
+    localFileService: new LocalFileService(),
   };
 }

@@ -142,4 +142,10 @@ export function registerIpc(registry: MainServiceRegistry) {
   ipcMain.handle(CHANNELS.notes.delete, (_e, id: string) =>
     registry.notes.delete(id),
   );
+
+  ipcMain.handle(
+    CHANNELS.files.store,
+    (_e, data: ArrayBuffer, mimeType: string, filename: string) =>
+      registry.localFileService.storeFile(data, mimeType, filename),
+  );
 }

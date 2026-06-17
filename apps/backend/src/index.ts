@@ -12,6 +12,7 @@ import {
   createUserRoutes,
   createFolderRoutes,
   createAuthRoutes,
+  createFileRoutes,
 } from "./modules";
 
 const db = createDb();
@@ -61,7 +62,8 @@ export const createApp = () =>
     .use(createNoteContentRoutes(rawDb))
     .use(createUserRoutes(db))
     .use(createFolderRoutes(db))
-    .use(createAuthRoutes(db));
+    .use(createAuthRoutes(db))
+    .use(createFileRoutes());
 
 export type App = ReturnType<typeof createApp>;
 
