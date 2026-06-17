@@ -79,7 +79,7 @@ export function createMainRegistry(vaultRoot: string): MainServiceRegistry {
     .then(() => compositeNotes.sync())
     .catch((err) => console.error("[sync] startup:", err));
 
-  const preferences = new StorageService(vaultRoot);
+  const preferences = new StorageService<PreferenceSchema>(vaultRoot);
 
   return {
     diagnostics: new DiagnosticsService(apiClient),

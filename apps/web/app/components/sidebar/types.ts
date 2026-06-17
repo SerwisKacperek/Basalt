@@ -35,6 +35,7 @@ export interface AppSidebarProps {
   onEditStart: (id: string) => void;
   onEditEnd: () => void;
   onRename: (id: string, name: string) => void;
+  onRenameValueChange?: (value: string) => void;
   onCreateFolder: () => void;
   onRenameFolder: (id: string, name: string) => void;
   onDeleteFolder: (id: string) => void;
@@ -60,6 +61,7 @@ export interface NoteHandlers {
   onEditStart: (id: string) => void;
   onEditEnd: () => void;
   onRename: (id: string, name: string) => void;
+  onRenameValueChange?: (value: string) => void;
 }
 
 /** Shared folder-row callbacks, bundled to avoid prop drilling. */

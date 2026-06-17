@@ -32,6 +32,8 @@ export const CHANNELS = {
     create: "svc:workspaces:create",
     update: "svc:workspaces:update",
     delete: "svc:workspaces:delete",
+    join: "svc:workspaces:join",
+    sync: "svc:workspaces:sync",
   },
   folders: {
     findAll: "svc:folders:findAll",

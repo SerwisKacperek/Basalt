@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import * as Y from "yjs";
+import { Awareness } from "y-protocols/awareness";
 import { useServices } from "~/services/ServiceContext";
 import type { ConnectionStatus } from "~/services/web/SyncService";
 
@@ -20,6 +21,7 @@ export interface RemoteSyncState {
 export function useRemoteSync(
   noteId: string,
   doc: Y.Doc,
+  awareness: Awareness,
   ready: boolean,
 ): RemoteSyncState {
   const { syncService, notes, workspaces } = useServices();
@@ -47,7 +49,7 @@ export function useRemoteSync(
 
   useEffect(() => {
     if (!ready || !isConfigured) return;
-    syncService.connect(noteId, doc);
+    syncService.connect(noteId, doc, awareness);
     const unsubSynced = syncService.addSyncedListener(() => {
       setLastSyncedAt(Date.now());
     });
@@ -67,7 +69,7 @@ export function useRemoteSync(
       unsubPending();
       syncService.disconnect();
     };
-  }, [noteId, doc, ready, syncService, isConfigured]);
+  }, [noteId, doc, awareness, ready, syncService, isConfigured]);
 
   let remoteSyncStatus: RemoteSyncStatus;
   if (!isConfigured) {

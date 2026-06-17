@@ -104,6 +104,12 @@ export function registerIpc(registry: MainServiceRegistry) {
   ipcMain.handle(CHANNELS.workspaces.delete, (_e, id: string) =>
     registry.workspaces.delete(id),
   );
+  ipcMain.handle(CHANNELS.workspaces.join, (_e, dto) =>
+    registry.workspaces.join!(dto),
+  );
+  ipcMain.handle(CHANNELS.workspaces.sync, () =>
+    registry.workspaces.sync!(),
+  );
 
   ipcMain.handle(CHANNELS.folders.findAll, (_e, filters?) =>
     registry.folders.findAll(filters),

@@ -44,7 +44,13 @@ export class CompositeFolderService implements IFolderService {
   async update(id: string, dto: Partial<Insert<"folders">>): Promise<Select<"folders">> {
     const result = await this.local.update(id, dto);
     const remote = await this.remoteFor(result.workspace_id);
-    if (remote) this.gate.run(() => remote.update(id, dto));
+    if (remote) {
+      this.gate.run(async () => {
+        const serverResult = await remote.update(id, dto);
+        // Overwrite local timestamp with server's so future sync comparisons use same clock.
+        await this.local.update(id, { updatedAt: serverResult.updatedAt });
+      });
+    }
     return result;
   }
 
@@ -83,21 +89,35 @@ export class CompositeFolderService implements IFolderService {
       }
       const remoteIds = new Set(remoteFolders.map((f) => f.id));
 
+      const remoteById = new Map(remoteFolders.map((f) => [f.id, f]));
+
       for (const folder of remoteFolders) {
         if (!wsIds.has(folder.workspace_id)) continue;
         const { id, ...fields } = folder;
         if (localIds.has(id)) {
-          await this.local.update(id, fields as Partial<Insert<"folders">>);
+          const local = localFolders.find((f) => f.id === id)!;
+          if (new Date(folder.updatedAt).getTime() > new Date(local.updatedAt).getTime()) {
+            await this.local.update(id, fields as Partial<Insert<"folders">>);
+          }
         } else {
           await this.local.create(folder as Insert<"folders">);
         }
       }
 
       for (const folder of localFolders) {
-        if (wsIds.has(folder.workspace_id) && !remoteIds.has(folder.id)) {
+        if (!wsIds.has(folder.workspace_id)) continue;
+        const remote_ = remoteById.get(folder.id);
+        if (!remote_) {
           await remote.create(folder as Insert<"folders">).catch((err) =>
-            console.error("[composite:folders] sync push failed:", err),
+            console.error("[composite:folders] sync push create failed:", err),
           );
+        } else if (new Date(folder.updatedAt).getTime() > new Date(remote_.updatedAt).getTime()) {
+          const { id, ...updateFields } = folder;
+          await remote.update(id, updateFields as Partial<Insert<"folders">>)
+            .then((serverResult) => this.local.update(id, { updatedAt: serverResult.updatedAt }))
+            .catch((err) =>
+              console.error("[composite:folders] sync push update failed:", err),
+            );
         }
       }
     }

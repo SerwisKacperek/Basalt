@@ -24,6 +24,7 @@
     "elysia": "latest",
     "jose": "^6.2.3",
     "pg": "^8.20.0",
+    "y-protocols": "^1.0.7",
     "yjs": "^13.6.20"
   },
   "devDependencies": {

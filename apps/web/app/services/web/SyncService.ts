@@ -1,4 +1,5 @@
 import * as Y from "yjs";
+import { Awareness, encodeAwarenessUpdate, applyAwarenessUpdate, removeAwarenessStates } from "y-protocols/awareness";
 
 function getWsBase(): string | null {
   const envUrl = import.meta.env.VITE_BACKEND_URL as string | undefined;
@@ -28,8 +29,10 @@ type StatusListener = (status: ConnectionStatus, error: SyncError | null) => voi
 export class SyncService {
   private noteId: string | null = null;
   private doc: Y.Doc | null = null;
+  private awareness: Awareness | null = null;
   private ws: WebSocket | null = null;
   private offUpdate: (() => void) | null = null;
+  private offAwareness: (() => void) | null = null;
   private active = false;
   private generation = 0;
   private reconnectDelay = BASE_DELAY;
@@ -94,13 +97,14 @@ export class SyncService {
     for (const cb of this.pendingLocalListeners) cb(value);
   }
 
-  connect(noteId: string, doc: Y.Doc): void {
+  connect(noteId: string, doc: Y.Doc, awareness: Awareness): void {
     this.disconnect();
     const wsBase = getWsBase();
     if (!wsBase) return;
     this.active = true;
     this.noteId = noteId;
     this.doc = doc;
+    this.awareness = awareness;
     this.reconnectDelay = BASE_DELAY;
     this.generation++;
     this.hasPendingLocal = false;
@@ -115,13 +119,14 @@ export class SyncService {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
     }
-    this._clearUpdateSub();
+    this._clearSubs();
     if (this.ws) {
       this.ws.close();
       this.ws = null;
     }
     this.noteId = null;
     this.doc = null;
+    this.awareness = null;
     this._setStatus("idle");
   }
 
@@ -152,6 +157,27 @@ export class SyncService {
       };
       this.doc!.on("update", onUpdate);
       this.offUpdate = () => this.doc?.off("update", onUpdate);
+
+      // Send initial awareness state + subscribe to future changes
+      const awareness = this.awareness!;
+      const sendAwareness = (clients: number[]) => {
+        if (gen !== this.generation || ws.readyState !== WebSocket.OPEN) return;
+        const update = encodeAwarenessUpdate(awareness, clients);
+        ws.send(prefixMsg(0x04, update));
+      };
+      // Broadcast our own state immediately on connect
+      sendAwareness([awareness.clientID]);
+      const onAwarenessChange = ({ added, updated, removed }: { added: number[]; updated: number[]; removed: number[] }) => {
+        sendAwareness([...added, ...updated, ...removed]);
+      };
+      awareness.on("change", onAwarenessChange);
+      this.offAwareness = () => {
+        awareness.off("change", onAwarenessChange);
+        // Notify peers our cursor is gone before closing
+        if (ws.readyState === WebSocket.OPEN) {
+          removeAwarenessStates(awareness, [awareness.clientID], "disconnect");
+        }
+      };
     };
 
     ws.onmessage = (ev) => {
@@ -183,6 +209,9 @@ export class SyncService {
         // Server ACK: our changes persisted on backend
         this._setPendingLocal(false);
         this._notifySynced();
+      } else if (type === 0x04) {
+        // Awareness update from a peer — apply to local awareness
+        applyAwarenessUpdate(this.awareness!, payload, "remote");
       }
     };
 
@@ -192,7 +221,7 @@ export class SyncService {
 
     ws.onclose = (ev) => {
       if (gen !== this.generation) return;
-      this._clearUpdateSub();
+      this._clearSubs();
       if (this.active) {
         const error: SyncError = {
           code: ev.code,
@@ -209,10 +238,14 @@ export class SyncService {
     };
   }
 
-  private _clearUpdateSub(): void {
+  private _clearSubs(): void {
     if (this.offUpdate) {
       this.offUpdate();
       this.offUpdate = null;
+    }
+    if (this.offAwareness) {
+      this.offAwareness();
+      this.offAwareness = null;
     }
   }
 }

@@ -4,6 +4,7 @@ import { EditorView } from "~/features/editor/EditorView";
 import { useServices } from "~/services/ServiceContext";
 import type { EditorNote } from "@basalt/core/interfaces/IEditorPersistenceService";
 import type { Select } from "@basalt/domain";
+import { RenameInput } from "~/components/sidebar/RenameInput";
 import { BookLock, Plus, PanelLeftOpen } from "lucide-react";
 
 export type Folder = Select<"folders">;
@@ -40,6 +41,9 @@ export default function Main() {
   const [workspaceList, setWorkspaceList] = useState<Workspace[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingSource, setEditingSource] = useState<"sidebar" | "topbar" | null>(null);
+  const [editingName, setEditingName] = useState<string | null>(null);
+  const originalNameRef = useRef<string | null>(null);
   const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
   const [width, setWidth] = useState(loadSidebarWidth);
   const [isResizing, setIsResizing] = useState(false);
@@ -146,6 +150,8 @@ export default function Main() {
       await refresh();
       setActiveId(note.id);
       setEditingId(note.id);
+      setEditingSource("sidebar");
+      setEditingName(null);
     },
     [editorPersistence, noteService, refresh, notes, workspaceId],
   );
@@ -350,15 +356,25 @@ export default function Main() {
         workspaces={workspaceList}
         activeWorkspaceId={workspaceId}
         activeId={activeId}
-        editingId={editingId}
+        editingId={editingSource === "sidebar" ? editingId : null}
         editingFolderId={editingFolderId}
         onSelect={setActiveId}
         onCreate={handleCreate}
         onDelete={handleDelete}
         onDuplicate={handleDuplicate}
-        onEditStart={setEditingId}
-        onEditEnd={() => setEditingId(null)}
+        onEditStart={(id) => {
+          setEditingId(id);
+          setEditingSource("sidebar");
+          setEditingName(null);
+          originalNameRef.current = null;
+        }}
+        onEditEnd={() => {
+          setEditingId(null);
+          setEditingSource(null);
+          setEditingName(null);
+        }}
         onRename={handleRename}
+        onRenameValueChange={setEditingName}
         onCreateFolder={handleCreateFolder}
         onRenameFolder={handleRenameFolder}
         onDeleteFolder={handleDeleteFolder}
@@ -375,10 +391,65 @@ export default function Main() {
       />
       <SidebarInset className="min-h-0 overflow-hidden">
         <header className="flex h-16 items-center justify-between gap-4 border-b border-border p-4">
-          <h1 className="flex min-w-0 items-center gap-2 text-xl font-bold">
+          <h1 className="flex min-w-0 flex-1 items-center gap-2 text-xl font-bold">
             <OpenSidebarButton />
             <BookLock size={18} className="shrink-0" />
-            <span className="truncate">{activeNote?.name ?? "Basalt"}</span>
+            {activeNote && editingId === activeId && editingSource === "topbar" ? (
+              <RenameInput
+                initial={activeNote.name}
+                onSubmit={(name) => {
+                  const trimmed = name.trim();
+                  if (trimmed && trimmed !== originalNameRef.current) {
+                    void handleRename(activeId!, trimmed);
+                  } else {
+                    const orig = originalNameRef.current;
+                    if (orig !== null) {
+                      setNotes((prev) =>
+                        prev?.map((n) => (n.id === activeId ? { ...n, name: orig } : n)) ?? null,
+                      );
+                    }
+                  }
+                  setEditingId(null);
+                  setEditingSource(null);
+                  setEditingName(null);
+                }}
+                onCancel={() => {
+                  const orig = originalNameRef.current;
+                  if (orig !== null) {
+                    setNotes((prev) =>
+                      prev?.map((n) => (n.id === activeId ? { ...n, name: orig } : n)) ?? null,
+                    );
+                  }
+                  setEditingId(null);
+                  setEditingSource(null);
+                  setEditingName(null);
+                }}
+                onValueChange={(value) => {
+                  setNotes((prev) =>
+                    prev?.map((n) => (n.id === activeId ? { ...n, name: value } : n)) ?? null,
+                  );
+                }}
+                className="h-8 min-w-0 flex-1 px-2 text-xl font-bold"
+              />
+            ) : (
+              <span
+                className={activeNote ? "cursor-text truncate" : "truncate"}
+                onDoubleClick={
+                  activeNote
+                    ? () => {
+                        originalNameRef.current = activeNote.name;
+                        setEditingId(activeId!);
+                        setEditingSource("topbar");
+                        setEditingName(null);
+                      }
+                    : undefined
+                }
+              >
+                {editingId === activeId && editingSource === "sidebar" && editingName !== null
+                  ? editingName
+                  : activeNote?.name ?? "Basalt"}
+              </span>
+            )}
           </h1>
           <div className="flex items-center gap-2">
             {activeNote && (

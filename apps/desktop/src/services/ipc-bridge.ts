@@ -119,6 +119,10 @@ export function buildRendererBridge(): RendererServiceBridge {
         ipcRenderer.invoke(CHANNELS.workspaces.update, id, dto) as Promise<Select<"workspaces">>,
       delete: (id: string) =>
         ipcRenderer.invoke(CHANNELS.workspaces.delete, id) as Promise<void>,
+      join: (dto: Insert<"workspaces">) =>
+        ipcRenderer.invoke(CHANNELS.workspaces.join, dto) as Promise<Select<"workspaces">>,
+      sync: () =>
+        ipcRenderer.invoke(CHANNELS.workspaces.sync) as Promise<void>,
     },
     folders: {
       findAll: (filters?: Filters<Select<"folders">>) =>

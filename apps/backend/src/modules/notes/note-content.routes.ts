@@ -155,6 +155,9 @@ export function createNoteContentRoutes(rawDb: RawDb) {
             .applyAndBroadcast(meta.noteId, payload, meta.clientId)
             .then(() => meta.channel.send(new Uint8Array([0x03])))
             .catch(console.error);
+        } else if (type === 0x04) {
+          // Awareness update (cursor/presence) — relay to peers, no persistence
+          pubSub.publish(meta.noteId, prefixMsg(0x04, payload), meta.clientId);
         }
       },
       close(ws) {

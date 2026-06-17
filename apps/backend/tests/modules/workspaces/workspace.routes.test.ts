@@ -4,7 +4,7 @@ import { createWorkspaceRoutes } from '@/modules/workspaces/workspace.routes';
 const db = null as any;
 import { NotFoundException } from '@basalt/domain';
 
-const ws = { id: '11111111-1111-1111-1111-111111111111', name: 'Test', createdAt: new Date(), updatedAt: new Date(), deletedAt: null };
+const ws = { id: '11111111-1111-1111-1111-111111111111', name: 'Test', type: 'local' as const, url: null, createdAt: new Date(), updatedAt: new Date(), deletedAt: null };
 
 function makeApp(overrides: Record<string, any> = {}) {
   const controller = {
